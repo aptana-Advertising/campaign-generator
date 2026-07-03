@@ -1,0 +1,1981 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Campaign Generator - Kuponku</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background: #f5f6f8;
+    color: #1a1a1a;
+    line-height: 1.5;
+    padding: 24px;
+  }
+
+  .container { max-width: 1400px; margin: 0 auto; }
+
+  /* Header */
+  .header { margin-bottom: 24px; }
+  .header h1 { font-size: 24px; font-weight: 600; margin-bottom: 4px; }
+  .header p { color: #6b7280; font-size: 14px; }
+
+  /* Campaign Type Selector */
+  .type-selector {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+
+  .type-selector label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: block;
+    margin-bottom: 12px;
+  }
+
+  .type-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+  }
+
+  .type-btn {
+    padding: 14px 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #ffffff;
+    color: #1a1a1a;
+    font-weight: 500;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    opacity: 0.55;
+  }
+
+  .type-btn:hover { border-color: #9ca3af; opacity: 0.8; }
+
+  .type-btn.active {
+    opacity: 1;
+    border-color: #3b82f6;
+    background: #eff6ff;
+    color: #1d4ed8;
+  }
+
+  .type-btn .icon {
+    font-size: 22px;
+    display: block;
+    margin-bottom: 6px;
+    text-align: center;
+  }
+
+  /* Main Grid */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.1fr;
+    gap: 24px;
+  }
+
+  @media (max-width: 900px) {
+    .main-grid { grid-template-columns: 1fr; }
+  }
+
+  .form-col { display: flex; flex-direction: column; gap: 20px; }
+
+  /* Cards */
+  .card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 20px;
+  }
+
+  .card-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* Form Fields */
+  .field { margin-bottom: 14px; }
+  .field:last-child { margin-bottom: 0; }
+
+  .field label {
+    font-size: 13px;
+    color: #374151;
+    margin-bottom: 6px;
+    display: block;
+    font-weight: 500;
+  }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .field-row:last-child { margin-bottom: 0; }
+
+  input[type="text"],
+  input[type="url"],
+  input[type="date"],
+  select,
+  textarea {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #1a1a1a;
+    font-size: 13px;
+    font-family: inherit;
+    transition: border-color 0.15s ease;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+
+  input[readonly] { background: #f9fafb; color: #6b7280; }
+
+  textarea {
+    resize: none;
+    font-family: inherit;
+  }
+
+  /* Char counter */
+  .field-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .field-header label { margin-bottom: 0; }
+
+  .char-count {
+    font-size: 11px;
+    color: #6b7280;
+    background: #f3f4f6;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .char-count.over { color: #dc2626; background: #fef2f2; }
+
+  .char-warning {
+    font-size: 11px;
+    color: #dc2626;
+    font-weight: 500;
+    display: none;
+    margin-left: 6px;
+  }
+
+  /* Buttons */
+  .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .btn {
+    padding: 11px 14px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.15s ease;
+  }
+
+  .btn-primary { background: #2563eb; color: #ffffff; }
+  .btn-primary:hover { background: #1d4ed8; }
+
+  .btn-secondary { background: #ffffff; color: #374151; border-color: #d1d5db; }
+  .btn-secondary:hover { background: #f9fafb; }
+
+  .btn-full { width: 100%; }
+
+  .btn-sm {
+    padding: 6px 10px;
+    font-size: 13px;
+    border-radius: 6px;
+  }
+
+  .btn-danger-outline {
+    background: #ffffff;
+    color: #dc2626;
+    border-color: #fecaca;
+  }
+  .btn-danger-outline:hover { background: #fef2f2; }
+
+  /* Connect row */
+  .connect-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+
+  .btn-connect {
+    background: #2563eb;
+    color: #fff;
+    padding: 9px 16px;
+    border-radius: 8px;
+    border: none;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-connect:hover { background: #1d4ed8; }
+
+  .status-box {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #166534;
+    margin-top: 10px;
+    display: none;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .status-box.show { display: flex; }
+
+  .btn-reload {
+    padding: 3px 10px;
+    background: #ffffff;
+    border: 1px solid #bbf7d0;
+    border-radius: 6px;
+    color: #166534;
+    font-size: 13px;
+    cursor: pointer;
+    font-weight: 500;
+  }
+
+  .info-box {
+    margin-top: 10px;
+    padding: 10px 12px;
+    background: #f9fafb;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #6b7280;
+    line-height: 1.5;
+  }
+
+  /* Searchable Brand Dropdown */
+  .brand-search-wrap {
+    position: relative;
+  }
+
+  .brand-search-results {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    max-height: 220px;
+    overflow-y: auto;
+    z-index: 50;
+    display: none;
+  }
+
+  .brand-search-results.show { display: block; }
+
+  .brand-result-item {
+    padding: 9px 12px;
+    font-size: 13px;
+    cursor: pointer;
+    border-bottom: 1px solid #f3f4f6;
+  }
+
+  .brand-result-item:last-child { border-bottom: none; }
+  .brand-result-item:hover { background: #f0f7ff; }
+
+  .brand-result-item .b-name { font-weight: 600; color: #1a1a1a; }
+  .brand-result-item .b-mid { font-size: 13px; color: #6b7280; }
+
+  .brand-no-result {
+    padding: 10px 12px;
+    font-size: 13px;
+    color: #9ca3af;
+    text-align: center;
+  }
+
+  .brand-selected-tag {
+    margin-top: 8px;
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    padding: 7px 10px;
+    border-radius: 7px;
+    font-size: 13px;
+    color: #1d4ed8;
+  }
+
+  .brand-selected-tag.show { display: flex; }
+
+  .brand-clear-btn {
+    background: none;
+    border: none;
+    color: #1d4ed8;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  /* Campaign Content Sections (repeatable) */
+  .content-section {
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 20px;
+    background: #ffffff;
+    position: relative;
+  }
+
+  .content-section + .content-section { margin-top: 16px; }
+
+  .content-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .content-section-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .content-section-actions { display: flex; gap: 6px; }
+
+  .icon-btn {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 4px 9px;
+    font-size: 13px;
+    cursor: pointer;
+    color: #374151;
+  }
+  .icon-btn:hover { background: #f3f4f6; }
+  .icon-btn.danger { color: #dc2626; border-color: #fecaca; }
+  .icon-btn.danger:hover { background: #fef2f2; }
+
+  .add-section-row {
+    margin-top: 16px;
+  }
+
+  .btn-add-section {
+    width: 100%;
+    padding: 12px;
+    border: 1.5px dashed #93c5fd;
+    border-radius: 10px;
+    background: #f0f7ff;
+    color: #1d4ed8;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .btn-add-section:hover { background: #e0effe; }
+
+  /* Preview panel */
+  .preview-panel {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 20px;
+    max-height: 1300px;
+    overflow-y: auto;
+  }
+
+  .preview-panel h3 {
+    font-size: 13px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 16px;
+  }
+
+  .preview-content { font-size: 13px; color: #1a1a1a; }
+
+  .preview-empty { text-align: center; padding: 48px 0; color: #9ca3af; }
+
+  .preview-section {
+    margin-bottom: 18px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid #f1f1f1;
+  }
+  .preview-section:last-child { border-bottom: none; }
+
+  .preview-section-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 10px;
+  }
+
+  .preview-table { width: 100%; font-size: 13px; border-collapse: collapse; }
+  .preview-table td { padding: 5px 0; vertical-align: top; }
+  .preview-table td:first-child { color: #6b7280; width: 40%; }
+  .preview-table td:last-child { color: #1a1a1a; font-weight: 500; text-align: right; }
+
+  .content-block {
+    background: #fafbfc;
+    border: 1px solid #eef0f2;
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+  .content-block:last-child { margin-bottom: 0; }
+
+  .content-block-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: #1d4ed8;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .key-visual-img {
+    max-width: 100%;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    display: block;
+    border: 1px solid #e5e7eb;
+  }
+
+  .key-visual-missing {
+    font-size: 11px;
+    color: #9ca3af;
+    padding: 10px;
+    background: #f9fafb;
+    border-radius: 6px;
+    text-align: center;
+    margin-bottom: 10px;
+  }
+
+  .sms-box {
+    background: #f9fafb;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+  }
+
+  .sms-meta { font-size: 11px; color: #6b7280; margin-bottom: 6px; }
+  .sms-meta .warn { color: #dc2626; font-weight: 600; }
+  .sms-text { font-size: 13px; color: #1a1a1a; white-space: pre-wrap; line-height: 1.6; }
+
+  .highlight-pill {
+    background: #eff6ff;
+    color: #1d4ed8;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-block;
+  }
+
+  .terms-box {
+    background: #f9fafb;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 13px;
+    white-space: pre-wrap;
+    line-height: 1.7;
+    max-height: 220px;
+    overflow-y: auto;
+  }
+
+  .preview-actions { margin-top: 18px; display: flex; flex-direction: column; gap: 8px; }
+
+  .other-placeholder {
+    background: #ffffff;
+    border: 1px dashed #d1d5db;
+    border-radius: 12px;
+    padding: 48px;
+    text-align: center;
+    color: #9ca3af;
+  }
+
+  .required { color: #dc2626; }
+
+  /* ===== Phone Mockup (Customer Journey) ===== */
+  .mockup-scroll {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    padding: 8px 2px 16px;
+    scroll-snap-type: x mandatory;
+  }
+
+  .phone {
+    flex: 0 0 auto;
+    width: 150px;
+    scroll-snap-align: start;
+  }
+
+  .phone-frame {
+    position: relative;
+    width: 150px;
+    height: 310px;
+    background: #1a1a1a;
+    border-radius: 22px;
+    padding: 8px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+  }
+
+  .phone-notch {
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 46px;
+    height: 12px;
+    background: #1a1a1a;
+    border-radius: 0 0 8px 8px;
+    z-index: 3;
+  }
+
+  .phone-screen {
+    width: 100%;
+    height: 100%;
+    background: #ffffff;
+    border-radius: 15px;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .phone-screen.dark { background: #6b7280; }
+
+  .phone-caption {
+    text-align: center;
+    font-size: 11px;
+    color: #6b7280;
+    margin-top: 8px;
+    font-weight: 500;
+  }
+
+  /* Screen 1: SMS inbox */
+  .sms-topbar {
+    background: #f4f4f5;
+    padding: 8px 6px 6px;
+    text-align: center;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  .sms-avatar {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: #d1d5db;
+    margin: 0 auto 3px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+  }
+  .sms-sender { font-size: 9px; font-weight: 700; color: #374151; }
+  .sms-bubble-area { padding: 8px 7px; flex: 1; overflow-y: auto; }
+  .sms-bubble {
+    background: #eef0f2;
+    border-radius: 10px;
+    padding: 7px 8px;
+    font-size: 8.5px;
+    line-height: 1.45;
+    color: #1a1a1a;
+    word-break: break-word;
+  }
+
+  /* Screen 2: Landing page / coupon */
+  .lp-scroll {
+    flex: 1;
+    overflow-y: auto;
+    scrollbar-width: none;
+  }
+  .lp-scroll::-webkit-scrollbar { display: none; width: 0; height: 0; }
+  .lp-logo-bar {
+    background: #2563eb;
+    color: #fff;
+    text-align: center;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 4px;
+    min-height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .lp-logo-img {
+    max-height: 16px;
+    max-width: 80%;
+    object-fit: contain;
+    display: block;
+  }
+  .lp-logo-bar-white {
+    background: #ffffff;
+    border-bottom: 1px solid #eef0f2;
+  }
+  .lp-logo-bar-white .lp-logo-img { max-height: 18px; }
+  .lp-visual {
+    width: 100%;
+    display: block;
+    background: #f3f4f6;
+    min-height: 70px;
+    object-fit: cover;
+  }
+  .lp-visual-missing {
+    width: 100%; min-height: 70px;
+    background: #f3f4f6;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 8px; color: #9ca3af; text-align: center; padding: 6px;
+  }
+  .lp-headline {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 800;
+    color: #1a1a1a;
+    padding: 8px 6px 4px;
+    line-height: 1.2;
+  }
+  .lp-timer {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    padding: 4px 6px 8px;
+  }
+  .lp-timer-box {
+    background: #fde8e8;
+    border-radius: 5px;
+    padding: 3px 5px;
+    text-align: center;
+    min-width: 26px;
+  }
+  .lp-timer-num { font-size: 11px; font-weight: 800; color: #dc2626; line-height: 1; }
+  .lp-timer-lbl { font-size: 6px; color: #b91c1c; margin-top: 1px; }
+  .lp-outlet {
+    text-align: center;
+    font-size: 8px;
+    color: #2563eb;
+    padding: 4px;
+  }
+  .lp-cta {
+    background: #ef4444;
+    color: #fff;
+    text-align: center;
+    font-size: 10px;
+    font-weight: 700;
+    margin: 4px 10px 6px;
+    padding: 7px;
+    border-radius: 20px;
+  }
+  .lp-tnc {
+    text-align: center;
+    font-size: 7px;
+    color: #9ca3af;
+    padding: 0 6px 6px;
+  }
+
+  /* Generic modal card (validation screens) */
+  .phone-modal-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+  }
+  .phone-modal {
+    background: #fff;
+    border-radius: 10px;
+    padding: 10px 9px;
+    width: 100%;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+  .pm-title { font-size: 10px; font-weight: 700; text-align: center; margin-bottom: 8px; color: #1a1a1a; }
+  .pm-close { text-align: right; font-size: 10px; color: #9ca3af; margin-bottom: 2px; }
+  .pm-row { display: flex; gap: 6px; margin-bottom: 8px; }
+  .pm-check {
+    width: 14px; height: 14px; border-radius: 50%;
+    background: #22c55e; color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 8px; flex-shrink: 0;
+  }
+  .pm-check.gray { background: #d1d5db; }
+  .pm-txt { font-size: 7.5px; line-height: 1.4; color: #374151; }
+  .pm-txt strong { color: #1a1a1a; }
+  .pm-btn {
+    background: #ef4444; color: #fff; text-align: center;
+    font-size: 8.5px; font-weight: 700; padding: 5px; border-radius: 14px;
+    margin-top: 4px;
+  }
+  .pm-note { font-size: 6.5px; color: #9ca3af; text-align: center; margin-top: 5px; }
+
+  /* Keypad screen */
+  .kp-number { text-align: center; font-size: 14px; font-weight: 700; padding: 20px 0 10px; color: #1a1a1a; }
+  .kp-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    padding: 4px 14px;
+  }
+  .kp-key {
+    aspect-ratio: 1;
+    background: #f3f4f6;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600; color: #1a1a1a;
+  }
+  .kp-call {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: #22c55e; color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    margin: 8px auto 0; font-size: 13px;
+  }
+
+  .mockup-hint {
+    font-size: 11px;
+    color: #9ca3af;
+    margin-bottom: 8px;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>Campaign Generator</h1>
+    <p>Kuponku Campaign Visual &amp; Wording Builder</p>
+  </div>
+
+  <!-- Campaign Type Selector -->
+  <div class="type-selector">
+    <label>Select Campaign Type</label>
+    <div class="type-grid">
+      <button class="type-btn" id="btn-kuponku-sms" onclick="selectCampaignType('kuponku-sms')">
+        <span class="icon">✉️</span>Kuponku SMS
+      </button>
+      <button class="type-btn" id="btn-kuponku-meta" onclick="selectCampaignType('kuponku-meta')">
+        <span class="icon">📘</span>Kuponku Meta
+      </button>
+      <button class="type-btn" id="btn-whatsapp-lba" onclick="selectCampaignType('whatsapp-lba')">
+        <span class="icon">💬</span>WhatsApp LBA
+      </button>
+      <button class="type-btn" id="btn-medsos" onclick="selectCampaignType('medsos')">
+        <span class="icon">📱</span>Medsos
+      </button>
+      <button class="type-btn" id="btn-sms-lba" onclick="selectCampaignType('sms-lba')">
+        <span class="icon">📩</span>SMS LBA
+      </button>
+    </div>
+  </div>
+
+  <!-- Google Sheets Integration (Shared across all campaign types) -->
+  <div class="card" style="margin-bottom: 24px;">
+    <div class="card-title">🔗 Google Sheets Integration</div>
+    <div class="field">
+      <label>Google Sheets URL</label>
+      <div class="connect-row">
+        <input type="text" id="sheetsUrl" placeholder="Paste your Google Sheets URL here">
+        <button class="btn-connect" onclick="connectGoogleSheets()">Connect</button>
+      </div>
+    </div>
+    <div class="status-box" id="sheetsStatus">
+      <span id="sheetsStatusText">Connected!</span>
+      <button class="btn-reload" onclick="reloadBrandData()">⟲ Reload</button>
+    </div>
+    <div class="info-box">
+      ℹ️ <strong>How to:</strong> Make sure your sheet has a Brandlist tab with columns: Nama Brand, MID, Brand_Display, Brand_masking. Share the sheet with "Anyone with the link" view access. This connection applies to all campaign types below.
+    </div>
+  </div>
+
+  <!-- Kuponku SMS Form -->
+  <div id="kuponku-sms-form" style="display:none;">
+    <div class="main-grid">
+
+      <!-- FORM COLUMN -->
+      <div class="form-col">
+
+        <!-- Basic Information -->
+        <div class="card">
+          <div class="card-title">Basic Information</div>
+
+          <div class="field">
+            <label>Search Brand <span class="required">*</span></label>
+            <div class="brand-search-wrap">
+              <input type="text" id="brandSearchInput" placeholder="Type to search brand name..." autocomplete="off" oninput="handleBrandSearch()" onfocus="handleBrandSearch()">
+              <div class="brand-search-results" id="brandSearchResults"></div>
+            </div>
+            <div class="brand-selected-tag" id="brandSelectedTag">
+              <span id="brandSelectedText"></span>
+              <button class="brand-clear-btn" onclick="clearSelectedBrand()">✕ Clear</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Brand Name <span class="required">*</span></label>
+            <input type="text" id="brandName" placeholder="Auto-filled from search, or type manually">
+          </div>
+
+          <div class="field">
+            <label>MID <span class="required">*</span></label>
+            <input type="text" id="mid" placeholder="Auto-filled">
+          </div>
+
+          <div class="field">
+            <label>Brand Masking <span class="required">*</span></label>
+            <input type="text" id="brandMasking" placeholder="Auto-filled">
+          </div>
+        </div>
+
+        <!-- Campaign Details -->
+        <div class="card">
+          <div class="card-title">Campaign Details</div>
+          <div class="field-row">
+            <div class="field">
+              <label>Invoice Number</label>
+              <input type="text" id="invoiceNumber" placeholder="e.g. 13615">
+            </div>
+            <div class="field">
+              <label>Payment Method</label>
+              <input type="text" id="paymentMethod" placeholder="e.g. Prepaid">
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>Price</label>
+              <input type="text" id="price" placeholder="e.g. Rp. 9.000.000">
+            </div>
+            <div class="field">
+              <label>Campaign Period <span class="required">*</span></label>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+                <input type="date" id="startDate">
+                <input type="date" id="endDate">
+              </div>
+            </div>
+          </div>
+          <div class="field">
+            <label>Whitelist Numbers</label>
+            <textarea id="whitelist" style="height:60px;" placeholder="Comma-separated phone numbers"></textarea>
+          </div>
+        </div>
+
+        <!-- Campaign Content Sections (dynamic, repeatable) -->
+        <div id="campaignContentList"></div>
+
+        <div class="add-section-row">
+          <button class="btn-add-section" onclick="addContentSection()">+ Add Campaign Content Section</button>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="generateCampaign()">▶ Generate</button>
+          <button class="btn btn-secondary" onclick="resetForm()">⟲ Reset</button>
+        </div>
+      </div>
+
+      <!-- PREVIEW COLUMN -->
+      <div class="preview-panel">
+        <h3>Campaign Preview</h3>
+        <div class="preview-content" id="preview">
+          <div class="preview-empty">
+            ℹ️ Connect Google Sheets and fill the form to see preview
+          </div>
+        </div>
+        <div class="preview-actions">
+          <button class="btn btn-secondary btn-full" onclick="downloadJSON()">⬇ Download JSON</button>
+          <button class="btn btn-secondary btn-full" onclick="copyPreview()">⧉ Copy Preview</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Kuponku Meta Form -->
+  <div id="kuponku-meta-form" style="display:none;">
+    <div class="main-grid">
+
+      <!-- FORM COLUMN -->
+      <div class="form-col">
+
+        <!-- Basic Information -->
+        <div class="card">
+          <div class="card-title">Basic Information</div>
+
+          <div class="field">
+            <label>Search Brand <span class="required">*</span></label>
+            <div class="brand-search-wrap">
+              <input type="text" id="metaBrandSearchInput" placeholder="Type to search brand name..." autocomplete="off" oninput="handleBrandSearchMeta()" onfocus="handleBrandSearchMeta()">
+              <div class="brand-search-results" id="metaBrandSearchResults"></div>
+            </div>
+            <div class="brand-selected-tag" id="metaBrandSelectedTag">
+              <span id="metaBrandSelectedText"></span>
+              <button class="brand-clear-btn" onclick="clearSelectedBrandMeta()">✕ Clear</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Brand Name <span class="required">*</span></label>
+            <input type="text" id="metaBrandName" placeholder="Auto-filled from search, or type manually">
+          </div>
+
+          <div class="field">
+            <label>MID <span class="required">*</span></label>
+            <input type="text" id="metaMid" placeholder="Auto-filled">
+          </div>
+
+          <div class="field">
+            <label>Brand Masking <span class="required">*</span></label>
+            <input type="text" id="metaBrandMasking" placeholder="Auto-filled">
+          </div>
+        </div>
+
+        <!-- Campaign Details -->
+        <div class="card">
+          <div class="card-title">Campaign Details</div>
+          <div class="field">
+            <label>Campaign Period <span class="required">*</span></label>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+              <input type="date" id="metaStartDate">
+              <input type="date" id="metaEndDate">
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>Payment Method</label>
+              <input type="text" id="metaPaymentMethod" placeholder="e.g. Prepaid">
+            </div>
+            <div class="field">
+              <label>Location</label>
+              <input type="text" id="metaLocation" placeholder="e.g. Jakarta, Bandung">
+            </div>
+          </div>
+          <div class="field">
+            <label>Max Redeem</label>
+            <input type="text" id="metaMaxRedeem" placeholder="e.g. 500 redemptions">
+          </div>
+        </div>
+
+        <!-- Meta Ads -->
+        <div class="card">
+          <div class="card-title">📘 Meta Ads</div>
+          <div class="field">
+            <label>Key Visual (URL)</label>
+            <input type="url" id="metaAdsKeyVisual" placeholder="https://example.com/image.jpg">
+          </div>
+          <div class="field">
+            <label>Caption</label>
+            <textarea id="metaAdsCaption" style="height:80px;" placeholder="Write the ad caption..."></textarea>
+          </div>
+          <div class="field">
+            <label>Pretext</label>
+            <textarea id="metaAdsPretext" style="height:60px;" placeholder="Write the pretext..."></textarea>
+          </div>
+          <div class="field">
+            <label>Link CTA (URL)</label>
+            <input type="url" id="metaAdsLinkCta" placeholder="https://example.com/cta">
+          </div>
+        </div>
+
+        <!-- WhatsApp -->
+        <div class="card">
+          <div class="card-title">💬 WhatsApp</div>
+          <div class="field">
+            <label>Campaign Image (URL)</label>
+            <input type="url" id="metaWaImage" placeholder="https://example.com/image.jpg">
+          </div>
+          <div class="field">
+            <div class="field-header">
+              <label>Campaign Wording</label>
+              <span>
+                <span class="char-count" id="metaWaCharCount">0/950</span>
+                <span class="char-warning" id="metaWaCharWarning">⚠ Over limit</span>
+              </span>
+            </div>
+            <textarea id="metaWaWording" style="height:120px;" placeholder="Write the WhatsApp campaign message..."></textarea>
+          </div>
+        </div>
+
+        <!-- Flow -->
+        <div class="card">
+          <div class="card-title">🔄 Flow</div>
+          <div class="field">
+            <label>Campaign Image (URL)</label>
+            <input type="url" id="metaFlowImage" placeholder="https://example.com/image.jpg">
+          </div>
+          <div class="field">
+            <label>Highlight Text</label>
+            <input type="text" id="metaFlowHighlight" placeholder="e.g. FREE 1 JAM">
+          </div>
+          <div class="field">
+            <label>Promo Screen Wording</label>
+            <textarea id="metaFlowWording" style="height:90px;" placeholder="Write the promo screen wording..."></textarea>
+          </div>
+        </div>
+
+        <!-- After Validation -->
+        <div class="card">
+          <div class="card-title">✅ After Validation</div>
+          <div class="field">
+            <label>Validation Success</label>
+            <textarea id="metaValidationSuccess" style="height:70px;" placeholder="Message shown when validation succeeds..."></textarea>
+          </div>
+          <div class="field">
+            <label>Validation Failed</label>
+            <textarea id="metaValidationFailed" style="height:70px;" placeholder="Message shown when validation fails..."></textarea>
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="generateCampaignMeta()">▶ Generate</button>
+          <button class="btn btn-secondary" onclick="resetFormMeta()">⟲ Reset</button>
+        </div>
+      </div>
+
+      <!-- PREVIEW COLUMN -->
+      <div class="preview-panel">
+        <h3>Campaign Preview</h3>
+        <div class="preview-content" id="metaPreview">
+          <div class="preview-empty">
+            ℹ️ Connect Google Sheets and fill the form to see preview
+          </div>
+        </div>
+        <div class="preview-actions">
+          <button class="btn btn-secondary btn-full" onclick="downloadJSONMeta()">⬇ Download JSON</button>
+          <button class="btn btn-secondary btn-full" onclick="copyPreviewMeta()">⧉ Copy Preview</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Placeholder -->
+  <div class="other-placeholder" id="other-campaign-placeholder">
+    ℹ️ Select a campaign type to get started
+  </div>
+</div>
+
+<script>
+let brandsData = [];
+let contentSectionCount = 0;
+
+/* ---------------- Campaign Type ---------------- */
+function selectCampaignType(type) {
+  document.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('active'));
+  const btn = document.getElementById('btn-' + type);
+  if (btn) btn.classList.add('active');
+
+  document.getElementById('kuponku-sms-form').style.display = 'none';
+  document.getElementById('kuponku-meta-form').style.display = 'none';
+  document.getElementById('other-campaign-placeholder').style.display = 'none';
+
+  if (type === 'kuponku-sms') {
+    document.getElementById('kuponku-sms-form').style.display = 'block';
+  } else if (type === 'kuponku-meta') {
+    document.getElementById('kuponku-meta-form').style.display = 'block';
+  } else {
+    document.getElementById('other-campaign-placeholder').style.display = 'block';
+  }
+}
+
+/* ---------------- Google Sheets ---------------- */
+async function connectGoogleSheets() {
+  const url = document.getElementById('sheetsUrl').value;
+  if (!url) { alert('Please paste a Google Sheets URL'); return; }
+
+  try {
+    const sheetId = extractSheetId(url);
+    if (!sheetId) { alert("Invalid Google Sheets URL. Make sure it's a shareable link."); return; }
+
+    const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=1941891146`;
+    const response = await fetch(csvUrl);
+    if (!response.ok) throw new Error('Failed to fetch data. Make sure the sheet is shared publicly.');
+
+    const csv = await response.text();
+    brandsData = parseCSV(csv);
+
+    if (brandsData.length === 0) {
+      alert('No data found. Make sure the Brandlist tab exists with correct columns.');
+      return;
+    }
+
+    document.getElementById('sheetsStatus').classList.add('show');
+    document.getElementById('sheetsStatusText').textContent = `✓ Connected! Found ${brandsData.length} brand(s)`;
+  } catch (error) {
+    alert('Error: ' + error.message);
+    console.error(error);
+  }
+}
+
+function extractSheetId(url) {
+  const match = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+  return match ? match[1] : null;
+}
+
+function parseCSV(csv) {
+  const lines = csv.trim().split('\n');
+  const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/"/g, ''));
+
+  const brandNameIdx = headers.findIndex(h => h.includes('nama brand'));
+  const midIdx = headers.findIndex(h => h === 'mid');
+  const displayIdx = headers.findIndex(h => h.includes('brand_display') || h.includes('brand display'));
+  const maskingIdx = headers.findIndex(h => h.includes('brand_masking') || h.includes('brand masking'));
+  const ptIdx = headers.findIndex(h => h.includes('nama pt'));
+  const logoIdx = headers.findIndex(h => h.includes('brand_logo') || h.includes('logo'));
+
+  const brands = [];
+  for (let i = 1; i < lines.length; i++) {
+    const values = parseCSVLine(lines[i]);
+    const brandName = values[brandNameIdx >= 0 ? brandNameIdx : 2];
+    if (brandName && brandName.trim()) {
+      brands.push({
+        name: brandName.trim() || '',
+        mid: (values[midIdx >= 0 ? midIdx : 3] || '').trim(),
+        display: (values[displayIdx >= 0 ? displayIdx : 4] || '').trim(),
+        masking: (values[maskingIdx >= 0 ? maskingIdx : 6] || '').trim(),
+        pt: (values[ptIdx >= 0 ? ptIdx : 1] || '').trim(),
+        logoUrl: (values[logoIdx >= 0 ? logoIdx : 5] || '').trim()
+      });
+    }
+  }
+  return brands;
+}
+
+function parseCSVLine(line) {
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if (char === '"') { inQuotes = !inQuotes; }
+    else if (char === ',' && !inQuotes) { result.push(current.trim()); current = ''; }
+    else { current += char; }
+  }
+  result.push(current.trim());
+  return result;
+}
+
+function reloadBrandData() { connectGoogleSheets(); }
+
+/* ---------------- Searchable Brand Dropdown ---------------- */
+function handleBrandSearch() {
+  const query = document.getElementById('brandSearchInput').value.trim().toLowerCase();
+  const resultsBox = document.getElementById('brandSearchResults');
+
+  if (!brandsData.length) {
+    resultsBox.innerHTML = '<div class="brand-no-result">Connect Google Sheets first to search brands</div>';
+    resultsBox.classList.add('show');
+    return;
+  }
+
+  const filtered = query
+    ? brandsData.filter(b => b.name.toLowerCase().includes(query) || b.mid.toLowerCase().includes(query))
+    : brandsData;
+
+  if (filtered.length === 0) {
+    resultsBox.innerHTML = '<div class="brand-no-result">No matching brand found</div>';
+  } else {
+    resultsBox.innerHTML = filtered.slice(0, 30).map((b, idx) => {
+      const realIdx = brandsData.indexOf(b);
+      return `<div class="brand-result-item" onclick="selectBrand(${realIdx})">
+        <div class="b-name">${escapeHtml(b.name)}</div>
+        <div class="b-mid">${escapeHtml(b.mid)}</div>
+      </div>`;
+    }).join('');
+  }
+  resultsBox.classList.add('show');
+}
+
+function selectBrand(idx) {
+  const brand = brandsData[idx];
+  if (!brand) return;
+
+  document.getElementById('brandName').value = brand.name;
+  document.getElementById('mid').value = brand.mid;
+  document.getElementById('brandMasking').value = brand.masking;
+  window.smsSelectedLogoUrl = brand.logoUrl || '';
+
+  document.getElementById('brandSearchInput').value = '';
+  document.getElementById('brandSearchResults').classList.remove('show');
+
+  const tag = document.getElementById('brandSelectedTag');
+  document.getElementById('brandSelectedText').textContent = `✓ ${brand.name} (${brand.mid})`;
+  tag.classList.add('show');
+}
+
+function clearSelectedBrand() {
+  document.getElementById('brandSelectedTag').classList.remove('show');
+  document.getElementById('brandName').value = '';
+  document.getElementById('mid').value = '';
+  document.getElementById('brandMasking').value = '';
+  window.smsSelectedLogoUrl = '';
+}
+
+document.addEventListener('click', function(e) {
+  const smsWrap = document.getElementById('brandSearchInput')?.closest('.brand-search-wrap');
+  if (smsWrap && !smsWrap.contains(e.target)) {
+    document.getElementById('brandSearchResults').classList.remove('show');
+  }
+  const metaWrap = document.getElementById('metaBrandSearchInput')?.closest('.brand-search-wrap');
+  if (metaWrap && !metaWrap.contains(e.target)) {
+    document.getElementById('metaBrandSearchResults').classList.remove('show');
+  }
+});
+
+/* ---------------- Campaign Content Sections (dynamic) ---------------- */
+function createContentSectionHTML(id, data) {
+  data = data || {};
+  return `
+    <div class="content-section" id="content-section-${id}" data-section-id="${id}">
+      <div class="content-section-header">
+        <span class="content-section-title">Campaign Content${data.label ? ' — ' + escapeHtml(data.label) : ''}</span>
+        <div class="content-section-actions">
+          <button class="icon-btn" onclick="duplicateContentSection(${id})" title="Duplicate this section">⧉ Duplicate</button>
+          <button class="icon-btn danger" onclick="removeContentSection(${id})" title="Remove this section">🗑 Remove</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>URL Key Visual</label>
+        <input type="url" class="cc-urlKeyVisual" placeholder="https://example.com/image.jpg" value="${escapeAttr(data.urlKeyVisual)}">
+      </div>
+
+      <div class="field">
+        <div class="field-header">
+          <label>Wording SMS <span class="required">*</span></label>
+          <span>
+            <span class="char-count cc-charCountDisplay">0/160</span>
+            <span class="char-warning cc-charWarning">⚠ Over limit</span>
+          </span>
+        </div>
+        <textarea class="cc-wordingSms" style="height:80px;" placeholder="Type your SMS message...">${escapeHtml(data.wordingSms)}</textarea>
+      </div>
+
+      <div class="field">
+        <label>Syarat &amp; Ketentuan <span class="required">*</span></label>
+        <textarea class="cc-syaratKetentuan" style="height:100px;" placeholder="List terms and conditions...">${escapeHtml(data.syaratKetentuan)}</textarea>
+      </div>
+
+      <div class="field">
+        <label>Highlight Text</label>
+        <input type="text" class="cc-highlightText" placeholder="e.g. FREE 1 JAM" value="${escapeAttr(data.highlightText)}">
+      </div>
+
+      <div class="field">
+        <label>Outlet <span class="required">*</span></label>
+        <input type="text" class="cc-outlet" placeholder="e.g. All Store" value="${escapeAttr(data.outlet)}">
+      </div>
+    </div>
+  `;
+}
+
+function addContentSection(data) {
+  contentSectionCount += 1;
+  const id = contentSectionCount;
+  const wrapper = document.createElement('div');
+  wrapper.innerHTML = createContentSectionHTML(id, data);
+  document.getElementById('campaignContentList').appendChild(wrapper.firstElementChild);
+  attachContentSectionListeners(id);
+  if (data && data.wordingSms) updateCharCount(document.querySelector(`#content-section-${id} .cc-wordingSms`));
+  if (data && data.syaratKetentuan) updateTermsCount(document.querySelector(`#content-section-${id} .cc-syaratKetentuan`));
+}
+
+function attachContentSectionListeners(id) {
+  const section = document.getElementById('content-section-' + id);
+  const wording = section.querySelector('.cc-wordingSms');
+  wording.addEventListener('keyup', () => updateCharCount(wording));
+  wording.addEventListener('input', () => updateCharCount(wording));
+}
+
+function updateCharCount(textarea) {
+  const section = textarea.closest('.content-section');
+  const length = textarea.value.length;
+  const countEl = section.querySelector('.cc-charCountDisplay');
+  const warnEl = section.querySelector('.cc-charWarning');
+  countEl.textContent = length + '/160';
+
+  if (length > 160) {
+    countEl.classList.add('over');
+    warnEl.style.display = 'inline';
+    textarea.style.borderColor = '#dc2626';
+  } else {
+    countEl.classList.remove('over');
+    warnEl.style.display = 'none';
+    textarea.style.borderColor = '#d1d5db';
+  }
+}
+
+function updateTermsCount(textarea) {
+  // kept for symmetry; terms char count not displayed per-field anymore but function safe to call
+}
+
+function duplicateContentSection(id) {
+  const section = document.getElementById('content-section-' + id);
+  const data = {
+    urlKeyVisual: section.querySelector('.cc-urlKeyVisual').value,
+    wordingSms: section.querySelector('.cc-wordingSms').value,
+    syaratKetentuan: section.querySelector('.cc-syaratKetentuan').value,
+    highlightText: section.querySelector('.cc-highlightText').value,
+    outlet: section.querySelector('.cc-outlet').value
+  };
+  addContentSection(data);
+}
+
+function removeContentSection(id) {
+  const list = document.getElementById('campaignContentList');
+  if (list.children.length <= 1) {
+    alert('At least one Campaign Content section is required.');
+    return;
+  }
+  const section = document.getElementById('content-section-' + id);
+  if (section) section.remove();
+}
+
+/* ---------------- Helpers ---------------- */
+function escapeHtml(str) {
+  if (!str) return '';
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function escapeAttr(str) {
+  if (!str) return '';
+  return String(str).replace(/"/g, '&quot;');
+}
+
+function isImageUrl(url) {
+  if (!url) return false;
+  return /\.(jpg|jpeg|png|gif|webp|svg)(\?.*)?$/i.test(url) || url.includes('googleusercontent.com') || url.includes('drive.google.com');
+}
+
+function toDirectImageUrl(url) {
+  if (!url) return url;
+
+  // Google Drive: /file/d/XXXX/view  OR  open?id=XXXX  OR  uc?id=XXXX
+  let driveId = null;
+  let m = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (m) driveId = m[1];
+  if (!driveId) {
+    m = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    if (m && url.includes('google.com')) driveId = m[1];
+  }
+  if (driveId) {
+    // The thumbnail endpoint still allows <img> embedding (uc?export=view is now blocked)
+    return `https://drive.google.com/thumbnail?id=${driveId}&sz=w1000`;
+  }
+  return url;
+}
+
+/* ---------------- Generate / Preview ---------------- */
+function generateCampaign() {
+  const brandName = document.getElementById('brandName').value;
+  const mid = document.getElementById('mid').value;
+  const brandMasking = document.getElementById('brandMasking').value;
+
+  if (!brandName || !mid || !brandMasking) {
+    alert('Please fill all required Basic Information fields (marked with *)');
+    return;
+  }
+
+  const contentSections = [];
+  document.querySelectorAll('.content-section').forEach(section => {
+    const wordingSms = section.querySelector('.cc-wordingSms').value;
+    const syaratKetentuan = section.querySelector('.cc-syaratKetentuan').value;
+    const outlet = section.querySelector('.cc-outlet').value;
+
+    if (!wordingSms || !syaratKetentuan || !outlet) {
+      return; // skip incomplete sections silently in validation pass below
+    }
+  });
+
+  // Full validation
+  const sectionEls = document.querySelectorAll('.content-section');
+  for (const section of sectionEls) {
+    const wordingSms = section.querySelector('.cc-wordingSms').value;
+    const syaratKetentuan = section.querySelector('.cc-syaratKetentuan').value;
+    const outlet = section.querySelector('.cc-outlet').value;
+    if (!wordingSms.trim() || !syaratKetentuan.trim() || !outlet.trim()) {
+      alert('Please fill all required fields in each Campaign Content section (Wording SMS, Syarat & Ketentuan, Outlet).');
+      return;
+    }
+  }
+
+  sectionEls.forEach(section => {
+    contentSections.push({
+      url_key_visual: section.querySelector('.cc-urlKeyVisual').value,
+      wording_sms: section.querySelector('.cc-wordingSms').value,
+      wording_sms_length: section.querySelector('.cc-wordingSms').value.length,
+      syarat_ketentuan: section.querySelector('.cc-syaratKetentuan').value,
+      highlight_text: section.querySelector('.cc-highlightText').value,
+      outlet: section.querySelector('.cc-outlet').value
+    });
+  });
+
+  const campaign = {
+    campaign_type: 'Kuponku SMS',
+    brand_name: brandName,
+    mid: mid,
+    brand_masking: brandMasking,
+    brand_logo_url: window.smsSelectedLogoUrl || '',
+    invoice_number: document.getElementById('invoiceNumber').value,
+    payment_method: document.getElementById('paymentMethod').value,
+    price: document.getElementById('price').value,
+    campaign_period: document.getElementById('startDate').value + ' - ' + document.getElementById('endDate').value,
+    whitelist: document.getElementById('whitelist').value,
+    campaign_contents: contentSections
+  };
+
+  renderPreview(campaign);
+  window.campaignData = campaign;
+}
+
+/* ---------------- SMS Customer Journey Mockup ---------------- */
+function buildSmsMockup(campaign) {
+  // Use the first campaign content for the visual/landing screens
+  const c = (campaign.campaign_contents && campaign.campaign_contents[0]) || {};
+  const smsText = c.wording_sms || '';
+  const headline = c.highlight_text || 'Promo Spesial';
+  const outlet = c.outlet || '';
+  const sender = campaign.brand_masking || campaign.brand_name || 'BRAND';
+
+  let visualHtml;
+  if (c.url_key_visual) {
+    const imgSrc = toDirectImageUrl(c.url_key_visual);
+    visualHtml = `<img src="${escapeAttr(imgSrc)}" class="lp-visual" alt="Key Visual" onerror="this.outerHTML='<div class=&quot;lp-visual-missing&quot;>Image not loaded (check Drive sharing)</div>'">`;
+  } else {
+    visualHtml = `<div class="lp-visual-missing">No key visual</div>`;
+  }
+
+  // Brand logo bar — use image from Brand_logo_url column if available
+  let logoBarHtml;
+  if (campaign.brand_logo_url) {
+    const logoSrc = toDirectImageUrl(campaign.brand_logo_url);
+    logoBarHtml = `<div class="lp-logo-bar lp-logo-bar-white"><img src="${escapeAttr(logoSrc)}" class="lp-logo-img" alt="Logo" onerror="this.parentNode.classList.remove('lp-logo-bar-white'); this.outerHTML='${escapeHtml(sender)}'"></div>`;
+  } else {
+    logoBarHtml = `<div class="lp-logo-bar">${escapeHtml(sender)}</div>`;
+  }
+
+  return `
+    <div class="mockup-hint">Simulated customer journey — actual timer & data are illustrative.</div>
+    <div class="mockup-scroll">
+
+      <!-- 1. SMS -->
+      <div class="phone">
+        <div class="phone-frame">
+          <div class="phone-notch"></div>
+          <div class="phone-screen">
+            <div class="sms-topbar">
+              <div class="sms-avatar">👤</div>
+              <div class="sms-sender">${escapeHtml(sender)}</div>
+            </div>
+            <div class="sms-bubble-area">
+              <div class="sms-bubble">${escapeHtml(smsText) || 'Your SMS wording will appear here'}</div>
+            </div>
+          </div>
+        </div>
+        <div class="phone-caption">1. SMS Diterima</div>
+      </div>
+
+      <!-- 2. Landing Page / Coupon -->
+      <div class="phone">
+        <div class="phone-frame">
+          <div class="phone-notch"></div>
+          <div class="phone-screen">
+            ${logoBarHtml}
+            <div class="lp-scroll">
+              ${visualHtml}
+              <div class="lp-headline">${escapeHtml(headline)}</div>
+              <div class="lp-timer">
+                <div class="lp-timer-box"><div class="lp-timer-num">0</div><div class="lp-timer-lbl">Days</div></div>
+                <div class="lp-timer-box"><div class="lp-timer-num">5</div><div class="lp-timer-lbl">Hours</div></div>
+                <div class="lp-timer-box"><div class="lp-timer-num">45</div><div class="lp-timer-lbl">Min</div></div>
+                <div class="lp-timer-box"><div class="lp-timer-num">2</div><div class="lp-timer-lbl">Sec</div></div>
+              </div>
+              <div class="lp-outlet">📍 ${escapeHtml(outlet) || 'Find the outlet'}</div>
+              <div class="lp-cta">TUKAR KUPON</div>
+              <div class="lp-tnc">Syarat dan Ketentuan Promo ›</div>
+            </div>
+          </div>
+        </div>
+        <div class="phone-caption">2. Landing Page</div>
+      </div>
+
+      <!-- 3. Masukkan Code Outlet -->
+      <div class="phone">
+        <div class="phone-frame">
+          <div class="phone-notch"></div>
+          <div class="phone-screen dark">
+            <div class="phone-modal-wrap">
+              <div class="phone-modal">
+                <div class="pm-close">✕</div>
+                <div class="pm-title">Masukkan Code Outlet</div>
+                <div class="kp-grid" style="padding:0; gap:5px;">
+                  ${[1,2,3,4,5,6,7,8,9].map(n => `<div class="kp-key" style="font-size:10px;">${n}</div>`).join('')}
+                  <div class="kp-key" style="background:#ef4444;color:#fff;font-size:8px;">⌫</div>
+                  <div class="kp-key" style="font-size:10px;">0</div>
+                  <div class="kp-key" style="background:#22c55e;color:#fff;">✓</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="phone-caption">3. Input Kode</div>
+      </div>
+
+      <!-- 4. Validasi Kode -->
+      <div class="phone">
+        <div class="phone-frame">
+          <div class="phone-notch"></div>
+          <div class="phone-screen dark">
+            <div class="phone-modal-wrap">
+              <div class="phone-modal">
+                <div class="pm-close">✕</div>
+                <div class="pm-row">
+                  <div class="pm-check">✓</div>
+                  <div class="pm-txt"><strong>Validasi Kode</strong><br>Kode outlet valid</div>
+                </div>
+                <div class="pm-row">
+                  <div class="pm-check gray">✓</div>
+                  <div class="pm-txt"><strong>Tukar Kupon</strong><br>Lanjutkan dengan panggilan USSD</div>
+                </div>
+                <div class="pm-btn">LANJUTKAN</div>
+                <div class="pm-note">Prosedur berikutnya tidak dikenakan biaya</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="phone-caption">4. Validasi</div>
+      </div>
+
+      <!-- 5. USSD Dial -->
+      <div class="phone">
+        <div class="phone-frame">
+          <div class="phone-notch"></div>
+          <div class="phone-screen">
+            <div class="kp-number">*200*1*1234#</div>
+            <div class="kp-grid">
+              ${['1','2','3','4','5','6','7','8','9','*','0','#'].map(k => `<div class="kp-key">${k}</div>`).join('')}
+            </div>
+            <div class="kp-call">📞</div>
+          </div>
+        </div>
+        <div class="phone-caption">5. Panggil USSD</div>
+      </div>
+
+      <!-- 6. Success -->
+      <div class="phone">
+        <div class="phone-frame">
+          <div class="phone-notch"></div>
+          <div class="phone-screen dark">
+            <div class="phone-modal-wrap">
+              <div class="phone-modal">
+                <div class="pm-title" style="margin:6px 0;">Tukar Kupon Berhasil</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="phone-caption">6. Berhasil</div>
+      </div>
+
+    </div>
+  `;
+}
+
+function renderPreview(campaign) {
+  let contentBlocksHtml = '';
+  campaign.campaign_contents.forEach((c, idx) => {
+    const overLimit = c.wording_sms_length > 160;
+    let visualHtml = '';
+    if (c.url_key_visual) {
+      const imgSrc = toDirectImageUrl(c.url_key_visual);
+      visualHtml = `<img src="${escapeAttr(imgSrc)}" class="key-visual-img" alt="Key Visual ${idx + 1}" onerror="this.outerHTML='<div class=&quot;key-visual-missing&quot;>⚠️ Image could not be loaded. If this is a Google Drive link, make sure the file is shared as &quot;Anyone with the link&quot;.</div>'">`;
+    } else {
+      visualHtml = `<div class="key-visual-missing">No key visual provided</div>`;
+    }
+
+    contentBlocksHtml += `
+      <div class="content-block">
+        <div class="content-block-title">Campaign Content ${idx + 1}</div>
+
+        ${visualHtml}
+
+        <div class="sms-box">
+          <div class="sms-meta">Wording SMS (${c.wording_sms_length} char)${overLimit ? ' <span class="warn">⚠️ OVER 160 CHARS</span>' : ''}</div>
+          <div class="sms-text">${escapeHtml(c.wording_sms)}</div>
+        </div>
+
+        ${c.highlight_text ? `<div style="font-size:13px; color:#6b7280; margin-bottom:6px;">Highlight Text:</div><span class="highlight-pill">${escapeHtml(c.highlight_text)}</span><div style="margin-top:10px;"></div>` : ''}
+
+        <div style="font-size:13px; color:#6b7280; margin-bottom:6px; margin-top:10px;">Syarat &amp; Ketentuan:</div>
+        <div class="terms-box">${escapeHtml(c.syarat_ketentuan)}</div>
+
+        <table class="preview-table" style="margin-top:10px;">
+          <tr><td>Outlet</td><td>${escapeHtml(c.outlet)}</td></tr>
+        </table>
+      </div>
+    `;
+  });
+
+  const html = `
+    <div class="preview-section">
+      <div class="preview-section-title">Campaign Type</div>
+      <div style="font-size:13px; font-weight:600;">Kuponku SMS</div>
+    </div>
+
+    <div class="preview-section">
+      <div class="preview-section-title">Brand Information</div>
+      <table class="preview-table">
+        <tr><td>Brand Name</td><td>${escapeHtml(campaign.brand_name)}</td></tr>
+        <tr><td>MID</td><td>${escapeHtml(campaign.mid)}</td></tr>
+        <tr><td>Brand Masking</td><td>${escapeHtml(campaign.brand_masking)}</td></tr>
+      </table>
+    </div>
+
+    <div class="preview-section">
+      <div class="preview-section-title">Campaign Details</div>
+      <table class="preview-table">
+        <tr><td>Invoice Number</td><td>${escapeHtml(campaign.invoice_number) || '-'}</td></tr>
+        <tr><td>Payment Method</td><td>${escapeHtml(campaign.payment_method) || '-'}</td></tr>
+        <tr><td>Price</td><td>${escapeHtml(campaign.price) || '-'}</td></tr>
+        <tr><td>Campaign Period</td><td>${escapeHtml(campaign.campaign_period)}</td></tr>
+      </table>
+      ${campaign.whitelist ? `<div style="margin-top:10px; font-size:13px;"><strong style="color:#6b7280;">Whitelist:</strong><div style="margin-top:4px; white-space:pre-wrap;">${escapeHtml(campaign.whitelist)}</div></div>` : ''}
+    </div>
+
+    <div class="preview-section">
+      <div class="preview-section-title">Campaign Content (${campaign.campaign_contents.length})</div>
+      ${contentBlocksHtml}
+    </div>
+
+    <div class="preview-section">
+      <div class="preview-section-title">Campaign Mockup — Customer Journey</div>
+      ${buildSmsMockup(campaign)}
+    </div>
+  `;
+
+  document.getElementById('preview').innerHTML = html;
+}
+
+function downloadJSON() {
+  if (!window.campaignData) { alert('Generate campaign first'); return; }
+  const dataStr = JSON.stringify(window.campaignData, null, 2);
+  const blob = new Blob([dataStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'kuponku-sms-campaign.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function copyPreview() {
+  const content = document.getElementById('preview').innerText;
+  navigator.clipboard.writeText(content).then(() => alert('Preview copied to clipboard!'));
+}
+
+function resetForm() {
+  document.getElementById('brandName').value = '';
+  document.getElementById('mid').value = '';
+  document.getElementById('brandMasking').value = '';
+  document.getElementById('brandSearchInput').value = '';
+  clearSelectedBrand();
+
+  document.getElementById('invoiceNumber').value = '';
+  document.getElementById('paymentMethod').value = '';
+  document.getElementById('price').value = '';
+  document.getElementById('startDate').value = '';
+  document.getElementById('endDate').value = '';
+  document.getElementById('whitelist').value = '';
+
+  document.getElementById('campaignContentList').innerHTML = '';
+  contentSectionCount = 0;
+  addContentSection();
+
+  document.getElementById('preview').innerHTML = '<div class="preview-empty">ℹ️ Connect Google Sheets and fill the form to see preview</div>';
+  window.campaignData = null;
+}
+
+/* ============================================================
+   KUPONKU META — mirrors Kuponku SMS logic patterns
+   Uses the shared global `brandsData` from Google Sheets Integration
+   ============================================================ */
+
+function handleBrandSearchMeta() {
+  const query = document.getElementById('metaBrandSearchInput').value.trim().toLowerCase();
+  const resultsBox = document.getElementById('metaBrandSearchResults');
+
+  if (!brandsData.length) {
+    resultsBox.innerHTML = '<div class="brand-no-result">Connect Google Sheets first to search brands</div>';
+    resultsBox.classList.add('show');
+    return;
+  }
+
+  const filtered = query
+    ? brandsData.filter(b => b.name.toLowerCase().includes(query) || b.mid.toLowerCase().includes(query))
+    : brandsData;
+
+  if (filtered.length === 0) {
+    resultsBox.innerHTML = '<div class="brand-no-result">No matching brand found</div>';
+  } else {
+    resultsBox.innerHTML = filtered.slice(0, 30).map((b) => {
+      const realIdx = brandsData.indexOf(b);
+      return `<div class="brand-result-item" onclick="selectBrandMeta(${realIdx})">
+        <div class="b-name">${escapeHtml(b.name)}</div>
+        <div class="b-mid">${escapeHtml(b.mid)}</div>
+      </div>`;
+    }).join('');
+  }
+  resultsBox.classList.add('show');
+}
+
+function selectBrandMeta(idx) {
+  const brand = brandsData[idx];
+  if (!brand) return;
+
+  document.getElementById('metaBrandName').value = brand.name;
+  document.getElementById('metaMid').value = brand.mid;
+  document.getElementById('metaBrandMasking').value = brand.masking;
+
+  document.getElementById('metaBrandSearchInput').value = '';
+  document.getElementById('metaBrandSearchResults').classList.remove('show');
+
+  const tag = document.getElementById('metaBrandSelectedTag');
+  document.getElementById('metaBrandSelectedText').textContent = `✓ ${brand.name} (${brand.mid})`;
+  tag.classList.add('show');
+}
+
+function clearSelectedBrandMeta() {
+  document.getElementById('metaBrandSelectedTag').classList.remove('show');
+  document.getElementById('metaBrandName').value = '';
+  document.getElementById('metaMid').value = '';
+  document.getElementById('metaBrandMasking').value = '';
+}
+
+// WhatsApp char counter (950 limit)
+document.getElementById('metaWaWording').addEventListener('input', function() {
+  const length = this.value.length;
+  const countEl = document.getElementById('metaWaCharCount');
+  const warnEl = document.getElementById('metaWaCharWarning');
+  countEl.textContent = length + '/950';
+
+  if (length > 950) {
+    countEl.classList.add('over');
+    warnEl.style.display = 'inline';
+    this.style.borderColor = '#dc2626';
+  } else {
+    countEl.classList.remove('over');
+    warnEl.style.display = 'none';
+    this.style.borderColor = '#d1d5db';
+  }
+});
+
+function generateCampaignMeta() {
+  const brandName = document.getElementById('metaBrandName').value;
+  const mid = document.getElementById('metaMid').value;
+  const brandMasking = document.getElementById('metaBrandMasking').value;
+
+  if (!brandName || !mid || !brandMasking) {
+    alert('Please fill all required Basic Information fields (marked with *)');
+    return;
+  }
+
+  const waWording = document.getElementById('metaWaWording').value;
+  if (waWording.length > 950) {
+    alert('WhatsApp Campaign Wording exceeds the 950 character limit. Please shorten it.');
+    return;
+  }
+
+  const campaign = {
+    campaign_type: 'Kuponku Meta',
+    brand_name: brandName,
+    mid: mid,
+    brand_masking: brandMasking,
+    campaign_period: document.getElementById('metaStartDate').value + ' - ' + document.getElementById('metaEndDate').value,
+    payment_method: document.getElementById('metaPaymentMethod').value,
+    location: document.getElementById('metaLocation').value,
+    max_redeem: document.getElementById('metaMaxRedeem').value,
+    meta_ads: {
+      key_visual: document.getElementById('metaAdsKeyVisual').value,
+      caption: document.getElementById('metaAdsCaption').value,
+      pretext: document.getElementById('metaAdsPretext').value,
+      link_cta: document.getElementById('metaAdsLinkCta').value
+    },
+    whatsapp: {
+      campaign_image: document.getElementById('metaWaImage').value,
+      campaign_wording: waWording,
+      campaign_wording_length: waWording.length
+    },
+    flow: {
+      campaign_image: document.getElementById('metaFlowImage').value,
+      highlight_text: document.getElementById('metaFlowHighlight').value,
+      promo_screen_wording: document.getElementById('metaFlowWording').value
+    },
+    after_validation: {
+      validation_success: document.getElementById('metaValidationSuccess').value,
+      validation_failed: document.getElementById('metaValidationFailed').value
+    }
+  };
+
+  renderPreviewMeta(campaign);
+  window.metaCampaignData = campaign;
+}
+
+function renderPreviewMeta(campaign) {
+  const waOverLimit = campaign.whatsapp.campaign_wording_length > 950;
+
+  function visualBlock(url, label) {
+    if (!url) return `<div class="key-visual-missing">No ${label} provided</div>`;
+    const imgSrc = toDirectImageUrl(url);
+    return `<img src="${escapeAttr(imgSrc)}" class="key-visual-img" alt="${escapeAttr(label)}" onerror="this.outerHTML='<div class=&quot;key-visual-missing&quot;>⚠️ Image could not be loaded. If this is a Google Drive link, make sure the file is shared as &quot;Anyone with the link&quot;.</div>'">`;
+  }
+
+  const html = `
+    <div class="preview-section">
+      <div class="preview-section-title">Campaign Type</div>
+      <div style="font-size:13px; font-weight:600;">Kuponku Meta</div>
+    </div>
+
+    <div class="preview-section">
+      <div class="preview-section-title">Brand Information</div>
+      <table class="preview-table">
+        <tr><td>Brand Name</td><td>${escapeHtml(campaign.brand_name)}</td></tr>
+        <tr><td>MID</td><td>${escapeHtml(campaign.mid)}</td></tr>
+        <tr><td>Brand Masking</td><td>${escapeHtml(campaign.brand_masking)}</td></tr>
+      </table>
+    </div>
+
+    <div class="preview-section">
+      <div class="preview-section-title">Campaign Details</div>
+      <table class="preview-table">
+        <tr><td>Campaign Period</td><td>${escapeHtml(campaign.campaign_period)}</td></tr>
+        <tr><td>Payment Method</td><td>${escapeHtml(campaign.payment_method) || '-'}</td></tr>
+        <tr><td>Location</td><td>${escapeHtml(campaign.location) || '-'}</td></tr>
+        <tr><td>Max Redeem</td><td>${escapeHtml(campaign.max_redeem) || '-'}</td></tr>
+      </table>
+    </div>
+
+    <div class="preview-section">
+      <div class="preview-section-title">Meta Ads</div>
+      <div class="content-block">
+        ${visualBlock(campaign.meta_ads.key_visual, 'Key Visual')}
+        ${campaign.meta_ads.caption ? `<div style="font-size:11px; color:#6b7280; margin-bottom:6px;">Caption:</div><div class="sms-text" style="margin-bottom:10px;">${escapeHtml(campaign.meta_ads.caption)}</div>` : ''}
+        ${campaign.meta_ads.pretext ? `<div style="font-size:11px; color:#6b7280; margin-bottom:6px;">Pretext:</div><div class="sms-text" style="margin-bottom:10px;">${escapeHtml(campaign.meta_ads.pretext)}</div>` : ''}
+        ${campaign.meta_ads.link_cta ? `<div style="font-size:11px; color:#6b7280; margin-bottom:6px;">Link CTA:</div><a href="${escapeAttr(campaign.meta_ads.link_cta)}" target="_blank" class="preview-link">🔗 ${escapeHtml(campaign.meta_ads.link_cta)}</a>` : ''}
+      </div>
+    </div>
+
+    <div class="preview-section">
+      <div class="preview-section-title">WhatsApp</div>
+      <div class="content-block">
+        ${visualBlock(campaign.whatsapp.campaign_image, 'Campaign Image')}
+        <div class="sms-box">
+          <div class="sms-meta">Campaign Wording (${campaign.whatsapp.campaign_wording_length} char)${waOverLimit ? ' <span class="warn">⚠️ OVER 950 CHARS</span>' : ''}</div>
+          <div class="sms-text">${escapeHtml(campaign.whatsapp.campaign_wording)}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="preview-section">
+      <div class="preview-section-title">Flow</div>
+      <div class="content-block">
+        ${visualBlock(campaign.flow.campaign_image, 'Campaign Image')}
+        ${campaign.flow.highlight_text ? `<div style="font-size:11px; color:#6b7280; margin-bottom:6px;">Highlight Text:</div><span class="highlight-pill">${escapeHtml(campaign.flow.highlight_text)}</span><div style="margin-top:10px;"></div>` : ''}
+        ${campaign.flow.promo_screen_wording ? `<div style="font-size:13px; color:#6b7280; margin-bottom:6px;">Promo Screen Wording:</div><div class="sms-text">${escapeHtml(campaign.flow.promo_screen_wording)}</div>` : ''}
+      </div>
+    </div>
+
+    <div class="preview-section">
+      <div class="preview-section-title">After Validation</div>
+      <div class="content-block">
+        <div style="font-size:11px; color:#6b7280; margin-bottom:6px;">Validation Success:</div>
+        <div class="sms-text" style="margin-bottom:12px;">${escapeHtml(campaign.after_validation.validation_success) || '-'}</div>
+        <div style="font-size:11px; color:#6b7280; margin-bottom:6px;">Validation Failed:</div>
+        <div class="sms-text">${escapeHtml(campaign.after_validation.validation_failed) || '-'}</div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('metaPreview').innerHTML = html;
+}
+
+function downloadJSONMeta() {
+  if (!window.metaCampaignData) { alert('Generate campaign first'); return; }
+  const dataStr = JSON.stringify(window.metaCampaignData, null, 2);
+  const blob = new Blob([dataStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'kuponku-meta-campaign.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function copyPreviewMeta() {
+  const content = document.getElementById('metaPreview').innerText;
+  navigator.clipboard.writeText(content).then(() => alert('Preview copied to clipboard!'));
+}
+
+function resetFormMeta() {
+  document.getElementById('metaBrandName').value = '';
+  document.getElementById('metaMid').value = '';
+  document.getElementById('metaBrandMasking').value = '';
+  document.getElementById('metaBrandSearchInput').value = '';
+  clearSelectedBrandMeta();
+
+  document.getElementById('metaStartDate').value = '';
+  document.getElementById('metaEndDate').value = '';
+  document.getElementById('metaPaymentMethod').value = '';
+  document.getElementById('metaLocation').value = '';
+  document.getElementById('metaMaxRedeem').value = '';
+
+  document.getElementById('metaAdsKeyVisual').value = '';
+  document.getElementById('metaAdsCaption').value = '';
+  document.getElementById('metaAdsPretext').value = '';
+  document.getElementById('metaAdsLinkCta').value = '';
+
+  document.getElementById('metaWaImage').value = '';
+  document.getElementById('metaWaWording').value = '';
+  document.getElementById('metaWaCharCount').textContent = '0/950';
+  document.getElementById('metaWaCharCount').classList.remove('over');
+  document.getElementById('metaWaCharWarning').style.display = 'none';
+
+  document.getElementById('metaFlowImage').value = '';
+  document.getElementById('metaFlowHighlight').value = '';
+  document.getElementById('metaFlowWording').value = '';
+
+  document.getElementById('metaValidationSuccess').value = '';
+  document.getElementById('metaValidationFailed').value = '';
+
+  document.getElementById('metaPreview').innerHTML = '<div class="preview-empty">ℹ️ Connect Google Sheets and fill the form to see preview</div>';
+  window.metaCampaignData = null;
+}
+
+/* ---------------- Init ---------------- */
+selectCampaignType('kuponku-sms');
+addContentSection();
+</script>
+
+</body>
+</html>
