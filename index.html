@@ -568,6 +568,16 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
 
   .field-row:last-child { margin-bottom: 0; }
 
+  /* Preset dropdown + manual override pattern (Payment Method, Price, Outlet) */
+  .manual-wrap { display: flex; flex-direction: column; gap: 4px; }
+  .preset-back-link {
+    font-size: 12px;
+    color: #6b7280;
+    text-decoration: none;
+    align-self: flex-start;
+  }
+  .preset-back-link:hover { color: #2563eb; text-decoration: underline; }
+
   input[type="text"],
   input[type="url"],
   input[type="date"],
@@ -1483,13 +1493,31 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
             </div>
             <div class="field">
               <label>Payment Method</label>
-              <input type="text" id="paymentMethod" placeholder="e.g. Prepaid">
+              <select class="preset-select" onchange="onPresetSelectChange(this, 'paymentMethod')">
+                <option value="">Pilih cepat...</option>
+                <option value="Credit Limit">Credit Limit</option>
+                <option value="Prepaid">Prepaid</option>
+                <option value="Credit Limit (Deposit)">Credit Limit (Deposit)</option>
+                <option value="__manual__">Isi Manual</option>
+              </select>
+              <div class="manual-wrap" style="display:none;">
+                <input type="text" id="paymentMethod" placeholder="e.g. Prepaid">
+                <a href="javascript:void(0)" class="preset-back-link" onclick="revertToPresetSelect(this)">↩ Pilih dari daftar</a>
+              </div>
             </div>
           </div>
           <div class="field-row">
             <div class="field">
               <label>Price</label>
-              <input type="text" id="price" placeholder="e.g. Rp 9.000.000" oninput="formatRupiahInput(this)">
+              <select class="preset-select" onchange="onPresetSelectChange(this, 'price')">
+                <option value="">Pilih cepat...</option>
+                <option value="Rp. 5.000/redeem">Rp. 5.000/redeem</option>
+                <option value="__manual__">Isi Manual</option>
+              </select>
+              <div class="manual-wrap" style="display:none;">
+                <input type="text" id="price" placeholder="e.g. Rp 9.000.000" oninput="formatRupiahInput(this)">
+                <a href="javascript:void(0)" class="preset-back-link" onclick="revertToPresetSelect(this)">↩ Pilih dari daftar</a>
+              </div>
             </div>
             <div class="field">
               <label>Campaign Period <span class="required">*</span></label>
@@ -1608,11 +1636,29 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
           <div class="field-row">
             <div class="field">
               <label>Payment Method</label>
-              <input type="text" id="metaPaymentMethod" placeholder="e.g. Prepaid">
+              <select class="preset-select" onchange="onPresetSelectChange(this, 'metaPaymentMethod')">
+                <option value="">Pilih cepat...</option>
+                <option value="Credit Limit">Credit Limit</option>
+                <option value="Prepaid">Prepaid</option>
+                <option value="Credit Limit (Deposit)">Credit Limit (Deposit)</option>
+                <option value="__manual__">Isi Manual</option>
+              </select>
+              <div class="manual-wrap" style="display:none;">
+                <input type="text" id="metaPaymentMethod" placeholder="e.g. Prepaid">
+                <a href="javascript:void(0)" class="preset-back-link" onclick="revertToPresetSelect(this)">↩ Pilih dari daftar</a>
+              </div>
             </div>
             <div class="field">
               <label>Location</label>
-              <input type="text" id="metaLocation" placeholder="e.g. Jakarta, Bandung">
+              <select class="preset-select" onchange="onPresetSelectChange(this, 'metaLocation')">
+                <option value="">Pilih cepat...</option>
+                <option value="All Store">All Store</option>
+                <option value="__manual__">Isi Manual</option>
+              </select>
+              <div class="manual-wrap" style="display:none;">
+                <input type="text" id="metaLocation" placeholder="e.g. Jakarta, Bandung">
+                <a href="javascript:void(0)" class="preset-back-link" onclick="revertToPresetSelect(this)">↩ Pilih dari daftar</a>
+              </div>
             </div>
           </div>
           <div class="field">
@@ -2762,7 +2808,9 @@ function loadCampaignIntoForm(campaign, historyId) {
     document.getElementById('metaEndDate').value = pEnd ? pEnd.trim() : '';
 
     document.getElementById('metaPaymentMethod').value = campaign.payment_method || '';
+    syncPresetFieldVisibility(document.getElementById('metaPaymentMethod'));
     document.getElementById('metaLocation').value = campaign.location || '';
+    syncPresetFieldVisibility(document.getElementById('metaLocation'));
     document.getElementById('metaMaxRedeem').value = campaign.max_redeem || '';
 
     if (campaign.meta_ads) {
@@ -2996,7 +3044,9 @@ function loadCampaignIntoForm(campaign, historyId) {
 
     document.getElementById('invoiceNumber').value = campaign.invoice_number || '';
     document.getElementById('paymentMethod').value = campaign.payment_method || '';
+    syncPresetFieldVisibility(document.getElementById('paymentMethod'));
     document.getElementById('price').value = campaign.price || '';
+    syncPresetFieldVisibility(document.getElementById('price'));
 
     const [pStart, pEnd] = (campaign.campaign_period || '').split(' - ');
     document.getElementById('startDate').value = pStart ? pStart.trim() : '';
@@ -3818,7 +3868,15 @@ function createContentSectionHTML(id, data) {
 
       <div class="field">
         <label>Outlet <span class="required">*</span></label>
-        <input type="text" class="cc-outlet" placeholder="e.g. All Store" value="${escapeAttr(data.outlet)}">
+        <select class="preset-select cc-outlet-preset" style="display:${data.outlet ? 'none' : ''};" onchange="onOutletPresetChange(this)">
+          <option value="">Pilih cepat...</option>
+          <option value="All Store">All Store</option>
+          <option value="__manual__">Isi Manual</option>
+        </select>
+        <div class="manual-wrap" style="display:${data.outlet ? '' : 'none'};">
+          <input type="text" class="cc-outlet" placeholder="e.g. All Store" value="${escapeAttr(data.outlet)}">
+          <a href="javascript:void(0)" class="preset-back-link" onclick="revertToPresetSelect(this)">↩ Pilih dari daftar</a>
+        </div>
       </div>
     </div>
   `;
@@ -3995,6 +4053,70 @@ function formatRupiahInput(input) {
   // Add thousand separators (dots)
   const formatted = digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
   input.value = 'Rp ' + formatted;
+}
+
+// Generic "quick pick" dropdown helper for single (non-repeated) fields like Payment
+// Method and Price. Only one control is ever visible at a time: the dropdown, or the
+// manual text input in its place. The text field's id stays the single source of truth
+// for the generation/restore/reset code, so nothing else needs to know these presets exist.
+function onPresetSelectChange(selectEl, targetInputId) {
+  const input = document.getElementById(targetInputId);
+  if (!input) return;
+  const wrap = input.closest('.manual-wrap');
+  if (selectEl.value === '__manual__') {
+    input.value = '';
+    if (wrap) wrap.style.display = 'block';
+    selectEl.style.display = 'none';
+    input.focus();
+  } else if (selectEl.value !== '') {
+    input.value = selectEl.value; // kept in sync even though the input stays hidden
+  }
+}
+
+// Same idea, but scoped to the closest repeated "Campaign Content" section, since
+// Outlet is a per-section field rather than a single one.
+function onOutletPresetChange(selectEl) {
+  const section = selectEl.closest('.content-section');
+  const input = section ? section.querySelector('.cc-outlet') : null;
+  if (!input) return;
+  const wrap = input.closest('.manual-wrap');
+  if (selectEl.value === '__manual__') {
+    input.value = '';
+    if (wrap) wrap.style.display = 'block';
+    selectEl.style.display = 'none';
+    input.focus();
+  } else if (selectEl.value !== '') {
+    input.value = selectEl.value;
+  }
+}
+
+// "↩ Pilih dari daftar" link inside a manual-wrap: switches back from the manual text
+// input to the preset dropdown (works for both the single-field and per-section cases,
+// since the dropdown is always the manual-wrap's immediately preceding sibling).
+function revertToPresetSelect(linkEl) {
+  const wrap = linkEl.closest('.manual-wrap');
+  if (!wrap) return;
+  const select = wrap.previousElementSibling;
+  const input = wrap.querySelector('input');
+  if (input) input.value = '';
+  wrap.style.display = 'none';
+  if (select) { select.style.display = ''; select.value = ''; }
+}
+
+// Called after a field's value is set programmatically (e.g. restoring a saved
+// campaign) to decide whether to show the preset dropdown or the manual input —
+// mirrors the logic in onPresetSelectChange()/onOutletPresetChange() above.
+function syncPresetFieldVisibility(inputEl) {
+  const wrap = inputEl.closest('.manual-wrap');
+  if (!wrap) return;
+  const select = wrap.previousElementSibling;
+  if (inputEl.value) {
+    wrap.style.display = 'block';
+    if (select) select.style.display = 'none';
+  } else {
+    wrap.style.display = 'none';
+    if (select) { select.style.display = ''; select.value = ''; }
+  }
 }
 
 // Live-mask a date input as dd/mm/yyyy while typing, e.g. "15072026" -> "15/07/2026".
@@ -4364,14 +4486,18 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
 
   function paragraph(label, text) {
     if (!text) return;
-    ensureSpace(10);
+    pdf.setFont('Outfit', 'normal'); pdf.setFontSize(10);
+    const lines = pdf.splitTextToSize(text, CW);
+    // Reserve space for the label AND its first line together, so the label
+    // never gets stranded alone at the bottom of a page (see embedImageWithLabel
+    // for the same pattern applied to images).
+    ensureSpace(SP.xs + SP.sm + 5);
     y += SP.xs; // space above the label
     pdf.setFont('Outfit', 'bold'); pdf.setFontSize(9); pdf.setTextColor(TEXT_GRAY[0], TEXT_GRAY[1], TEXT_GRAY[2]);
     pdf.text(label, M, y); y += SP.sm;
     pdf.setFont('Outfit', 'normal'); pdf.setFontSize(10); pdf.setTextColor(TEXT_DARK[0], TEXT_DARK[1], TEXT_DARK[2]);
-    const lines = pdf.splitTextToSize(text, CW);
     for (let i = 0; i < lines.length; i++) {
-      ensureSpace(5);
+      if (i > 0) ensureSpace(5);
       pdf.setTextColor(TEXT_DARK[0], TEXT_DARK[1], TEXT_DARK[2]);
       drawMixedText(lines[i], M, y + 4, 'Outfit', 'normal', 10);
       y += 5;
@@ -4381,12 +4507,14 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
 
   function paragraphRich(label, text) {
     if (!text) return;
-    ensureSpace(10);
+    pdf.setFont('Outfit', 'normal'); pdf.setFontSize(10);
+    const rawLines = String(text).split('\n');
+    ensureSpace(SP.xs + SP.sm + 5);
     y += SP.xs; // space above the label
     pdf.setFont('Outfit', 'bold'); pdf.setFontSize(9); pdf.setTextColor(TEXT_GRAY[0], TEXT_GRAY[1], TEXT_GRAY[2]);
     pdf.text(label, M, y); y += SP.sm;
     pdf.setFont('Outfit', 'normal'); pdf.setFontSize(10); pdf.setTextColor(TEXT_DARK[0], TEXT_DARK[1], TEXT_DARK[2]);
-    const rawLines = String(text).split('\n');
+    let isFirstLine = true;
     rawLines.forEach(raw => {
       const line = raw.replace(/\s+$/, '');
       if (line.trim() === '') { y += 2; return; }
@@ -4398,7 +4526,8 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
       const wrapW = CW - indent;
       const bodyLines = pdf.splitTextToSize(body, wrapW);
       bodyLines.forEach((bl, i) => {
-        ensureSpace(5);
+        if (!isFirstLine) ensureSpace(5);
+        isFirstLine = false;
         // Re-assert style each line so page-break header changes don't leak in
         pdf.setFontSize(10); pdf.setTextColor(TEXT_DARK[0], TEXT_DARK[1], TEXT_DARK[2]);
         if (i === 0 && marker) {
@@ -5378,7 +5507,9 @@ function resetForm() {
 
   document.getElementById('invoiceNumber').value = '';
   document.getElementById('paymentMethod').value = '';
+  syncPresetFieldVisibility(document.getElementById('paymentMethod'));
   document.getElementById('price').value = '';
+  syncPresetFieldVisibility(document.getElementById('price'));
   document.getElementById('startDate').value = '';
   document.getElementById('endDate').value = '';
   document.getElementById('whitelist').value = '';
@@ -5652,7 +5783,9 @@ function resetFormMeta() {
   document.getElementById('metaStartDate').value = '';
   document.getElementById('metaEndDate').value = '';
   document.getElementById('metaPaymentMethod').value = '';
+  syncPresetFieldVisibility(document.getElementById('metaPaymentMethod'));
   document.getElementById('metaLocation').value = '';
+  syncPresetFieldVisibility(document.getElementById('metaLocation'));
   document.getElementById('metaMaxRedeem').value = '';
 
   document.getElementById('metaAdsKeyVisual').value = '';
