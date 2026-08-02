@@ -578,6 +578,20 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   }
   .preset-back-link:hover { color: #2563eb; text-decoration: underline; }
 
+  .checkbox-label {
+    display: flex !important;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    margin-bottom: 0 !important;
+  }
+  .checkbox-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #2563eb;
+    cursor: pointer;
+  }
+
   input[type="text"],
   input[type="url"],
   input[type="date"],
@@ -3059,12 +3073,16 @@ function loadCampaignIntoForm(campaign, historyId) {
     contentSectionCount = 0;
     if (Array.isArray(campaign.campaign_contents) && campaign.campaign_contents.length) {
       campaign.campaign_contents.forEach(c => {
+        const fwa = c.floating_whatsapp || {};
         addContentSection({
           urlKeyVisual: c.url_key_visual || '',
           wordingSms: c.wording_sms || '',
           syaratKetentuan: c.syarat_ketentuan || '',
           highlightText: c.highlight_text || '',
-          outlet: c.outlet || ''
+          outlet: c.outlet || '',
+          floatingWaEnabled: !!fwa.enabled,
+          floatingWaNumber: fwa.number || '',
+          floatingWaPretext: fwa.pretext || ''
         });
       });
     } else {
@@ -3878,6 +3896,25 @@ function createContentSectionHTML(id, data) {
           <a href="javascript:void(0)" class="preset-back-link" onclick="revertToPresetSelect(this)">↩ Pilih dari daftar</a>
         </div>
       </div>
+
+      <div class="field">
+        <label class="checkbox-label">
+          <input type="checkbox" class="cc-floatingWaEnabled" onchange="toggleFloatingWaFields(this)" ${data.floatingWaEnabled ? 'checked' : ''}>
+          Floating WhatsApp
+        </label>
+      </div>
+      <div class="cc-floatingWaFields" style="display:${data.floatingWaEnabled ? 'block' : 'none'};">
+        <div class="field-row">
+          <div class="field">
+            <label>Nomor WhatsApp</label>
+            <input type="text" class="cc-floatingWaNumber" placeholder="e.g. 6281234567890" value="${escapeAttr(data.floatingWaNumber)}">
+          </div>
+          <div class="field">
+            <label>Pretext</label>
+            <input type="text" class="cc-floatingWaPretext" placeholder="e.g. Halo, saya mau tanya soal promo ini" value="${escapeAttr(data.floatingWaPretext)}">
+          </div>
+        </div>
+      </div>
     </div>
   `;
 }
@@ -4101,6 +4138,14 @@ function revertToPresetSelect(linkEl) {
   if (input) input.value = '';
   wrap.style.display = 'none';
   if (select) { select.style.display = ''; select.value = ''; }
+}
+
+// Shows/hides the "Nomor WhatsApp" + "Pretext" fields based on the Floating
+// WhatsApp checkbox — an optional per-content-section feature for Kuponku SMS.
+function toggleFloatingWaFields(checkboxEl) {
+  const section = checkboxEl.closest('.content-section');
+  const fields = section ? section.querySelector('.cc-floatingWaFields') : null;
+  if (fields) fields.style.display = checkboxEl.checked ? 'block' : 'none';
 }
 
 // Called after a field's value is set programmatically (e.g. restoring a saved
@@ -4655,6 +4700,10 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
       if (c.highlight_text) paragraph('Highlight Text:', c.highlight_text);
       paragraphRich('Syarat & Ketentuan:', c.syarat_ketentuan);
       kvRow('Outlet', c.outlet, 9, 28);
+      if (c.floating_whatsapp && c.floating_whatsapp.enabled) {
+        kvRow('Floating WhatsApp', c.floating_whatsapp.number, 9, 45);
+        if (c.floating_whatsapp.pretext) paragraph('Pretext:', c.floating_whatsapp.pretext);
+      }
       y += 4;
     });
   }
@@ -5011,7 +5060,12 @@ function generateCampaign() {
       wording_sms_length: section.querySelector('.cc-wordingSms').value.length,
       syarat_ketentuan: section.querySelector('.cc-syaratKetentuan').value,
       highlight_text: section.querySelector('.cc-highlightText').value,
-      outlet: section.querySelector('.cc-outlet').value
+      outlet: section.querySelector('.cc-outlet').value,
+      floating_whatsapp: {
+        enabled: section.querySelector('.cc-floatingWaEnabled').checked,
+        number: section.querySelector('.cc-floatingWaNumber').value,
+        pretext: section.querySelector('.cc-floatingWaPretext').value
+      }
     });
   });
 
