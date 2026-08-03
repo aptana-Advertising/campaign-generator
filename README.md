@@ -1,2 +1,2 @@
 Update font PDF dan UI 
-update 3 agt : edit draft email
+update 3 agt : edit draft email, format cc email
