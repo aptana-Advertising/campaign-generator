@@ -2623,14 +2623,19 @@ function openOutlookComposeForCampaign(campaignData, pdfLink) {
 
   const subject = `Campaign Visual - ${type}${brand ? ' - ' + brand : ''}${period ? ' (' + period + ')' : ''}`;
   const bodyLines = [
-    'Halo,',
+    'Dear Rekan - Rekan,',
     '',
-    `Berikut kami sampaikan Campaign Visual untuk campaign ${brand}.`,
+    `Berikut terlampir Campaign Visual untuk campaign ${brand}.`,
     '',
     `Brand         : ${brand}`,
-    `Tipe Campaign : ${type}`,
   ];
   if (period) bodyLines.push(`Periode       : ${period}`);
+
+  bodyLines.push(
+    '',
+    'File PDF Campaign Visual dapat diakses melalui link berikut:',
+    pdfLink
+  );
 
   // Include Key Visual link(s) so the recipient can access the raw image directly.
   if (type === 'Kuponku SMS' && Array.isArray(campaignData.campaign_contents)) {
@@ -2661,13 +2666,7 @@ function openOutlookComposeForCampaign(campaignData, pdfLink) {
 
   bodyLines.push(
     '',
-    'File PDF Campaign Visual dapat diakses melalui link berikut:',
-    pdfLink,
-    '',
-    'Mohon dicek dan silakan hubungi kami jika ada pertanyaan.',
-    '',
-    'Terima kasih,',
-    'Tim Kuponku.id'
+    'Terima Kasih'
   );
   const body = bodyLines.join('\n');
 
