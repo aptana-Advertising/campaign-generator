@@ -2672,7 +2672,7 @@ function openOutlookComposeForCampaign(campaignData, pdfLink) {
 
   // mailto: URI — cc is a standard field here (unlike Outlook Web's compose deeplink).
   let mailto = 'mailto:?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
-  if (ccList.length) mailto += '&cc=' + encodeURIComponent(ccList.join(','));
+  if (ccList.length) mailto += '&cc=' + encodeURIComponent(ccList.join(';'));
 
   // Assigning location.href (rather than window.open) is the standard, most reliable
   // way to hand off a mailto: link to the OS's default mail client.
