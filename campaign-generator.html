@@ -1707,7 +1707,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
           </div>
           <div class="field">
             <div class="field-header">
-              <label>Campaign Wording</label>
+              <label>Release Content</label>
               <span>
                 <span class="char-count" id="metaWaCharCount">0/950</span>
                 <span class="char-warning" id="metaWaCharWarning">⚠ Over limit</span>
@@ -1725,11 +1725,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
             <input type="url" id="metaFlowImage" placeholder="https://example.com/image.jpg">
           </div>
           <div class="field">
-            <label>Highlight Text</label>
+            <label>Flow Title</label>
             <input type="text" id="metaFlowHighlight" placeholder="e.g. FREE 1 JAM">
           </div>
           <div class="field">
-            <label>Promo Screen Wording</label>
+            <label>Flow Description</label>
             <textarea id="metaFlowWording" style="height:90px;" placeholder="Write the promo screen wording..."></textarea>
           </div>
         </div>
@@ -1738,11 +1738,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
         <div class="card">
           <div class="card-title">✅ After Validation</div>
           <div class="field">
-            <label>Validation Success</label>
+            <label>Redeem Content</label>
             <textarea id="metaValidationSuccess" style="height:70px;" placeholder="Message shown when validation succeeds..."></textarea>
           </div>
           <div class="field">
-            <label>Validation Failed</label>
+            <label>Expired/Ended Content</label>
             <textarea id="metaValidationFailed" style="height:70px;" placeholder="Message shown when validation fails..."></textarea>
           </div>
         </div>
@@ -1833,6 +1833,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
         <!-- Section 2: Campaign Details -->
         <div class="card">
           <div class="card-title">Campaign Details</div>
+          <div class="field">
+            <div style="display:flex; gap:8px;">
+              <button type="button" id="lbaSubtypeLBA" class="type-btn active" onclick="selectLbaGlobalSubType('LBA')" style="flex:1;">📍 LBA</button>
+              <button type="button" id="lbaSubtypeTargeted" class="type-btn" onclick="selectLbaGlobalSubType('Targeted')" style="flex:1;">🎯 Targeted</button>
+            </div>
+          </div>
           <div class="field-row">
             <div class="field">
               <label>Nomor Invoice</label>
@@ -1841,16 +1847,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
             <div class="field">
               <label>Harga Impression</label>
               <input type="text" id="lbaPriceImpression" placeholder="e.g. Rp 150" oninput="formatRupiahInput(this)">
-            </div>
-          </div>
-          <div class="field-row">
-            <div class="field">
-              <label>Nomor UAT</label>
-              <input type="text" id="lbaUatNumber" placeholder="e.g. 08123456789">
-            </div>
-            <div class="field">
-              <label>Nomor Whitelist</label>
-              <input type="text" id="lbaWhitelistNumber" placeholder="e.g. 08123456789">
             </div>
           </div>
         </div>
@@ -2870,8 +2866,12 @@ function loadCampaignIntoForm(campaign, historyId) {
 
     document.getElementById('lbaInvoiceNumber').value = campaign.invoice_number || '';
     document.getElementById('lbaPriceImpression').value = campaign.price_impression || '';
-    document.getElementById('lbaUatNumber').value = campaign.uat_number || '';
-    document.getElementById('lbaWhitelistNumber').value = campaign.whitelist_number || '';
+
+    // The LBA/Targeted choice is now a single campaign-wide toggle — read it from
+    // the first content section (or the old flat format) for backward compatibility.
+    const restoredSubType = (Array.isArray(campaign.campaign_contents) && campaign.campaign_contents[0] && campaign.campaign_contents[0].sub_type)
+      || campaign.sub_type || 'LBA';
+    selectLbaGlobalSubType(restoredSubType);
 
     // Rebuild Campaign Content sections from saved data
     document.getElementById('lbaContentList').innerHTML = '';
@@ -2879,33 +2879,37 @@ function loadCampaignIntoForm(campaign, historyId) {
     if (Array.isArray(campaign.campaign_contents) && campaign.campaign_contents.length) {
       campaign.campaign_contents.forEach(c => {
         addLbaContentSection({
-          subType: c.sub_type || 'LBA',
           sender: c.sender || '',
           wording: c.wording || '',
-          usage: c.usage || '',
+          arpu: c.arpu || '',
           impression: c.impression || '',
           deliveryDate: c.delivery_date || '',
           deliveryTime: c.delivery_time || '',
           gender: c.gender || '',
           age: c.age || '',
           location: c.location || '',
-          longLat: c.long_lat || ''
+          longLat: c.long_lat || '',
+          // Fall back to the old top-level fields for campaigns saved before UAT/Whitelist
+          // moved to per-section.
+          uatNumber: c.uat_number || campaign.uat_number || '',
+          whitelistNumber: c.whitelist_number || campaign.whitelist_number || ''
         });
       });
     } else if (campaign.sender || campaign.wording) {
       // Backward-compat with the older single-content flat format
       addLbaContentSection({
-        subType: campaign.sub_type || 'LBA',
         sender: campaign.sender || '',
         wording: campaign.wording || '',
-        usage: campaign.usage || '',
+        arpu: campaign.arpu || '',
         impression: campaign.impression || '',
         deliveryDate: campaign.delivery_date || '',
         deliveryTime: campaign.delivery_time || '',
         gender: campaign.gender || '',
         age: campaign.age || '',
         location: campaign.location || '',
-        longLat: campaign.long_lat || ''
+        longLat: campaign.long_lat || '',
+        uatNumber: campaign.uat_number || '',
+        whitelistNumber: campaign.whitelist_number || ''
       });
     } else {
       addLbaContentSection();
@@ -3540,24 +3544,18 @@ function removeWlCard(id) {
 
 /* ---------------- SMS LBA/TGT — Campaign Content Sections (dynamic, repeatable) ---------------- */
 let lbaContentSectionCount = 0;
+let lbaSubType = 'LBA'; // Shared across all Campaign Content sections (toggle now lives in Campaign Details)
 
 function createLbaContentSectionHTML(id, data) {
   data = data || {};
-  const subType = data.subType || 'LBA';
+  const subType = lbaSubType;
   return `
-    <div class="content-section" id="lba-content-section-${id}" data-section-id="${id}" data-subtype="${subType}">
+    <div class="content-section" id="lba-content-section-${id}" data-section-id="${id}">
       <div class="content-section-header">
         <span class="content-section-title">Campaign Content${data.label ? ' — ' + escapeHtml(data.label) : ''}</span>
         <div class="content-section-actions">
           <button class="icon-btn" onclick="duplicateLbaContentSection(${id})" title="Duplicate this section">⧉ Duplicate</button>
           <button class="icon-btn danger" onclick="removeLbaContentSection(${id})" title="Remove this section">🗑 Remove</button>
-        </div>
-      </div>
-
-      <div class="field">
-        <div style="display:flex; gap:8px;">
-          <button type="button" class="type-btn lc-subtype-LBA${subType === 'LBA' ? ' active' : ''}" onclick="selectLbaContentSubType(${id}, 'LBA')" style="flex:1;">📍 LBA</button>
-          <button type="button" class="type-btn lc-subtype-Targeted${subType === 'Targeted' ? ' active' : ''}" onclick="selectLbaContentSubType(${id}, 'Targeted')" style="flex:1;">🎯 Targeted</button>
         </div>
       </div>
 
@@ -3579,8 +3577,8 @@ function createLbaContentSectionHTML(id, data) {
 
       <div class="field-row">
         <div class="field">
-          <label>Usage</label>
-          <input type="text" class="lc-usage" placeholder="e.g. Awareness" value="${escapeAttr(data.usage)}">
+          <label>ARPU</label>
+          <input type="text" class="lc-arpu" placeholder="e.g. High" value="${escapeAttr(data.arpu)}">
         </div>
         <div class="field">
           <label>Impression</label>
@@ -3627,6 +3625,17 @@ function createLbaContentSectionHTML(id, data) {
         <label>Long-Lat</label>
         <input type="text" class="lc-longLat" placeholder="e.g. -6.229728, 106.829993" value="${escapeAttr(data.longLat)}">
       </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Nomor UAT</label>
+          <input type="text" class="lc-uatNumber" placeholder="e.g. 08123456789" value="${escapeAttr(data.uatNumber)}">
+        </div>
+        <div class="field">
+          <label>Whitelist</label>
+          <input type="text" class="lc-whitelistNumber" placeholder="e.g. 08123456789" value="${escapeAttr(data.whitelistNumber)}">
+        </div>
+      </div>
     </div>
   `;
 }
@@ -3665,30 +3674,33 @@ function updateLbaContentWordingCount(textarea) {
   }
 }
 
-// Toggles a specific section between "LBA" and "Targeted" — LBA shows an extra
-// Long-Lat field that Targeted doesn't need.
-function selectLbaContentSubType(id, subType) {
-  const section = document.getElementById('lba-content-section-' + id);
-  section.dataset.subtype = subType;
-  section.querySelector('.lc-subtype-LBA').classList.toggle('active', subType === 'LBA');
-  section.querySelector('.lc-subtype-Targeted').classList.toggle('active', subType === 'Targeted');
-  section.querySelector('.lc-longLatField').style.display = subType === 'LBA' ? 'block' : 'none';
+// Toggles the whole campaign between "LBA" and "Targeted" (now a single choice in
+// Campaign Details, applied to every Campaign Content section) — LBA shows an extra
+// Long-Lat field on each section that Targeted doesn't need.
+function selectLbaGlobalSubType(subType) {
+  lbaSubType = subType;
+  document.getElementById('lbaSubtypeLBA').classList.toggle('active', subType === 'LBA');
+  document.getElementById('lbaSubtypeTargeted').classList.toggle('active', subType === 'Targeted');
+  document.querySelectorAll('#lbaContentList .lc-longLatField').forEach(el => {
+    el.style.display = subType === 'LBA' ? 'block' : 'none';
+  });
 }
 
 function duplicateLbaContentSection(id) {
   const section = document.getElementById('lba-content-section-' + id);
   const data = {
-    subType: section.dataset.subtype || 'LBA',
     sender: section.querySelector('.lc-sender').value,
     wording: section.querySelector('.lc-wording').value,
-    usage: section.querySelector('.lc-usage').value,
+    arpu: section.querySelector('.lc-arpu').value,
     impression: section.querySelector('.lc-impression').value,
     deliveryDate: section.querySelector('.lc-deliveryDate').value,
     deliveryTime: section.querySelector('.lc-deliveryTime').value,
     gender: section.querySelector('.lc-gender').value,
     age: section.querySelector('.lc-age').value,
     location: section.querySelector('.lc-location').value,
-    longLat: section.querySelector('.lc-longLat').value
+    longLat: section.querySelector('.lc-longLat').value,
+    uatNumber: section.querySelector('.lc-uatNumber').value,
+    whitelistNumber: section.querySelector('.lc-whitelistNumber').value
   };
   addLbaContentSection(data);
 }
@@ -4722,7 +4734,7 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
     if (campaignData.whatsapp.campaign_image) {
       embedImageWithLabel(campaignData.whatsapp.campaign_image, 'Campaign Image:', 75);
     }
-    paragraph('Campaign Wording (' + (campaignData.whatsapp.campaign_wording ? campaignData.whatsapp.campaign_wording.length : 0) + ' char):', campaignData.whatsapp.campaign_wording);
+    paragraph('Release Content (' + (campaignData.whatsapp.campaign_wording ? campaignData.whatsapp.campaign_wording.length : 0) + ' char):', campaignData.whatsapp.campaign_wording);
     y += 4;
   }
   if (campaignData.flow) {
@@ -4730,14 +4742,14 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
     if (campaignData.flow.campaign_image) {
       embedImageWithLabel(campaignData.flow.campaign_image, 'Campaign Image:', 75);
     }
-    if (campaignData.flow.highlight_text) paragraph('Highlight Text:', campaignData.flow.highlight_text);
-    paragraph('Promo Screen Wording:', campaignData.flow.promo_screen_wording);
+    if (campaignData.flow.highlight_text) paragraph('Flow Title:', campaignData.flow.highlight_text);
+    paragraph('Flow Description:', campaignData.flow.promo_screen_wording);
     y += 4;
   }
   if (campaignData.after_validation) {
     sectionTitle('After Validation');
-    paragraph('Validation Success:', campaignData.after_validation.validation_success);
-    paragraph('Validation Failed:', campaignData.after_validation.validation_failed);
+    paragraph('Redeem Content:', campaignData.after_validation.validation_success);
+    paragraph('Expired/Ended Content:', campaignData.after_validation.validation_failed);
     y += 4;
   }
   // Note: Customer Journey data fields are intentionally NOT shown as text in the
@@ -4754,8 +4766,6 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
     sectionTitle('Campaign Details');
     kvRow('Nomor Invoice', campaignData.invoice_number);
     kvRow('Harga Impression', campaignData.price_impression);
-    kvRow('Nomor UAT', campaignData.uat_number);
-    kvRow('Nomor Whitelist', campaignData.whitelist_number);
     y += 4;
 
     if (Array.isArray(campaignData.campaign_contents)) {
@@ -4763,7 +4773,7 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
         sectionTitle('Campaign Content ' + (idx + 1) + ' (' + c.campaign_type + ')');
         kvRow('Sender', c.sender);
         paragraph('Wording (' + (c.wording_length || 0) + ' char):', c.wording);
-        kvRow('Usage', c.usage);
+        kvRow('ARPU', c.arpu);
         kvRow('Impression', c.impression);
         kvRow('Delivery Date', c.delivery_date);
         kvRow('Delivery Time', c.delivery_time);
@@ -4771,6 +4781,8 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
         kvRow('Age', c.age);
         kvRow('Location', c.location);
         if (c.sub_type === 'LBA') kvRow('Long-Lat', c.long_lat);
+        kvRow('Nomor UAT', c.uat_number);
+        kvRow('Nomor Whitelist', c.whitelist_number);
         y += 4;
       });
     }
@@ -5662,7 +5674,7 @@ function generateCampaignMeta() {
 
   const waWording = document.getElementById('metaWaWording').value;
   if (waWording.length > 950) {
-    alert('WhatsApp Campaign Wording exceeds the 950 character limit. Please shorten it.');
+    alert('WhatsApp Release Content exceeds the 950 character limit. Please shorten it.');
     return;
   }
 
@@ -5758,7 +5770,7 @@ function renderPreviewMeta(campaign) {
       <div class="content-block">
         ${visualBlock(campaign.whatsapp.campaign_image, 'Campaign Image')}
         <div class="sms-box">
-          <div class="sms-meta">Campaign Wording (${campaign.whatsapp.campaign_wording_length} char)${waOverLimit ? ' <span class="warn">⚠️ OVER 950 CHARS</span>' : ''}</div>
+          <div class="sms-meta">Release Content (${campaign.whatsapp.campaign_wording_length} char)${waOverLimit ? ' <span class="warn">⚠️ OVER 950 CHARS</span>' : ''}</div>
           <div class="sms-text">${escapeHtml(campaign.whatsapp.campaign_wording)}</div>
         </div>
       </div>
@@ -5768,17 +5780,17 @@ function renderPreviewMeta(campaign) {
       <div class="preview-section-title">Flow</div>
       <div class="content-block">
         ${visualBlock(campaign.flow.campaign_image, 'Campaign Image')}
-        ${campaign.flow.highlight_text ? `<div style="font-size:13px; color:#6b7280; margin-bottom:6px;">Highlight Text:</div><span class="highlight-pill">${escapeHtml(campaign.flow.highlight_text)}</span><div style="margin-top:10px;"></div>` : ''}
-        ${campaign.flow.promo_screen_wording ? `<div style="font-size:13px; color:#6b7280; margin-bottom:6px;">Promo Screen Wording:</div><div class="sms-text">${escapeHtml(campaign.flow.promo_screen_wording)}</div>` : ''}
+        ${campaign.flow.highlight_text ? `<div style="font-size:13px; color:#6b7280; margin-bottom:6px;">Flow Title:</div><span class="highlight-pill">${escapeHtml(campaign.flow.highlight_text)}</span><div style="margin-top:10px;"></div>` : ''}
+        ${campaign.flow.promo_screen_wording ? `<div style="font-size:13px; color:#6b7280; margin-bottom:6px;">Flow Description:</div><div class="sms-text">${escapeHtml(campaign.flow.promo_screen_wording)}</div>` : ''}
       </div>
     </div>
 
     <div class="preview-section">
       <div class="preview-section-title">After Validation</div>
       <div class="content-block">
-        <div style="font-size:13px; color:#6b7280; margin-bottom:6px;">Validation Success:</div>
+        <div style="font-size:13px; color:#6b7280; margin-bottom:6px;">Redeem Content:</div>
         <div class="sms-text" style="margin-bottom:12px;">${escapeHtml(campaign.after_validation.validation_success) || '-'}</div>
-        <div style="font-size:13px; color:#6b7280; margin-bottom:6px;">Validation Failed:</div>
+        <div style="font-size:13px; color:#6b7280; margin-bottom:6px;">Expired/Ended Content:</div>
         <div class="sms-text">${escapeHtml(campaign.after_validation.validation_failed) || '-'}</div>
       </div>
     </div>
@@ -5898,7 +5910,7 @@ function generateCampaignLba() {
 
   const contentSections = [];
   sectionEls.forEach(section => {
-    const subType = section.dataset.subtype || 'LBA';
+    const subType = lbaSubType;
     const wording = section.querySelector('.lc-wording').value;
     contentSections.push({
       sub_type: subType,
@@ -5906,14 +5918,16 @@ function generateCampaignLba() {
       sender: section.querySelector('.lc-sender').value,
       wording: wording,
       wording_length: wording.length,
-      usage: section.querySelector('.lc-usage').value,
+      arpu: section.querySelector('.lc-arpu').value,
       impression: section.querySelector('.lc-impression').value,
       delivery_date: section.querySelector('.lc-deliveryDate').value,
       delivery_time: section.querySelector('.lc-deliveryTime').value,
       gender: section.querySelector('.lc-gender').value,
       age: section.querySelector('.lc-age').value,
       location: section.querySelector('.lc-location').value,
-      long_lat: subType === 'LBA' ? section.querySelector('.lc-longLat').value : ''
+      long_lat: subType === 'LBA' ? section.querySelector('.lc-longLat').value : '',
+      uat_number: section.querySelector('.lc-uatNumber').value,
+      whitelist_number: section.querySelector('.lc-whitelistNumber').value
     });
   });
 
@@ -5923,8 +5937,6 @@ function generateCampaignLba() {
     mid: mid,
     invoice_number: document.getElementById('lbaInvoiceNumber').value,
     price_impression: document.getElementById('lbaPriceImpression').value,
-    uat_number: document.getElementById('lbaUatNumber').value,
-    whitelist_number: document.getElementById('lbaWhitelistNumber').value,
     // Reused by the History/Drive-folder-by-date logic, which expects this field —
     // uses the first content section's delivery date as the reference date.
     campaign_period: (contentSections[0] && contentSections[0].delivery_date) || '',
@@ -5952,7 +5964,7 @@ function renderPreviewLba(campaign) {
         </div>
         <table class="preview-table" style="margin-top:10px;">
           <tr><td>Sender</td><td>${escapeHtml(c.sender)}</td></tr>
-          <tr><td>Usage</td><td>${escapeHtml(c.usage) || '-'}</td></tr>
+          <tr><td>ARPU</td><td>${escapeHtml(c.arpu) || '-'}</td></tr>
           <tr><td>Impression</td><td>${escapeHtml(c.impression) || '-'}</td></tr>
           <tr><td>Delivery Date</td><td>${escapeHtml(c.delivery_date) || '-'}</td></tr>
           <tr><td>Delivery Time</td><td>${escapeHtml(c.delivery_time) || '-'}</td></tr>
@@ -5960,6 +5972,8 @@ function renderPreviewLba(campaign) {
           <tr><td>Age</td><td>${escapeHtml(c.age) || '-'}</td></tr>
           <tr><td>Location</td><td>${escapeHtml(c.location) || '-'}</td></tr>
           ${c.sub_type === 'LBA' ? `<tr><td>Long-Lat</td><td>${escapeHtml(c.long_lat) || '-'}</td></tr>` : ''}
+          <tr><td>Nomor UAT</td><td>${escapeHtml(c.uat_number) || '-'}</td></tr>
+          <tr><td>Nomor Whitelist</td><td>${escapeHtml(c.whitelist_number) || '-'}</td></tr>
         </table>
       </div>
     `;
@@ -5984,8 +5998,6 @@ function renderPreviewLba(campaign) {
       <table class="preview-table">
         <tr><td>Nomor Invoice</td><td>${escapeHtml(campaign.invoice_number) || '-'}</td></tr>
         <tr><td>Harga Impression</td><td>${escapeHtml(campaign.price_impression) || '-'}</td></tr>
-        <tr><td>Nomor UAT</td><td>${escapeHtml(campaign.uat_number) || '-'}</td></tr>
-        <tr><td>Nomor Whitelist</td><td>${escapeHtml(campaign.whitelist_number) || '-'}</td></tr>
       </table>
     </div>
 
@@ -6030,8 +6042,7 @@ function resetFormLba() {
 
   document.getElementById('lbaInvoiceNumber').value = '';
   document.getElementById('lbaPriceImpression').value = '';
-  document.getElementById('lbaUatNumber').value = '';
-  document.getElementById('lbaWhitelistNumber').value = '';
+  selectLbaGlobalSubType('LBA');
 
   document.getElementById('lbaContentList').innerHTML = '';
   lbaContentSectionCount = 0;
