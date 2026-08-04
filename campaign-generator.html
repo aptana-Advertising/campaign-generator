@@ -1976,7 +1976,23 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
           </div>
         </div>
 
-        <!-- Section 3: Campaign Content (dynamic, repeatable) -->
+        <!-- Section 3: Customer Journey (mockup-only fields, not shown in the PDF text) -->
+        <div class="card">
+          <div class="card-title">🧭 Customer Journey</div>
+          <div class="field">
+            <label>URL Key Visual <span style="font-weight:400; color:#9ca3af;">(untuk mockup Instagram Ads)</span></label>
+            <input type="url" id="medsosKeyVisual" placeholder="https://example.com/image.jpg">
+          </div>
+          <div class="field">
+            <div class="field-header">
+              <label>Caption</label>
+              <span class="char-count" id="medsosCaptionCount">0/100</span>
+            </div>
+            <textarea id="medsosCaption" style="height:60px;" maxlength="100" placeholder="Short caption (max 100 characters)..." oninput="document.getElementById('medsosCaptionCount').textContent = this.value.length + '/100'"></textarea>
+          </div>
+        </div>
+
+        <!-- Section 4: Campaign Content (dynamic, repeatable) -->
         <div id="medsosContentList"></div>
 
         <div class="add-section-row">
@@ -2967,6 +2983,11 @@ function loadCampaignIntoForm(campaign, historyId) {
     document.getElementById('medsosEndDate').value = mEnd ? mEnd.trim() : '';
     document.getElementById('medsosPlacement').value = campaign.placement || '';
     document.getElementById('medsosLinkFanpage').value = campaign.link_fanpage || '';
+
+    const medsosCj = campaign.customer_journey || {};
+    document.getElementById('medsosKeyVisual').value = medsosCj.key_visual || '';
+    document.getElementById('medsosCaption').value = medsosCj.caption || '';
+    document.getElementById('medsosCaptionCount').textContent = (medsosCj.caption || '').length + '/100';
 
     // Rebuild Campaign Content sections from saved data
     document.getElementById('medsosContentList').innerHTML = '';
@@ -4935,6 +4956,9 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
     kvRow('Placement', campaignData.placement);
     if (campaignData.link_fanpage) paragraph('Link Fanpage:', campaignData.link_fanpage);
     y += 4;
+    // Note: customer_journey (Key Visual/Caption) is intentionally NOT shown as text
+    // here — it's mockup-only data; the "Campaign Mockup — Customer Journey" phone
+    // screenshot further down still represents it visually.
 
     if (Array.isArray(campaignData.campaign_contents)) {
       campaignData.campaign_contents.forEach((c, idx) => {
@@ -5151,6 +5175,21 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
       }
     })
     .then(() => new Promise(r => setTimeout(r, 100)))
+    .then(() => {
+      // Equalize every phone-frame's height within the mockup grid so multi-phone
+      // journeys (e.g. Kuponku SMS's 6-step flow) wrap into a clean, evenly-aligned
+      // grid instead of a jagged/uneven layout. Each phone's content length
+      // (wording, key visual aspect ratio, etc.) can otherwise make its frame
+      // taller than its row-mates — combined with flex-wrap that leaves uneven
+      // gaps between rows. Using the tallest frame's height for all of them keeps
+      // every row uniform while still showing full content (no clipping), since
+      // every frame gets at least as tall as its own content needs.
+      const frames = Array.from(clone.querySelectorAll('.phone-frame'));
+      if (frames.length > 1) {
+        const maxFrameH = Math.max(...frames.map(el => el.offsetHeight));
+        frames.forEach(el => { el.style.height = maxFrameH + 'px'; });
+      }
+    })
     .then(() => {
       // Measure every clickable link's position now, while the mockup is still
       // attached to the DOM and its layout has settled (images loaded, etc.).
@@ -5525,6 +5564,100 @@ function buildMetaMockup(campaign) {
       <div class="mockup-instruction">
         Untuk melihat demo Campaign, silakan klik teks '<strong>Chat on WhatsApp</strong>'. Gunakan kode outlet '<strong>11111</strong>'
       </div>
+    </div>
+  `;
+}
+
+// Normalizes a raw WhatsApp number (e.g. "08123456789") into a clickable wa.me
+// deep link, optionally pre-filling a message. Leading "0" is swapped for the
+// "62" (Indonesia) country code since that's how numbers are entered in the form;
+// numbers already given with a country code pass through untouched.
+function buildWaMeLink(number, pretext) {
+  const digits = String(number || '').replace(/[^0-9]/g, '');
+  if (!digits) return '';
+  const withCountryCode = digits.startsWith('0') ? '62' + digits.slice(1) : digits;
+  const text = pretext ? '?text=' + encodeURIComponent(pretext) : '';
+  return `https://wa.me/${withCountryCode}${text}`;
+}
+
+// Builds a single-phone Instagram Ads-style mockup for Medsos, reusing the same
+// visual chrome as buildMetaMockup() above (Sponsored header, post image, CTA
+// bar, like/comment/share/bookmark row, bottom nav). Sourced from the first
+// Campaign Content section — if a CTA (URL or WhatsApp) is filled in, the CTA
+// bar becomes a real clickable link (WhatsApp CTAs go through buildWaMeLink()).
+function buildMedsosMockup(campaign) {
+  const c = (campaign.campaign_contents && campaign.campaign_contents[0]) || {};
+  const hasMultiple = campaign.campaign_contents && campaign.campaign_contents.length > 1;
+  const cj = campaign.customer_journey || {};
+  const igName = campaign.brand_name || 'yourbrand';
+  const initial = escapeHtml((igName[0] || 'B').toUpperCase());
+
+  let avatarHtml;
+  if (campaign.brand_logo_url) {
+    const logoSrc = toDirectImageUrl(campaign.brand_logo_url);
+    avatarHtml = `<img src="${escapeAttr(logoSrc)}" alt="Avatar" onerror="this.parentNode.textContent='${initial}'">`;
+  } else {
+    avatarHtml = initial;
+  }
+
+  let imageHtml;
+  if (cj.key_visual) {
+    const imgSrc = toDirectImageUrl(cj.key_visual);
+    imageHtml = `<img src="${escapeAttr(imgSrc)}" alt="Post Image" onerror="this.outerHTML='<div class=&quot;ig-post-image-missing&quot;>Image not loaded (check Drive sharing)</div>'">`;
+  } else {
+    imageHtml = `<div class="ig-post-image-missing">No key visual</div>`;
+  }
+
+  let ctaLabel = 'Learn More';
+  let ctaLink = '';
+  if (c.cta_type === 'WhatsApp' && c.cta_value) {
+    ctaLabel = 'Chat On WhatsApp';
+    ctaLink = buildWaMeLink(c.cta_value, c.pretext);
+  } else if (c.cta_type === 'URL' && c.cta_value) {
+    ctaLabel = 'Learn More';
+    ctaLink = c.cta_value;
+  }
+
+  const captionText = cj.caption || '';
+
+  return `
+    <div class="mockup-hint">Simulated customer journey — likes/comments/shares are illustrative.${hasMultiple ? ' Mockup reflects Campaign Content 1 only.' : ''}</div>
+    <div class="mockup-scroll">
+      <div class="phone" style="width:190px;">
+        <div class="phone-frame" style="width:190px; height:400px;">
+          <div class="phone-notch"></div>
+          <div class="phone-screen">
+            <div class="ig-header">
+              <div class="ig-avatar">${avatarHtml}</div>
+              <div class="ig-header-text">
+                <div class="ig-username">${escapeHtml(igName)}</div>
+                <div class="ig-sponsored">Sponsored</div>
+              </div>
+              <div class="ig-menu-dots">${igIconMenuDotsH('#1a1a1a')}</div>
+            </div>
+            <div class="ig-post-image-wrap">${imageHtml}</div>
+            ${ctaLink
+              ? `<a href="${escapeAttr(ctaLink)}" target="_blank" class="ig-cta-bar" style="text-decoration:none;"><span>${escapeHtml(ctaLabel)}</span><span>›</span></a>`
+              : `<div class="ig-cta-bar"><span>${escapeHtml(ctaLabel)}</span><span>›</span></div>`
+            }
+            <div class="ig-actions-row">
+              <span>${igIconHeart('#1a1a1a')} 6,961</span>
+              <span>${igIconComment('#1a1a1a')} 71</span>
+              <span>${igIconShare('#1a1a1a')} 1,886</span>
+              <span class="ig-bookmark">${igIconBookmark('#1a1a1a')}</span>
+            </div>
+            <div class="ig-caption">
+              <strong>${escapeHtml(igName)}</strong> ${captionText ? escapeHtml(captionText) + ' ' : ''}<span class="ig-more">... more</span>
+            </div>
+            <div class="ig-navbar">
+              <span>${igIconHome('#1a1a1a')}</span><span>${igIconSearch('#1a1a1a')}</span><span>${igIconAddSquare('#1a1a1a')}</span><span>${igIconReels('#1a1a1a')}</span><span class="ig-profile-dot"></span>
+            </div>
+          </div>
+        </div>
+        <div class="phone-caption">Instagram Ads</div>
+      </div>
+
+      ${ctaLink ? `<div class="mockup-instruction">Untuk melihat demo Campaign, silakan klik tombol '<strong>${escapeHtml(ctaLabel)}</strong>'.</div>` : ''}
     </div>
   `;
 }
@@ -6394,6 +6527,10 @@ function generateCampaignMedsos() {
     campaign_period: formatPeriod(startDate, endDate),
     placement: document.getElementById('medsosPlacement').value,
     link_fanpage: document.getElementById('medsosLinkFanpage').value,
+    customer_journey: {
+      key_visual: document.getElementById('medsosKeyVisual').value,
+      caption: document.getElementById('medsosCaption').value
+    },
     campaign_contents: contentSections
   };
 
@@ -6455,6 +6592,11 @@ function renderPreviewMedsos(campaign) {
       <div class="preview-section-title">Campaign Content (${campaign.campaign_contents.length})</div>
       ${contentBlocksHtml}
     </div>
+
+    <div class="preview-section mockup-section">
+      <div class="preview-section-title">Campaign Mockup — Customer Journey</div>
+      ${buildMedsosMockup(campaign)}
+    </div>
   `;
 
   document.getElementById('medsosPreview').innerHTML = html;
@@ -6492,6 +6634,9 @@ function resetFormMedsos() {
   document.getElementById('medsosEndDate').value = '';
   document.getElementById('medsosPlacement').value = '';
   document.getElementById('medsosLinkFanpage').value = '';
+  document.getElementById('medsosKeyVisual').value = '';
+  document.getElementById('medsosCaption').value = '';
+  document.getElementById('medsosCaptionCount').textContent = '0/100';
 
   document.getElementById('medsosContentList').innerHTML = '';
   medsosContentSectionCount = 0;
