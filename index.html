@@ -5075,10 +5075,24 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
     ms.style.overflowX = 'visible';
     ms.style.flexWrap = 'wrap';
     ms.style.justifyContent = 'flex-start';
+    ms.style.alignItems = 'flex-start';
     ms.style.paddingTop = '0';
   }
   const hint = clone.querySelector('.mockup-hint');
   if (hint) hint.style.marginBottom = '4px';
+  // Phone mockups use a fixed-height screen with internal overflow:auto scroll
+  // areas (wa-chat-bg, sms-bubble-area, lp-scroll) so they behave like a real
+  // phone on screen. html2canvas only captures what's within the visible
+  // scroll position though — if the wording is long, content below the fold
+  // (including a CTA button at the end of the card) gets silently cut out of
+  // the PDF. For this flattened snapshot we want everything visible instead,
+  // so let every phone frame/screen and inner scroll area grow to fit its
+  // full content rather than clipping or scrolling.
+  clone.querySelectorAll('.phone-frame').forEach(el => { el.style.height = 'auto'; });
+  clone.querySelectorAll('.phone-screen').forEach(el => { el.style.height = 'auto'; el.style.overflow = 'visible'; });
+  clone.querySelectorAll('.wa-chat-bg, .sms-bubble-area, .lp-scroll').forEach(el => {
+    el.style.overflow = 'visible'; el.style.maxHeight = 'none'; el.style.flex = 'none';
+  });
   mockupHost.appendChild(clone);
   document.body.appendChild(mockupHost);
   window.scrollTo(0, 0);
@@ -5498,6 +5512,29 @@ function renderWaWordingHtml(text) {
   return escaped.replace(/\*([^*\n]+)\*/g, '<strong>$1</strong>');
 }
 
+// Cuts wording down to a short preview for the mockup card, breaking at a word
+// boundary (not mid-word) and never leaving a dangling unclosed *bold* marker.
+function truncateWaWording(text, maxLen) {
+  let cut = text.slice(0, maxLen);
+  const lastSpace = cut.lastIndexOf(' ');
+  if (lastSpace > maxLen * 0.6) cut = cut.slice(0, lastSpace);
+  const asteriskCount = (cut.match(/\*/g) || []).length;
+  if (asteriskCount % 2 === 1) cut = cut.slice(0, cut.lastIndexOf('*'));
+  return cut.replace(/\s+$/, '');
+}
+
+// Builds the wording block shown inside the WhatsApp card: a short preview
+// plus a blue "Read more" link when the full wording is longer than that
+// preview — matching real WhatsApp behavior and keeping the phone mockup a
+// fixed, predictable height regardless of how long the actual wording is.
+function waWordingBlock(text) {
+  const full = text || '';
+  const maxLen = 140;
+  if (full.length <= maxLen) return renderWaWordingHtml(full);
+  const truncated = truncateWaWording(full, maxLen);
+  return renderWaWordingHtml(truncated) + '… <span class="wa-readmore">Read more</span>';
+}
+
 // Builds a WhatsApp-chat-style mockup for WhatsApp LBA/TGT: header (avatar + brand
 // name), a message card (image + wording + boilerplate opt-out text + button(s)
 // with the CTA embedded), and — for Carrousel — a horizontal scroll of card items
@@ -5561,7 +5598,7 @@ function buildWlMockup(campaign) {
     bodyHtml = `
       <div class="wa-card wa-card-text-only">
         <div class="wa-card-body">
-          <div class="wa-card-wording">${renderWaWordingHtml(campaign.wording)} <span class="wa-readmore">Read more</span></div>
+          <div class="wa-card-wording">${waWordingBlock(campaign.wording)}</div>
           <div class="wa-optout">${optOutText}</div>
         </div>
       </div>
@@ -5580,7 +5617,7 @@ function buildWlMockup(campaign) {
       <div class="wa-card">
         <div class="wa-card-image">${waImage(campaign.key_visual, 'Key Visual')}</div>
         <div class="wa-card-body">
-          <div class="wa-card-wording">${renderWaWordingHtml(campaign.wording)} <span class="wa-readmore">Read more</span></div>
+          <div class="wa-card-wording">${waWordingBlock(campaign.wording)}</div>
           <div class="wa-optout">${optOutText}</div>
         </div>
         ${waButtons(ctaButtons)}
