@@ -1375,6 +1375,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     margin-bottom: 8px;
   }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/twemoji.min.js"></script>
 </head>
 <body>
 
@@ -5103,6 +5104,27 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
   window.scrollTo(0, 0);
 
   inlineImagesAsDataURLs(mockupHost, imageMap)
+    .then(() => {
+      // Convert any emoji characters typed into the wording/caption text (e.g.
+      // 🏆🎉📅🎁) into real <img> tags via Twemoji before screenshotting. Color
+      // emoji glyphs drawn straight from a system font are exactly what
+      // html2canvas struggles to rasterize reliably across browsers/OSes —
+      // swapping them for actual images guarantees they show up in the PDF
+      // no matter which emoji the user typed. Run this AFTER
+      // inlineImagesAsDataURLs (not before), since that function replaces any
+      // <img> it can't resolve via the campaign's image cache with an "Image
+      // not available" placeholder — we don't want it doing that to the
+      // Twemoji images it knows nothing about.
+      if (window.twemoji) {
+        try {
+          window.twemoji.parse(clone, {
+            base: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/',
+            folder: 'svg',
+            ext: '.svg'
+          });
+        } catch (e) { console.warn('Twemoji parse failed:', e); }
+      }
+    })
     .then(() => new Promise(r => setTimeout(r, 100)))
     .then(() => {
       // Measure every clickable link's position now, while the mockup is still
