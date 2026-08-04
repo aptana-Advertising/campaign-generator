@@ -1155,9 +1155,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   .wa-optout { font-size: 7.5px; color: #8e8e8e; margin-top: 4px; line-height: 1.3; }
   .wa-card-buttons { border-top: 1px solid #f0f0f0; }
   .wa-card-button {
-    display: flex; align-items: center; gap: 4px; text-align: left; padding: 7px 8px; font-size: 9.5px;
+    display: flex; align-items: center; justify-content: center; gap: 4px; padding: 7px 8px; font-size: 9.5px;
     font-weight: 600; color: #039be5; text-decoration: none; border-top: 1px solid #f0f0f0;
   }
+  .wa-card-button span { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .wa-card-buttons .wa-card-button:first-child { border-top: none; }
   .wa-card-text-only .wa-card-body { padding: 8px; }
   .wa-carousel-scroll { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
@@ -5580,8 +5581,8 @@ function buildWlMockup(campaign) {
     return `<div class="wa-card-buttons">${buttons.map(b => {
       const label = b.text || 'Learn More';
       return b.cta
-        ? `<a href="${escapeAttr(b.cta)}" target="_blank" class="wa-card-button">${waIconLink('#039be5')}${escapeHtml(label)}</a>`
-        : `<div class="wa-card-button">${escapeHtml(label)}</div>`;
+        ? `<a href="${escapeAttr(b.cta)}" target="_blank" class="wa-card-button">${waIconLink('#039be5')}<span>${escapeHtml(label)}</span></a>`
+        : `<div class="wa-card-button"><span>${escapeHtml(label)}</span></div>`;
     }).join('')}</div>`;
   }
 
