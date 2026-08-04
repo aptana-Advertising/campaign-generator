@@ -5187,7 +5187,16 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
       const frames = Array.from(clone.querySelectorAll('.phone-frame'));
       if (frames.length > 1) {
         const maxFrameH = Math.max(...frames.map(el => el.offsetHeight));
-        frames.forEach(el => { el.style.height = maxFrameH + 'px'; });
+        frames.forEach(el => {
+          el.style.height = maxFrameH + 'px';
+          // .phone-screen was switched to height:auto earlier (to avoid clipping
+          // tall content) so it only fills its own content height, not the frame
+          // — stretch it back to 100% now that the frame is a fixed (equalized)
+          // height, so the white/dark screen fills the bezel with no gap, exactly
+          // like the on-screen Customer Journey preview.
+          const screen = el.querySelector('.phone-screen');
+          if (screen) screen.style.height = '100%';
+        });
       }
     })
     .then(() => {
