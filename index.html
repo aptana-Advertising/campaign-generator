@@ -1150,8 +1150,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   .wa-card-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .wa-card-image-missing { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 8px; color: #9ca3af; text-align: center; padding: 6px; }
   .wa-card-body { padding: 7px 8px 6px; }
-  .wa-card-wording { font-size: 9px; color: #1a1a1a; line-height: 1.4; white-space: pre-wrap; }
-  .wa-readmore { color: #039be5; font-size: 9px; }
+  .wa-card-wording { font-size: 8px; color: #1a1a1a; line-height: 1.4; white-space: pre-wrap; }
+  .wa-readmore { color: #039be5; font-size: 8px; }
   .wa-optout { font-size: 7.5px; color: #8e8e8e; margin-top: 4px; line-height: 1.3; }
   .wa-card-buttons { border-top: 1px solid #f0f0f0; }
   .wa-card-button {
@@ -5089,8 +5089,12 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
   // the PDF. For this flattened snapshot we want everything visible instead,
   // so let every phone frame/screen and inner scroll area grow to fit its
   // full content rather than clipping or scrolling.
+  // IMPORTANT: keep .phone-screen's overflow:hidden (don't override it) —
+  // that's what clips its square-cornered children (header bar, input bar)
+  // to the screen's rounded corners, matching the phone bezel. Only its fixed
+  // height needs to go; with height:auto there's nothing left to clip anyway.
   clone.querySelectorAll('.phone-frame').forEach(el => { el.style.height = 'auto'; });
-  clone.querySelectorAll('.phone-screen').forEach(el => { el.style.height = 'auto'; el.style.overflow = 'visible'; });
+  clone.querySelectorAll('.phone-screen').forEach(el => { el.style.height = 'auto'; });
   clone.querySelectorAll('.wa-chat-bg, .sms-bubble-area, .lp-scroll').forEach(el => {
     el.style.overflow = 'visible'; el.style.maxHeight = 'none'; el.style.flex = 'none';
   });
