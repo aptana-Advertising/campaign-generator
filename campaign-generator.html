@@ -549,6 +549,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
 
   /* Form Fields */
   .field { margin-bottom: 14px; }
+  .field-hint { font-size: 11px; color: #9ca3af; margin-top: 4px; }
+  .field-hint strong { color: #6b7280; }
   .field:last-child { margin-bottom: 0; }
 
   .field label {
@@ -1108,7 +1110,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     padding: 7px 10px; flex-shrink: 0;
   }
   .ig-actions-row { display: flex; align-items: center; gap: 8px; padding: 6px 10px 2px; font-size: 9px; color: #1a1a1a; flex-shrink: 0; }
+  .ig-actions-row span { display: inline-flex; align-items: center; gap: 3px; }
   .ig-actions-row .ig-bookmark { margin-left: auto; }
+  .ig-menu-dots, .ig-navbar span { display: inline-flex; align-items: center; }
   .ig-caption { font-size: 9px; color: #1a1a1a; padding: 2px 10px 6px; line-height: 1.4; flex-shrink: 0; }
   .ig-caption .ig-more { color: #8e8e8e; }
   .ig-navbar {
@@ -1120,18 +1124,23 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
 
   /* WhatsApp LBA/TGT mockup */
   .wa-header {
-    display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+    display: flex; align-items: center; gap: 5px; padding: 8px 8px;
     background: #41525c; color: #fff; flex-shrink: 0;
   }
-  .wa-back { font-size: 14px; }
+  .wa-back { font-size: 14px; display: flex; align-items: center; flex-shrink: 0; }
+  .wa-icon { display: inline-block; vertical-align: middle; flex-shrink: 0; }
+  .wa-card-button .wa-icon { vertical-align: -2px; }
   .wa-avatar {
-    width: 24px; height: 24px; border-radius: 50%; background: #ffffff33;
+    width: 18px; height: 18px; border-radius: 50%; background: #ffffff;
     overflow: hidden; flex-shrink: 0; display: flex; align-items: center;
-    justify-content: center; font-size: 10px; font-weight: 700; color: #fff;
+    justify-content: center; font-size: 9px; font-weight: 700; color: #fff;
   }
   .wa-avatar img { width: 100%; height: 100%; object-fit: cover; }
-  .wa-header-text { flex: 1; min-width: 0; font-size: 11px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .wa-menu-dots { font-size: 13px; }
+  .wa-header-text {
+    flex: 1; min-width: 0; font-size: 7.6px; font-weight: 700;
+    white-space: nowrap; overflow: visible; display: flex; align-items: center;
+  }
+  .wa-menu-dots { font-size: 13px; flex-shrink: 0; }
   .wa-chat-bg {
     flex: 1; background: #e5ddd5; padding: 10px 8px; overflow-y: auto;
     display: flex; flex-direction: column; gap: 6px;
@@ -1141,14 +1150,15 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   .wa-card-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .wa-card-image-missing { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 8px; color: #9ca3af; text-align: center; padding: 6px; }
   .wa-card-body { padding: 7px 8px 6px; }
-  .wa-card-wording { font-size: 9px; color: #1a1a1a; line-height: 1.4; white-space: pre-wrap; }
-  .wa-readmore { color: #039be5; font-size: 9px; }
+  .wa-card-wording { font-size: 8px; color: #1a1a1a; line-height: 1.4; white-space: pre-wrap; }
+  .wa-readmore { color: #039be5; font-size: 8px; }
   .wa-optout { font-size: 7.5px; color: #8e8e8e; margin-top: 4px; line-height: 1.3; }
   .wa-card-buttons { border-top: 1px solid #f0f0f0; }
   .wa-card-button {
-    display: block; text-align: center; padding: 7px 6px; font-size: 9.5px;
+    display: flex; align-items: center; justify-content: center; gap: 4px; padding: 7px 8px; font-size: 9.5px;
     font-weight: 600; color: #039be5; text-decoration: none; border-top: 1px solid #f0f0f0;
   }
+  .wa-card-button span { min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .wa-card-buttons .wa-card-button:first-child { border-top: none; }
   .wa-card-text-only .wa-card-body { padding: 8px; }
   .wa-carousel-scroll { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
@@ -1365,6 +1375,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     margin-bottom: 8px;
   }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/twemoji.min.js"></script>
 </head>
 <body>
 
@@ -1713,7 +1724,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
                 <span class="char-warning" id="metaWaCharWarning">⚠ Over limit</span>
               </span>
             </div>
-            <textarea id="metaWaWording" style="height:120px;" placeholder="Write the WhatsApp campaign message..."></textarea>
+            <textarea id="metaWaWording" style="height:120px;" placeholder="Write the WhatsApp campaign message... use *text* for bold"></textarea>
+            <div class="field-hint">Tip: wrap text with asterisks for <strong>*bold*</strong> — sama seperti format bold di WhatsApp.</div>
           </div>
         </div>
 
@@ -1921,8 +1933,23 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
         <div class="card">
           <div class="card-title">Campaign Details</div>
           <div class="field">
+            <label>Nomor Invoice</label>
+            <input type="text" id="medsosInvoiceNumber" placeholder="e.g. 13615">
+          </div>
+          <div class="field">
             <label>Goal Campaign</label>
-            <input type="text" id="medsosGoal" placeholder="e.g. Awareness, Traffic, Conversion">
+            <select class="preset-select" onchange="onPresetSelectChange(this, 'medsosGoal')">
+              <option value="">Pilih cepat...</option>
+              <option value="Message">Message</option>
+              <option value="Awareness">Awareness</option>
+              <option value="Traffic">Traffic</option>
+              <option value="Conversion">Conversion</option>
+              <option value="__manual__">Isi Manual</option>
+            </select>
+            <div class="manual-wrap" style="display:none;">
+              <input type="text" id="medsosGoal" placeholder="e.g. Awareness, Traffic, Conversion">
+              <a href="javascript:void(0)" class="preset-back-link" onclick="revertToPresetSelect(this)">↩ Pilih dari daftar</a>
+            </div>
           </div>
           <div class="field">
             <label>Campaign Period</label>
@@ -2123,7 +2150,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
                 <span class="char-warning" id="wlWordingWarning">⚠ Over limit</span>
               </span>
             </div>
-            <textarea id="wlWording" style="height:100px;" maxlength="3000" placeholder="Type the campaign wording..." oninput="updateWlWordingCount()"></textarea>
+            <textarea id="wlWording" style="height:100px;" maxlength="3000" placeholder="Type the campaign wording... use *text* for bold" oninput="updateWlWordingCount()"></textarea>
+            <div class="field-hint">Tip: wrap text with asterisks for <strong>*bold*</strong> — sama seperti format bold di WhatsApp.</div>
           </div>
           <div class="field">
             <label>Lokasi</label>
@@ -2170,7 +2198,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
                 <span class="char-warning" id="wlCarrouselWordingWarning">⚠ Over limit</span>
               </span>
             </div>
-            <textarea id="wlCarrouselWording" style="height:100px;" maxlength="3000" placeholder="Type the campaign wording..." oninput="updateWlCarrouselWordingCount()"></textarea>
+            <textarea id="wlCarrouselWording" style="height:100px;" maxlength="3000" placeholder="Type the campaign wording... use *text* for bold" oninput="updateWlCarrouselWordingCount()"></textarea>
+            <div class="field-hint">Tip: wrap text with asterisks for <strong>*bold*</strong> — sama seperti format bold di WhatsApp.</div>
           </div>
           <div class="field">
             <label>Lokasi</label>
@@ -2930,7 +2959,9 @@ function loadCampaignIntoForm(campaign, historyId) {
     document.getElementById('medsosBrandName').value = campaign.brand_name || '';
     document.getElementById('medsosMid').value = campaign.mid || '';
 
+    document.getElementById('medsosInvoiceNumber').value = campaign.invoice_number || '';
     document.getElementById('medsosGoal').value = campaign.goal_campaign || '';
+    syncPresetFieldVisibility(document.getElementById('medsosGoal'));
     const [mStart, mEnd] = (campaign.campaign_period || '').split(' - ');
     document.getElementById('medsosStartDate').value = mStart ? mStart.trim() : '';
     document.getElementById('medsosEndDate').value = mEnd ? mEnd.trim() : '';
@@ -3288,6 +3319,7 @@ function clearSelectedBrandMedsos() {
   document.getElementById('medsosMid').value = '';
 }
 
+
 /* ---------------- WhatsApp LBA/TGT — Brand Search ---------------- */
 function handleBrandSearchWl() {
   refreshBrandDataIfStale(handleBrandSearchWl);
@@ -3468,7 +3500,7 @@ function createWlCardHTML(id, data) {
 
       <div class="field">
         <label>Promo Wording</label>
-        <textarea class="wc-promoWording" style="height:70px;" placeholder="Promo wording for this card...">${escapeHtml(data.promoWording)}</textarea>
+        <textarea class="wc-promoWording" style="height:70px;" placeholder="Promo wording for this card... use *text* for bold">${escapeHtml(data.promoWording)}</textarea>
       </div>
 
       <div class="field-row">
@@ -4402,9 +4434,10 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
     pdf.addFileToVFS('Outfit-Bold.ttf', OUTFIT_BOLD);
     pdf.addFont('Outfit-Bold.ttf', 'Outfit', 'bold');
   } catch (e) { console.warn('Could not register Outfit font, falling back to Helvetica:', e); }
-  // Register a small monochrome emoji font (outline/black-and-white glyphs) covering
-  // a handful of the most common emoji (🔥📍✅⭐🎉). Text containing these characters
-  // is drawn with drawMixedText(), which switches to this font only for those glyphs.
+  // Register a monochrome emoji font (outline/black-and-white glyphs, Noto Emoji)
+  // covering ~850 common emoji/symbols. Text containing these characters is drawn
+  // with drawMixedText()/drawTokenRun(), which switch to this font only for those
+  // glyphs (see EMOJI_FONT_CHARS below for the exact supported set).
   try {
     pdf.addFileToVFS('NotoEmojiMono.ttf', NOTO_EMOJI_MONO);
     pdf.addFont('NotoEmojiMono.ttf', 'NotoEmojiMono', 'normal');
@@ -4427,8 +4460,13 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
   const ZEBRA_BG = [249, 250, 252];    // near-white, just enough to guide the eye across rows
   const SP = { xs: 2, sm: 4, md: 6, lg: 8 }; // consistent spacing rhythm
 
-  // The handful of emoji covered by the embedded NotoEmojiMono font.
-  const EMOJI_FONT_CHARS = ['🔥', '📍', '✅', '⭐', '🎉'];
+  // Characters covered by the embedded NotoEmojiMono font. The embedded font
+  // itself already contains ~850 monochrome emoji/symbol glyphs (Noto Emoji);
+  // this is the full list of codepoints we allow routing to it, built directly
+  // from that font's cmap. Kept as a Set for fast lookup. Plain ASCII (digits,
+  // punctuation) is intentionally excluded so normal text keeps using Outfit.
+  const EMOJI_FONT_CHARS_STR = '‍‼⁉⃣™ℹ↔↕↖↗↘↙↩↪⌚⌛⌨⏏⏩⏪⏫⏬⏭⏮⏯⏰⏱⏲⏳⏸⏹⏺Ⓜ▪▫▶◀◻◼◽◾☀☁☂☃☄☎☑☔☘☢☣☦☪☮☯☸♀♂♈♉♊♋♌♍♎♏♐♑♒♓♟♠♣♥♦♨♻♾♿⚒⚔⚕⚖⚗⚙⚛⚜⚠⚡⚧⚪⚫⚰⚱⚽⚾⛄⛅⛈⛎⛏⛑⛓⛔⛰⛳⛸✂✅✉✏✒✔✖✝✡✨✳✴❄❇❌❎❓❔❕❗❤➕➖➗➡➰➿⤴⤵⬅⬆⬇⬛⬜⭐⭕〰〽㊗㊙️🀄🃏🅰🅱🅾🅿🆎🆑🆒🆓🆔🆕🆖🆗🆘🆙🆚🈁🈂🈚🈯🈲🈳🈴🈵🈶🈷🈸🈹🈺🉐🉑🌀🌂🌄🌅🌈🌊🌋🌌🌍🌎🌏🌐🌑🌒🌓🌔🌕🌖🌗🌘🌙🌚🌛🌜🌝🌞🌟🌠🌡🌤🌥🌦🌧🌨🌩🌪🌫🌬🌱🌲🌳🌴🌵🌷🌸🌹🌺🌻🌼🌾🌿🍀🍁🍂🍃🍄🎀🎁🎂🎃🎄🎆🎇🎈🎉🎊🎋🎍🎎🎏🎐🎑🎒🎓🎖🎗🎙🎚🎛🎞🎟🎣🎤🎥🎦🎧🎨🎩🎫🎬🎭🎮🎯🎰🎱🎲🎳🎴🎵🎶🎷🎸🎹🎺🎻🎼🎽🎾🎿🏀🏅🏆🏈🏉🏏🏐🏑🏒🏓🏔🏖🏜🏝🏞🏧🏮🏵🏷🏸🏹🏺🐀🐁🐂🐃🐄🐅🐆🐇🐈🐉🐊🐋🐌🐍🐎🐏🐐🐑🐒🐓🐔🐕🐖🐗🐘🐙🐚🐛🐜🐝🐞🐟🐠🐡🐢🐣🐤🐥🐦🐧🐨🐩🐪🐫🐬🐭🐮🐯🐰🐱🐲🐳🐴🐵🐶🐷🐸🐹🐺🐻🐼🐽🐾🐿👁👑👒👓👔👕👖👗👘👙👚👛👜👝👞👟👠👡👢👾💄💉💊💌💍💎💐💙💚💛💜💟💠💡💣💥💧💬💭💮💰💱💲💳💴💵💶💷💸💹💻💼💽💾💿📀📁📂📃📄📅📆📇📈📉📊📋📌📍📎📏📐📑📒📓📔📕📖📗📘📙📚📛📜📝📞📟📠📡📢📣📤📥📦📧📨📩📪📫📬📭📮📯📰📱📲📳📴📵📶📷📸📹📺📻📼📽📿🔀🔁🔂🔃🔄🔅🔆🔇🔈🔉🔊🔋🔌🔍🔎🔏🔐🔑🔒🔓🔔🔕🔖🔗🔘🔙🔚🔛🔜🔝🔞🔟🔠🔡🔢🔣🔤🔥🔦🔧🔨🔩🔫🔬🔭🔮🔯🔰🔱🔲🔳🔴🔵🔶🔷🔸🔹🔺🔻🔼🔽🕉🕊🕎🕐🕑🕒🕓🕔🕕🕖🕗🕘🕙🕚🕛🕜🕝🕞🕟🕠🕡🕢🕣🕤🕥🕦🕧🕯🕰🕳🕶🕷🕸🕹🖇🖊🖋🖌🖍🖤🖥🖨🖱🖲🖼🗂🗃🗄🗑🗒🗓🗜🗝🗞🗡🗨🗯🗳🙈🙉🙊🚪🚫🚬🚭🚮🚯🚰🚱🚳🚷🚸🚹🚺🚻🚼🚽🚾🚿🛁🛂🛃🛄🛅🛋🛍🛎🛏🛐🛑🛒🛗🛘🛜🛠🛡🛰🛷🛹🛼🟠🟡🟢🟣🟤🟥🟦🟧🟨🟩🟪🟫🟰🤍🤎🤿🥀🥁🥅🥇🥈🥉🥊🥋🥌🥍🥎🥏🥻🥼🥽🥾🥿🦀🦁🦂🦃🦄🦅🦆🦇🦈🦉🦊🦋🦌🦍🦎🦏🦐🦑🦒🦓🦔🦕🦖🦗🦘🦙🦚🦛🦜🦝🦞🦟🦠🦡🦢🦣🦤🦥🦦🦧🦨🦩🦪🦫🦬🦭🦮🦯🦺🧑🧒🧡🧢🧣🧤🧥🧦🧧🧨🧩🧪🧫🧬🧮🧯🧰🧱🧲🧳🧴🧵🧶🧷🧸🧹🧺🧻🧼🧽🧾🧿🩰🩱🩲🩳🩴🩵🩶🩷🩹🩺🩻🪀🪁🪃🪄🪅🪆🪇🪈🪉🪊🪎🪏🪐🪑🪒🪓🪔🪕🪖🪗🪘🪙🪚🪛🪜🪝🪞🪟🪠🪡🪢🪣🪤🪥🪦🪧🪨🪩🪪🪫🪬🪭🪮🪯🪰🪱🪲🪳🪴🪵🪶🪷🪸🪹🪺🪻🪼🪽🪾🪿🫍🫎🫏🫟🫧';
+  const EMOJI_FONT_CHARS = new Set(Array.from(EMOJI_FONT_CHARS_STR));
 
   // Splits a line of text into alternating normal/emoji segments so each can be
   // drawn with the right font.
@@ -4438,7 +4476,7 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
     let currentIsEmoji = false;
     const chars = Array.from(String(text)); // iterate by code point (handles surrogate pairs)
     for (const ch of chars) {
-      const isEmoji = EMOJI_FONT_CHARS.indexOf(ch) !== -1;
+      const isEmoji = EMOJI_FONT_CHARS.has(ch);
       if (current === '') { current = ch; currentIsEmoji = isEmoji; }
       else if (isEmoji === currentIsEmoji) { current += ch; }
       else { segments.push({ text: current, emoji: currentIsEmoji }); current = ch; currentIsEmoji = isEmoji; }
@@ -4451,7 +4489,7 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
   // emoji font for any of the covered emoji characters, then restores baseFont/style.
   function drawMixedText(text, x, y, baseFont, baseStyle, fontSize) {
     const str = String(text);
-    if (!/[\u{1F300}-\u{1FAFF}\u2705\u2B50]/u.test(str)) {
+    if (!/[\u{2000}-\u{1FAFF}]/u.test(str)) {
       // Fast path: no relevant emoji present, draw normally (avoids per-char overhead)
       pdf.setFont(baseFont, baseStyle); pdf.setFontSize(fontSize);
       pdf.text(str, x, y);
@@ -4597,6 +4635,101 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
     y += SP.sm; // space below the block
   }
 
+  // Splits a wording string on WhatsApp-style *bold* markers into
+  // { text, bold } segments. Markers don't cross line breaks.
+  function parseBoldSegments(str) {
+    const segments = [];
+    const regex = /\*([^*\n]+)\*/g;
+    let lastIndex = 0;
+    let m;
+    while ((m = regex.exec(str)) !== null) {
+      if (m.index > lastIndex) segments.push({ text: str.slice(lastIndex, m.index), bold: false });
+      segments.push({ text: m[1], bold: true });
+      lastIndex = regex.lastIndex;
+    }
+    if (lastIndex < str.length) segments.push({ text: str.slice(lastIndex), bold: false });
+    return segments;
+  }
+
+  // Measures a single word/space token in the correct weight (used for manual
+  // word-wrapping that needs to know bold vs normal widths before drawing).
+  function measureToken(tok, fontSize) {
+    pdf.setFont('Outfit', tok.bold ? 'bold' : 'normal');
+    pdf.setFontSize(fontSize);
+    return pdf.getTextWidth(tok.text);
+  }
+
+  // Draws one token, switching to the monochrome emoji font for any covered
+  // emoji within it (reuses the same NotoEmojiMono handling as drawMixedText),
+  // and to Outfit bold/normal for the rest. Returns the width consumed.
+  function drawTokenRun(tok, x, yPos, fontSize) {
+    const baseStyle = tok.bold ? 'bold' : 'normal';
+    const segments = splitTextForEmojiFont(tok.text);
+    let curX = x;
+    segments.forEach(seg => {
+      pdf.setFont(seg.emoji ? 'NotoEmojiMono' : 'Outfit', seg.emoji ? 'normal' : baseStyle);
+      pdf.setFontSize(fontSize);
+      pdf.text(seg.text, curX, yPos);
+      curX += pdf.getTextWidth(seg.text);
+    });
+    return curX - x;
+  }
+
+  // Like paragraph(), but understands WhatsApp-style *bold* markers inside the
+  // wording text and renders those spans in bold instead of showing the
+  // literal asterisks. Wraps manually at the word level so bold/normal runs
+  // can be mixed within a single wrapped line.
+  function paragraphWording(label, text) {
+    if (!text) return;
+    const fontSize = 10;
+    ensureSpace(SP.xs + SP.sm + 5);
+    y += SP.xs;
+    pdf.setFont('Outfit', 'bold'); pdf.setFontSize(9); pdf.setTextColor(TEXT_GRAY[0], TEXT_GRAY[1], TEXT_GRAY[2]);
+    pdf.text(label, M, y); y += SP.sm;
+    pdf.setTextColor(TEXT_DARK[0], TEXT_DARK[1], TEXT_DARK[2]);
+
+    const hardLines = String(text).split(/\r?\n/);
+    let isFirstLine = true;
+    hardLines.forEach(hardLine => {
+      if (hardLine.trim() === '') {
+        if (!isFirstLine) ensureSpace(5);
+        y += 5; isFirstLine = false; return;
+      }
+      const segments = parseBoldSegments(hardLine);
+      const tokens = [];
+      segments.forEach(seg => {
+        (seg.text.split(/(\s+)/) || []).forEach(p => { if (p.length > 0) tokens.push({ text: p, bold: seg.bold }); });
+      });
+
+      const wrappedLines = [];
+      let currentTokens = [];
+      let currentWidth = 0;
+      tokens.forEach(tok => {
+        const isSpace = /^\s+$/.test(tok.text);
+        const w = measureToken(tok, fontSize);
+        if (currentWidth + w > CW && currentTokens.length > 0 && !isSpace) {
+          wrappedLines.push(currentTokens);
+          currentTokens = []; currentWidth = 0;
+        }
+        if (currentTokens.length === 0 && isSpace) return; // don't start a line with a space
+        currentTokens.push(tok);
+        currentWidth += w;
+      });
+      if (currentTokens.length) wrappedLines.push(currentTokens);
+      if (wrappedLines.length === 0) wrappedLines.push([]);
+
+      wrappedLines.forEach(lineTokens => {
+        if (!isFirstLine) ensureSpace(5);
+        isFirstLine = false;
+        pdf.setFontSize(fontSize); pdf.setTextColor(TEXT_DARK[0], TEXT_DARK[1], TEXT_DARK[2]);
+        let curX = M;
+        lineTokens.forEach(tok => { curX += drawTokenRun(tok, curX, y + 4, fontSize); });
+        y += 5;
+      });
+    });
+    y += SP.sm;
+  }
+
   function embedImage(url, maxWmm) {
     const data = imageMap[url];
     if (!data) return;
@@ -4734,7 +4867,7 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
     if (campaignData.whatsapp.campaign_image) {
       embedImageWithLabel(campaignData.whatsapp.campaign_image, 'Campaign Image:', 75);
     }
-    paragraph('Release Content (' + (campaignData.whatsapp.campaign_wording ? campaignData.whatsapp.campaign_wording.length : 0) + ' char):', campaignData.whatsapp.campaign_wording);
+    paragraphWording('Release Content (' + (campaignData.whatsapp.campaign_wording ? campaignData.whatsapp.campaign_wording.length : 0) + ' char):', campaignData.whatsapp.campaign_wording);
     y += 4;
   }
   if (campaignData.flow) {
@@ -4796,6 +4929,7 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
     y += 4;
 
     sectionTitle('Campaign Details');
+    kvRow('Nomor Invoice', campaignData.invoice_number);
     kvRow('Goal Campaign', campaignData.goal_campaign);
     kvRow('Campaign Period', campaignPeriod);
     kvRow('Placement', campaignData.placement);
@@ -4853,7 +4987,7 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
 
     if (campaignData.format === 'Carrousel') {
       sectionTitle('Campaign Content — Carrousel');
-      paragraph('Campaign Wording (' + (campaignData.wording_length || 0) + ' char):', campaignData.wording);
+      paragraphWording('Campaign Wording (' + (campaignData.wording_length || 0) + ' char):', campaignData.wording);
       kvRow('Lokasi', campaignData.location);
       if (campaignData.wl_type === 'LBA' && campaignData.long_lat) kvRow('Long-Lat', campaignData.long_lat);
       y += 4;
@@ -4864,7 +4998,7 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
           if (c.image) {
             embedImageWithLabel(c.image, 'Campaign Image:', 75);
           }
-          paragraph('Promo Wording:', c.promo_wording);
+          paragraphWording('Promo Wording:', c.promo_wording);
           (c.buttons || []).forEach((b, i) => {
             kvRow('Button ' + (i + 1) + ' Text', b.text);
             if (b.cta) paragraph('Button ' + (i + 1) + ' CTA:', b.cta);
@@ -4877,7 +5011,7 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
       if (campaignData.key_visual) {
         embedImageWithLabel(campaignData.key_visual, 'Key Visual:', 75);
       }
-      paragraph('Campaign Wording (' + (campaignData.wording_length || 0) + ' char):', campaignData.wording);
+      paragraphWording('Campaign Wording (' + (campaignData.wording_length || 0) + ' char):', campaignData.wording);
       kvRow('Lokasi', campaignData.location);
       if (campaignData.wl_type === 'LBA' && campaignData.long_lat) kvRow('Long-Lat', campaignData.long_lat);
       (campaignData.buttons || []).forEach((b, i) => {
@@ -4968,15 +5102,54 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
     ms.style.overflowX = 'visible';
     ms.style.flexWrap = 'wrap';
     ms.style.justifyContent = 'flex-start';
+    ms.style.alignItems = 'flex-start';
     ms.style.paddingTop = '0';
   }
   const hint = clone.querySelector('.mockup-hint');
   if (hint) hint.style.marginBottom = '4px';
+  // Phone mockups use a fixed-height screen with internal overflow:auto scroll
+  // areas (wa-chat-bg, sms-bubble-area, lp-scroll) so they behave like a real
+  // phone on screen. html2canvas only captures what's within the visible
+  // scroll position though — if the wording is long, content below the fold
+  // (including a CTA button at the end of the card) gets silently cut out of
+  // the PDF. For this flattened snapshot we want everything visible instead,
+  // so let every phone frame/screen and inner scroll area grow to fit its
+  // full content rather than clipping or scrolling.
+  // IMPORTANT: keep .phone-screen's overflow:hidden (don't override it) —
+  // that's what clips its square-cornered children (header bar, input bar)
+  // to the screen's rounded corners, matching the phone bezel. Only its fixed
+  // height needs to go; with height:auto there's nothing left to clip anyway.
+  clone.querySelectorAll('.phone-frame').forEach(el => { el.style.height = 'auto'; });
+  clone.querySelectorAll('.phone-screen').forEach(el => { el.style.height = 'auto'; });
+  clone.querySelectorAll('.wa-chat-bg, .sms-bubble-area, .lp-scroll').forEach(el => {
+    el.style.overflow = 'visible'; el.style.maxHeight = 'none'; el.style.flex = 'none';
+  });
   mockupHost.appendChild(clone);
   document.body.appendChild(mockupHost);
   window.scrollTo(0, 0);
 
   inlineImagesAsDataURLs(mockupHost, imageMap)
+    .then(() => {
+      // Convert any emoji characters typed into the wording/caption text (e.g.
+      // 🏆🎉📅🎁) into real <img> tags via Twemoji before screenshotting. Color
+      // emoji glyphs drawn straight from a system font are exactly what
+      // html2canvas struggles to rasterize reliably across browsers/OSes —
+      // swapping them for actual images guarantees they show up in the PDF
+      // no matter which emoji the user typed. Run this AFTER
+      // inlineImagesAsDataURLs (not before), since that function replaces any
+      // <img> it can't resolve via the campaign's image cache with an "Image
+      // not available" placeholder — we don't want it doing that to the
+      // Twemoji images it knows nothing about.
+      if (window.twemoji) {
+        try {
+          window.twemoji.parse(clone, {
+            base: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/',
+            folder: 'svg',
+            ext: '.svg'
+          });
+        } catch (e) { console.warn('Twemoji parse failed:', e); }
+      }
+    })
     .then(() => new Promise(r => setTimeout(r, 100)))
     .then(() => {
       // Measure every clickable link's position now, while the mockup is still
@@ -5257,6 +5430,37 @@ function buildSmsMockup(campaign) {
 // Builds a single-phone Instagram/Meta Ads post mockup: header (avatar + account
 // name + "Sponsored"), post image (key visual), a "Chat On WhatsApp" CTA bar,
 // like/comment/share row (illustrative counts), caption, and a bottom nav bar.
+// Small inline SVG icons used inside the Instagram/Meta Ads mockup instead of
+// emoji — same html2canvas rendering-reliability reasoning as the WhatsApp
+// mockup icons above (color/uncommon emoji glyphs can render blank in the PDF).
+function igIconMenuDotsH(color) {
+  return `<svg class="wa-icon" viewBox="0 0 24 24" width="14" height="14" fill="${color}"><circle cx="5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="19" cy="12" r="1.9"/></svg>`;
+}
+function igIconHeart(color) {
+  return `<svg class="wa-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5S3 14.8 3 8.9C3 5.9 5.3 4 7.8 4c1.7 0 3.3.9 4.2 2.4C13 4.9 14.6 4 16.3 4 18.8 4 21 5.9 21 8.9c0 5.9-9 11.6-9 11.6z"/></svg>`;
+}
+function igIconComment(color) {
+  return `<svg class="wa-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8 8 0 01-8.4 8.5 8.6 8.6 0 01-3.6-.7L3 21l1.8-5.2A8 8 0 1121 11.5z"/></svg>`;
+}
+function igIconShare(color) {
+  return `<svg class="wa-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 3L3 10.5l7 2.7 2.7 7z"/></svg>`;
+}
+function igIconBookmark(color) {
+  return `<svg class="wa-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5h12a1 1 0 011 1V21l-7-4-7 4V4.5a1 1 0 011-1z"/></svg>`;
+}
+function igIconHome(color) {
+  return `<svg class="wa-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11.5L12 4l8 7.5"/><path d="M6 10v9.5a1 1 0 001 1h10a1 1 0 001-1V10"/></svg>`;
+}
+function igIconSearch(color) {
+  return `<svg class="wa-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"/><line x1="20" y1="20" x2="15.3" y2="15.3"/></svg>`;
+}
+function igIconAddSquare(color) {
+  return `<svg class="wa-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>`;
+}
+function igIconReels(color) {
+  return `<svg class="wa-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M9.5 8.5l6 3.5-6 3.5z" fill="${color}" stroke="none"/></svg>`;
+}
+
 function buildMetaMockup(campaign) {
   const cj = campaign.customer_journey || {};
   const instaName = cj.instagram_name || 'yourbrand';
@@ -5294,7 +5498,7 @@ function buildMetaMockup(campaign) {
                 <div class="ig-username">${escapeHtml(instaName)}</div>
                 <div class="ig-sponsored">Sponsored</div>
               </div>
-              <div class="ig-menu-dots">⋯</div>
+              <div class="ig-menu-dots">${igIconMenuDotsH('#1a1a1a')}</div>
             </div>
             <div class="ig-post-image-wrap">${imageHtml}</div>
             ${linkCta
@@ -5302,16 +5506,16 @@ function buildMetaMockup(campaign) {
               : `<div class="ig-cta-bar"><span>Chat On WhatsApp</span><span>›</span></div>`
             }
             <div class="ig-actions-row">
-              <span>♡ 6,961</span>
-              <span>💬 71</span>
-              <span>➤ 1,886</span>
-              <span class="ig-bookmark">🔖</span>
+              <span>${igIconHeart('#1a1a1a')} 6,961</span>
+              <span>${igIconComment('#1a1a1a')} 71</span>
+              <span>${igIconShare('#1a1a1a')} 1,886</span>
+              <span class="ig-bookmark">${igIconBookmark('#1a1a1a')}</span>
             </div>
             <div class="ig-caption">
-              <strong>${escapeHtml(instaName)}</strong> ${escapeHtml(caption)} <span class="ig-more">... more</span>
+              <strong>${escapeHtml(instaName)}</strong> ${renderWaWordingHtml(caption)} <span class="ig-more">... more</span>
             </div>
             <div class="ig-navbar">
-              <span>⌂</span><span>⚲</span><span>⊕</span><span>▤</span><span class="ig-profile-dot"></span>
+              <span>${igIconHome('#1a1a1a')}</span><span>${igIconSearch('#1a1a1a')}</span><span>${igIconAddSquare('#1a1a1a')}</span><span>${igIconReels('#1a1a1a')}</span><span class="ig-profile-dot"></span>
             </div>
           </div>
         </div>
@@ -5325,22 +5529,97 @@ function buildMetaMockup(campaign) {
   `;
 }
 
+// Small inline SVG icons used inside the WhatsApp mockup instead of emoji.
+// html2canvas (used to flatten this mockup into an image for the PDF) does not
+// reliably render color/multi-codepoint emoji glyphs across environments — they
+// often come out blank ("icon hilang"). Real SVG shapes are DOM elements that
+// html2canvas rasterizes correctly every time, so we use those instead.
+function waIconBack(color) {
+  return `<svg class="wa-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="${color}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>`;
+}
+function waIconMenuDots(color) {
+  return `<svg class="wa-icon" viewBox="0 0 24 24" width="14" height="14" fill="${color}"><circle cx="12" cy="5" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="12" cy="19" r="1.9"/></svg>`;
+}
+function waIconSmiley(color) {
+  return `<svg class="wa-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="${color}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="8.6" cy="10" r="1" fill="${color}" stroke="none"/><circle cx="15.4" cy="10" r="1" fill="${color}" stroke="none"/><path d="M8 14.5c1.1 1.3 2.5 2 4 2s2.9-.7 4-2"/></svg>`;
+}
+function waIconPaperclip(color) {
+  return `<svg class="wa-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="${color}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5l-9.19 9.19a4.5 4.5 0 01-6.36-6.36l9.19-9.19a3 3 0 014.24 4.24l-9.2 9.19a1.5 1.5 0 01-2.12-2.12l8.49-8.49"/></svg>`;
+}
+function waIconCamera(color) {
+  return `<svg class="wa-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="${color}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 012-2h1.2l.9-1.5A1.5 1.5 0 019.4 4h5.2a1.5 1.5 0 011.3.8L16.8 6H18a2 2 0 012 2v9a2 2 0 01-2 2H6a2 2 0 01-2-2V8z"/><circle cx="12" cy="13" r="3.3"/></svg>`;
+}
+function waIconMic(color) {
+  return `<svg class="wa-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="${color}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"></rect><path d="M5 11a7 7 0 0014 0"></path><line x1="12" y1="18" x2="12" y2="21"></line><line x1="9" y1="21" x2="15" y2="21"></line></svg>`;
+}
+function waIconLink(color) {
+  return `<svg class="wa-icon" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="${color}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 15l6-6"></path><path d="M11 5.5l1-1a4 4 0 015.6 5.6l-1.6 1.6"></path><path d="M13 18.5l-1 1a4 4 0 01-5.6-5.6l1.6-1.6"></path></svg>`;
+}
+
+// Renders wording text for the WhatsApp mockup: escapes HTML, then converts
+// WhatsApp-style *bold* markers into real <strong> tags so the preview matches
+// how WhatsApp itself will render the message.
+function renderWaWordingHtml(text) {
+  const escaped = escapeHtml(text || '');
+  return escaped.replace(/\*([^*\n]+)\*/g, '<strong>$1</strong>');
+}
+
+// Cuts wording down to a short preview for the mockup card, breaking at a word
+// boundary (not mid-word) and never leaving a dangling unclosed *bold* marker.
+function truncateWaWording(text, maxLen) {
+  let cut = text.slice(0, maxLen);
+  const lastSpace = cut.lastIndexOf(' ');
+  if (lastSpace > maxLen * 0.6) cut = cut.slice(0, lastSpace);
+  const asteriskCount = (cut.match(/\*/g) || []).length;
+  if (asteriskCount % 2 === 1) cut = cut.slice(0, cut.lastIndexOf('*'));
+  return cut.replace(/\s+$/, '');
+}
+
+// Builds the wording block shown inside the WhatsApp card: a short preview
+// plus a blue "Read more" link when the full wording is longer than that
+// preview — matching real WhatsApp behavior and keeping the phone mockup a
+// fixed, predictable height regardless of how long the actual wording is.
+function waWordingBlock(text) {
+  const full = text || '';
+  const maxLen = 140;
+  if (full.length <= maxLen) return renderWaWordingHtml(full);
+  const truncated = truncateWaWording(full, maxLen);
+  return renderWaWordingHtml(truncated) + '… <span class="wa-readmore">Read more</span>';
+}
+
 // Builds a WhatsApp-chat-style mockup for WhatsApp LBA/TGT: header (avatar + brand
 // name), a message card (image + wording + boilerplate opt-out text + button(s)
 // with the CTA embedded), and — for Carrousel — a horizontal scroll of card items
 // below the main bubble. Matches the reference WhatsApp Business broadcast look.
-function buildWlMockup(campaign) {
-  const brandName = campaign.brand_masking || campaign.brand_name || 'Brand';
-  const optOutText = 'Penawaran bermanfaat? Jika tdk, sms stop tselpromorwd ke 8000';
+function waIconVerifiedBadge() {
+  return `<svg class="wa-icon" viewBox="0 0 24 24" width="9" height="9" style="margin-left:2px; vertical-align:middle; flex-shrink:0;"><circle cx="12" cy="12" r="11" fill="#34b7f1"/><path d="M7 12.5l3 3 7-7.5" stroke="#ffffff" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+// Official Telkomsel 2021 icon (flame mark) used as the WhatsApp mockup avatar,
+// since these broadcasts are sent from Telkomsel's own verified WABA. Uses a
+// unique gradient id to avoid clashing if the mockup is ever rendered twice.
+function waIconTelkomselAvatar() {
+  return `<svg viewBox="0 0 546.38213 749.99997" preserveAspectRatio="xMidYMid slice" width="100%" height="100%" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <defs>
+      <linearGradient id="tselFlameStops">
+        <stop offset="0" style="stop-color:#ffcc00;stop-opacity:1"/>
+        <stop offset="0.60435557" style="stop-color:#ff0015;stop-opacity:1"/>
+        <stop offset="1" style="stop-color:#c6000f;stop-opacity:1"/>
+      </linearGradient>
+      <radialGradient id="tselFlameGrad" xlink:href="#tselFlameStops" href="#tselFlameStops" cx="118.5562" cy="320.02252" fx="118.5562" fy="320.02252" r="83.7994" gradientTransform="matrix(5.1899738,-2.7817921,2.3691345,4.4200801,-1293.2326,-514.82443)" gradientUnits="userSpaceOnUse"/>
+    </defs>
+    <path fill="url(#tselFlameGrad)" d="M 239.18524,8.122638e-4 C 237.00921,0.03699893 234.21299,1.0099311 234.18531,4.7381027 c -0.0261,3.7281715 3.83341,11.6683073 3.61981,29.8897263 -0.22201,18.932079 -4.55988,31.807717 -30.99303,64.197093 L 102.03332,227.21363 C 41.402212,301.5068 0.19031833,335.38515 6.4806583e-4,416.42779 -0.1890222,497.47042 41.434291,537.07248 102.07697,585.88555 c 60.64265,48.81307 139.20175,112.18605 200.31649,161.82617 1.38715,1.12671 3.11518,2.3237 5.29123,2.28745 2.17603,-0.0362 4.973,-1.00912 4.99993,-4.73729 0.0261,-3.7282 -4.1438,-7.38948 -3.9302,-25.6109 0.22201,-18.93208 2.06124,-30.31757 28.65762,-62.57306 L 447.42999,523.65075 C 508.43548,449.66474 546.19206,416.58 546.38147,336.50664 546.57088,256.43329 504.5964,212.70914 450.86143,171.03009 380.17574,116.20339 298.01497,47.074182 244.47648,2.2882657 243.10578,1.1416375 241.36129,-0.035407 239.18524,8.122638e-4 Z"/>
+    <path fill="#ffffff" d="m 148.446,274.50713 v 32.98937 h 93.19812 v 215.18002 c 0,30.21052 21.52656,43.99121 42.6123,43.99121 21.08574,-3e-5 34.46011,-7.02226 34.46011,-7.02226 0,0 -12.85901,-10.41042 -12.91457,-56.67914 -0.0541,-44.8745 -0.005,-186.37462 0,-206.33283 0.005,-19.95819 -23.26089,-55.89411 -61.54365,-55.89401 l -59.1671,1.8e-4 c -19.39177,8e-5 -36.64521,15.79437 -36.64521,33.76746 z m 136.87333,-33.76764 c -1.22227,0 -2.20563,0.98337 -2.20563,2.20562 0,1.22228 1.2261,2.12897 2.20563,2.85999 4.05896,3.02919 16.70962,11.99788 22.75067,24.26826 6.04104,12.27036 6.18525,23.40585 10.11027,29.83819 3.92504,6.4323 10.33071,7.58495 17.10558,7.58495 h 48.70888 c 10.76298,0 14.99251,-7.2338 14.99251,-15.81376 v -50.94325 z"/>
+  </svg>`;
+}
 
-  const initial = escapeHtml((brandName[0] || 'B').toUpperCase());
-  let avatarHtml;
-  if (campaign.brand_logo_url) {
-    const logoSrc = toDirectImageUrl(campaign.brand_logo_url);
-    avatarHtml = `<img src="${escapeAttr(logoSrc)}" alt="Avatar" onerror="this.parentNode.textContent='${initial}'">`;
-  } else {
-    avatarHtml = initial;
-  }
+function buildWlMockup(campaign) {
+  // WhatsApp broadcasts for this channel are actually sent from Telkomsel's
+  // verified WhatsApp Business account, not the brand itself — the brand only
+  // shows up inside the message content (image/wording), so the chat header
+  // always reflects the real sender identity rather than campaign.brand_masking.
+  const waSenderName = 'Telkomsel Promo & Rewards';
+  const optOutText = 'Penawaran bermanfaat? Jika tdk, sms stop tselpromorwd ke 8000';
+  const avatarHtml = waIconTelkomselAvatar();
 
   function waImage(url, label) {
     if (!url) return `<div class="wa-card-image-missing">No ${label}</div>`;
@@ -5353,8 +5632,8 @@ function buildWlMockup(campaign) {
     return `<div class="wa-card-buttons">${buttons.map(b => {
       const label = b.text || 'Learn More';
       return b.cta
-        ? `<a href="${escapeAttr(b.cta)}" target="_blank" class="wa-card-button">🔗 ${escapeHtml(label)}</a>`
-        : `<div class="wa-card-button">${escapeHtml(label)}</div>`;
+        ? `<a href="${escapeAttr(b.cta)}" target="_blank" class="wa-card-button">${waIconLink('#039be5')}<span>${escapeHtml(label)}</span></a>`
+        : `<div class="wa-card-button"><span>${escapeHtml(label)}</span></div>`;
     }).join('')}</div>`;
   }
 
@@ -5363,29 +5642,37 @@ function buildWlMockup(campaign) {
     const cardsHtml = (campaign.cards || []).map(c => `
       <div class="wa-carousel-card">
         <div class="wa-card-image">${waImage(c.image, 'Campaign Image')}</div>
-        <div class="wa-carousel-caption">${escapeHtml(c.promo_wording)}</div>
-        ${waButtons(c.buttons)}
+        <div class="wa-carousel-caption">${renderWaWordingHtml(c.promo_wording)}</div>
+        ${waButtons(c.buttons && c.buttons.length ? c.buttons : [{ text: 'Kunjungi Sekarang', cta: (c.buttons && c.buttons[0] && c.buttons[0].cta) }])}
       </div>
     `).join('');
 
     bodyHtml = `
       <div class="wa-card wa-card-text-only">
         <div class="wa-card-body">
-          <div class="wa-card-wording">${escapeHtml(campaign.wording)} <span class="wa-readmore">Read more</span></div>
+          <div class="wa-card-wording">${waWordingBlock(campaign.wording)}</div>
           <div class="wa-optout">${optOutText}</div>
         </div>
       </div>
       <div class="wa-carousel-scroll">${cardsHtml}</div>
     `;
   } else {
+    // Always show a clickable CTA row in the mockup, matching the real WhatsApp
+    // broadcast layout (e.g. "🔗 Kunjungi [Brand] Sekarang") — falls back to a
+    // generic label/placeholder link if the user hasn't filled in a button yet,
+    // so the preview always demonstrates the clickable button placement.
+    const brandForCta = campaign.brand_masking || campaign.brand_name || 'Brand';
+    const ctaButtons = (campaign.buttons && campaign.buttons.length)
+      ? campaign.buttons
+      : [{ text: 'Kunjungi ' + brandForCta + ' Sekarang', cta: '#' }];
     bodyHtml = `
       <div class="wa-card">
         <div class="wa-card-image">${waImage(campaign.key_visual, 'Key Visual')}</div>
         <div class="wa-card-body">
-          <div class="wa-card-wording">${escapeHtml(campaign.wording)} <span class="wa-readmore">Read more</span></div>
+          <div class="wa-card-wording">${waWordingBlock(campaign.wording)}</div>
           <div class="wa-optout">${optOutText}</div>
         </div>
-        ${waButtons(campaign.buttons)}
+        ${waButtons(ctaButtons)}
       </div>
     `;
   }
@@ -5398,16 +5685,16 @@ function buildWlMockup(campaign) {
           <div class="phone-notch"></div>
           <div class="phone-screen">
             <div class="wa-header">
-              <span class="wa-back">←</span>
+              <span class="wa-back">${waIconBack('#ffffff')}</span>
               <div class="wa-avatar">${avatarHtml}</div>
-              <div class="wa-header-text">${escapeHtml(brandName)}</div>
-              <span class="wa-menu-dots">⋮</span>
+              <div class="wa-header-text">${escapeHtml(waSenderName)}${waIconVerifiedBadge()}</div>
+              <span class="wa-menu-dots">${waIconMenuDots('#ffffff')}</span>
             </div>
             <div class="wa-chat-bg">
               ${bodyHtml}
             </div>
             <div class="wa-input-bar">
-              <span>😊</span><span class="wa-input-field">Message</span><span>📎</span><span>📷</span><span class="wa-mic">🎤</span>
+              <span>${waIconSmiley('#8e8e8e')}</span><span class="wa-input-field">Message</span><span>${waIconPaperclip('#8e8e8e')}</span><span>${waIconCamera('#8e8e8e')}</span><span class="wa-mic">${waIconMic('#8e8e8e')}</span>
             </div>
           </div>
         </div>
@@ -5771,7 +6058,7 @@ function renderPreviewMeta(campaign) {
         ${visualBlock(campaign.whatsapp.campaign_image, 'Campaign Image')}
         <div class="sms-box">
           <div class="sms-meta">Release Content (${campaign.whatsapp.campaign_wording_length} char)${waOverLimit ? ' <span class="warn">⚠️ OVER 950 CHARS</span>' : ''}</div>
-          <div class="sms-text">${escapeHtml(campaign.whatsapp.campaign_wording)}</div>
+          <div class="sms-text">${renderWaWordingHtml(campaign.whatsapp.campaign_wording)}</div>
         </div>
       </div>
     </div>
@@ -6102,6 +6389,7 @@ function generateCampaignMedsos() {
     campaign_type: 'Medsos',
     brand_name: brandName,
     mid: mid,
+    invoice_number: document.getElementById('medsosInvoiceNumber').value,
     goal_campaign: document.getElementById('medsosGoal').value,
     campaign_period: formatPeriod(startDate, endDate),
     placement: document.getElementById('medsosPlacement').value,
@@ -6155,6 +6443,7 @@ function renderPreviewMedsos(campaign) {
     <div class="preview-section">
       <div class="preview-section-title">Campaign Details</div>
       <table class="preview-table">
+        <tr><td>Nomor Invoice</td><td>${escapeHtml(campaign.invoice_number) || '-'}</td></tr>
         <tr><td>Goal Campaign</td><td>${escapeHtml(campaign.goal_campaign) || '-'}</td></tr>
         <tr><td>Campaign Period</td><td>${escapeHtml(campaign.campaign_period) || '-'}</td></tr>
         <tr><td>Placement</td><td>${escapeHtml(campaign.placement) || '-'}</td></tr>
@@ -6196,7 +6485,9 @@ function resetFormMedsos() {
   document.getElementById('medsosBrandSearchInput').value = '';
   clearSelectedBrandMedsos();
 
+  document.getElementById('medsosInvoiceNumber').value = '';
   document.getElementById('medsosGoal').value = '';
+  syncPresetFieldVisibility(document.getElementById('medsosGoal'));
   document.getElementById('medsosStartDate').value = '';
   document.getElementById('medsosEndDate').value = '';
   document.getElementById('medsosPlacement').value = '';
