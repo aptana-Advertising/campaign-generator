@@ -5117,6 +5117,13 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
 
   if (!mockupEl) { finishSaveTextOnly(); return; }
 
+  // Record each phone frame's natural on-screen height (as the user sees it in the
+  // live Customer Journey preview) BEFORE we override heights in the clone below.
+  // We restore these as a floor later, so the flattened PDF snapshot keeps the same
+  // proportions as the preview instead of collapsing to just the text height.
+  const originalFrameHeights = Array.from(mockupEl.querySelectorAll('.phone-frame'))
+    .map(el => el.offsetHeight);
+
   const mockupHost = document.createElement('div');
   mockupHost.style.cssText = 'position:absolute; top:0; left:0; width:794px; z-index:99998; background:#ffffff; padding:4px 10px; font-family:\'Outfit\',-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,Helvetica,Arial,sans-serif;';
   const clone = mockupEl.cloneNode(true);
@@ -5179,24 +5186,29 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
     })
     .then(() => new Promise(r => setTimeout(r, 100)))
     .then(() => {
-      // Equalize every phone-frame's height within the mockup grid so multi-phone
-      // journeys (e.g. Kuponku SMS's 6-step flow) wrap into a clean, evenly-aligned
-      // grid instead of a jagged/uneven layout. Each phone's content length
-      // (wording, key visual aspect ratio, etc.) can otherwise make its frame
-      // taller than its row-mates — combined with flex-wrap that leaves uneven
-      // gaps between rows. Using the tallest frame's height for all of them keeps
-      // every row uniform while still showing full content (no clipping), since
-      // every frame gets at least as tall as its own content needs.
+      // Give every phone frame a concrete height, then stretch its screen to fill it.
+      //
+      // Heights were set to 'auto' above so long content (wording, tall key visuals)
+      // can't get clipped out of the snapshot. But 'auto' also means a phone with
+      // little content collapses to just that content's height — leaving the screen
+      // shorter than the bezel drawn around it, which reads as an empty black gap
+      // at the bottom of the phone. So for each frame we take whichever is taller:
+      // its content height, or the height it had in the live preview. That keeps
+      // short mockups looking exactly like the preview while still letting tall
+      // ones grow.
+      //
+      // Then all frames are levelled to the tallest of those, so multi-phone
+      // journeys (e.g. Kuponku SMS's 6-step flow) wrap into an evenly-aligned grid
+      // instead of a jagged one. Finally each .phone-screen goes back to height:100%
+      // so the white/dark screen fills its bezel edge to edge.
       const frames = Array.from(clone.querySelectorAll('.phone-frame'));
-      if (frames.length > 1) {
-        const maxFrameH = Math.max(...frames.map(el => el.offsetHeight));
+      if (frames.length) {
+        const targetH = Math.max(...frames.map((el, i) => Math.max(
+          el.offsetHeight,
+          originalFrameHeights[i] || 0
+        )));
         frames.forEach(el => {
-          el.style.height = maxFrameH + 'px';
-          // .phone-screen was switched to height:auto earlier (to avoid clipping
-          // tall content) so it only fills its own content height, not the frame
-          // — stretch it back to 100% now that the frame is a fixed (equalized)
-          // height, so the white/dark screen fills the bezel with no gap, exactly
-          // like the on-screen Customer Journey preview.
+          el.style.height = targetH + 'px';
           const screen = el.querySelector('.phone-screen');
           if (screen) screen.style.height = '100%';
         });
