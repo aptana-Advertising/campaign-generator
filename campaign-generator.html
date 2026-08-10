@@ -4645,12 +4645,12 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
   const TEXT_LIGHT_GRAY = [150, 150, 150];
   const LINE_COLOR = [230, 233, 238];
   const ZEBRA_BG = [249, 250, 252];    // near-white, just enough to guide the eye across rows
-  const SP = { xs: 3, sm: 6, md: 9, lg: 14, label: 3 }; // consistent spacing rhythm
+  const SP = { xs: 3, sm: 6, md: 9, lg: 14, label: 3, card: 4 }; // consistent spacing rhythm
   // SP.label is the gap directly under a small caption-style label (e.g. "Caption:",
   // "Pretext:") before its content starts — kept tighter than SP.sm on purpose, since
   // that one is shared with unrelated things like section-title underlines and
   // between-block spacing that still need the roomier value.
-  const CARD_PAD = 5;                  // gap between a card's border and its content
+  const CARD_PAD = 3;                  // gap between a card's border and its content
   const CARD_RADIUS = 2.5;
   const CARD_BORDER = [225, 229, 236];
 
@@ -4816,7 +4816,7 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
     // title on its own), so a section heading is never stranded alone at the bottom
     // of a page while everything under it gets pushed to the next one.
     ensureSpace(26);
-    y += SP.sm; // breathing room above the title so it never sticks to previous content
+    y += SP.label; // breathing room above the title so it never sticks to previous content
     kvZebra = false; // each section starts its own fresh striping pattern
     // Small accent square as a consistent visual anchor for every section heading.
     // Repeatable Campaign Content sections pass SECTION_ACCENT so each block start is
@@ -5104,7 +5104,7 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
     kvRow('MID', campaignData.mid);
     kvRow('Brand Masking', campaignData.brand_masking);
     endCard();
-    y += SP.sm;
+    y += SP.card;
 
     // ===== Campaign Details =====
     beginCard();
@@ -5117,7 +5117,7 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
     if (campaignData.max_redeem) kvRow('Max Redeem', campaignData.max_redeem);
     if (campaignData.whitelist) paragraph('Whitelist:', campaignData.whitelist);
     endCard();
-    y += SP.sm;
+    y += SP.card;
   }
 
   // ===== Campaign Content (SMS type) =====
@@ -5137,7 +5137,7 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
         if (c.floating_whatsapp.pretext) paragraph('Pretext:', c.floating_whatsapp.pretext);
       }
       endCard();
-      y += SP.sm;
+      y += SP.card;
     });
   }
 
@@ -5151,7 +5151,7 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
     paragraph('Caption:', campaignData.meta_ads.caption);
     paragraph('Pretext:', campaignData.meta_ads.pretext);
     endCard();
-    y += SP.sm;
+    y += SP.card;
   }
   if (campaignData.whatsapp) {
     beginCard();
@@ -5161,7 +5161,7 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
     }
     paragraphWording('Release Content (' + (campaignData.whatsapp.campaign_wording ? campaignData.whatsapp.campaign_wording.length : 0) + ' char):', campaignData.whatsapp.campaign_wording);
     endCard();
-    y += SP.sm;
+    y += SP.card;
   }
   if (campaignData.flow) {
     beginCard();
@@ -5172,7 +5172,7 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
     if (campaignData.flow.highlight_text) paragraph('Flow Title:', campaignData.flow.highlight_text);
     paragraph('Flow Description:', campaignData.flow.promo_screen_wording);
     endCard();
-    y += SP.sm;
+    y += SP.card;
   }
   if (campaignData.after_validation) {
     beginCard();
@@ -5180,7 +5180,7 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
     paragraph('Redeem Content:', campaignData.after_validation.validation_success);
     paragraph('Expired/Ended Content:', campaignData.after_validation.validation_failed);
     endCard();
-    y += SP.sm;
+    y += SP.card;
   }
   // Note: Customer Journey data fields are intentionally NOT shown as text in the
   // PDF (per request) — the visual "Campaign Mockup — Customer Journey" phone
@@ -5193,14 +5193,14 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
     kvRow('Brand Name', campaignData.brand_name);
     kvRow('MID', campaignData.mid);
     endCard();
-    y += SP.sm;
+    y += SP.card;
 
     beginCard();
     sectionTitle('Campaign Details');
     kvRow('Nomor Invoice', campaignData.invoice_number);
     kvRow('Harga Impression', campaignData.price_impression);
     endCard();
-    y += SP.sm;
+    y += SP.card;
 
     if (Array.isArray(campaignData.campaign_contents)) {
       campaignData.campaign_contents.forEach((c, idx) => {
@@ -5219,7 +5219,7 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
         kvRow('Nomor UAT', c.uat_number);
         kvRow('Nomor Whitelist', c.whitelist_number);
         endCard();
-        y += SP.sm;
+        y += SP.card;
       });
     }
   }
@@ -5231,7 +5231,7 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
     kvRow('Brand Name', campaignData.brand_name);
     kvRow('MID', campaignData.mid);
     endCard();
-    y += SP.sm;
+    y += SP.card;
 
     beginCard();
     sectionTitle('Campaign Details');
@@ -5241,7 +5241,7 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
     kvRow('Placement', campaignData.placement);
     if (campaignData.link_fanpage) paragraph('Link Fanpage:', campaignData.link_fanpage);
     endCard();
-    y += SP.sm;
+    y += SP.card;
     // Note: customer_journey (Key Visual/Caption) is intentionally NOT shown as text
     // here — it's mockup-only data; the "Campaign Mockup — Customer Journey" phone
     // screenshot further down still represents it visually.
@@ -5260,7 +5260,7 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
         if (c.cta_type === 'WhatsApp' && c.pretext) paragraph('Pretext:', c.pretext);
         kvRow('Keyword', c.keyword);
         endCard();
-        y += SP.sm;
+        y += SP.card;
       });
     }
   }
@@ -5272,7 +5272,7 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
     kvRow('Brand Name', campaignData.brand_name);
     kvRow('MID', campaignData.mid);
     endCard();
-    y += SP.sm;
+    y += SP.card;
 
     beginCard();
     sectionTitle('Campaign Details');
@@ -5284,7 +5284,7 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
     kvRow('Nomor UAT', campaignData.uat_number);
     kvRow('Nomor Whitelist', campaignData.whitelist_number);
     endCard();
-    y += SP.sm;
+    y += SP.card;
 
     // Profiling — only shown if present, and only individual fields that are non-empty
     if (campaignData.profiling) {
@@ -5299,7 +5299,7 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
         if (p.operating_system) kvRow('Operating System', p.operating_system);
         if (p.card_brand) kvRow('Card Brand', p.card_brand);
         endCard();
-        y += SP.sm;
+        y += SP.card;
       }
     }
 
@@ -5350,7 +5350,7 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
         y += 4;
       }
       endCard();
-      y += SP.sm;
+      y += SP.card;
     });
   }
 
