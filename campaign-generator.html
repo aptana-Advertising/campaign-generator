@@ -1707,8 +1707,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
             <textarea id="metaAdsCaption" style="height:80px;" placeholder="Write the ad caption..."></textarea>
           </div>
           <div class="field">
-            <label>Pretext</label>
-            <textarea id="metaAdsPretext" style="height:60px;" placeholder="Write the pretext..."></textarea>
+            <div class="field-header">
+              <label>Pretext</label>
+              <span class="char-count" id="metaAdsPretextCount">0/80</span>
+            </div>
+            <textarea id="metaAdsPretext" style="height:60px;" maxlength="80" placeholder="Write the pretext..." oninput="document.getElementById('metaAdsPretextCount').textContent = this.value.length + '/80'"></textarea>
           </div>
         </div>
 
@@ -2800,6 +2803,7 @@ function loadCampaignIntoForm(campaign, historyId) {
       document.getElementById('metaAdsKeyVisual').value = campaign.meta_ads.key_visual || '';
       document.getElementById('metaAdsCaption').value = campaign.meta_ads.caption || '';
       document.getElementById('metaAdsPretext').value = campaign.meta_ads.pretext || '';
+      document.getElementById('metaAdsPretextCount').textContent = (campaign.meta_ads.pretext || '').length + '/80';
     }
     if (campaign.customer_journey) {
       document.getElementById('cjInstagramName').value = campaign.customer_journey.instagram_name || '';
@@ -6571,6 +6575,7 @@ function resetFormMeta() {
   document.getElementById('metaAdsKeyVisual').value = '';
   document.getElementById('metaAdsCaption').value = '';
   document.getElementById('metaAdsPretext').value = '';
+  document.getElementById('metaAdsPretextCount').textContent = '0/80';
 
   document.getElementById('cjInstagramName').value = '';
   document.getElementById('cjKeyVisual').value = '';
