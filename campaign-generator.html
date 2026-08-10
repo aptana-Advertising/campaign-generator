@@ -556,7 +556,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   .field label {
     font-size: 13px;
     color: #374151;
-    margin-bottom: 6px;
+    margin-bottom: 3px;
     display: block;
     font-weight: 500;
   }
@@ -628,7 +628,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 6px;
+    margin-bottom: 3px;
   }
 
   .field-header label { margin-bottom: 0; }
@@ -4645,7 +4645,11 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
   const TEXT_LIGHT_GRAY = [150, 150, 150];
   const LINE_COLOR = [230, 233, 238];
   const ZEBRA_BG = [249, 250, 252];    // near-white, just enough to guide the eye across rows
-  const SP = { xs: 3, sm: 6, md: 9, lg: 14 }; // consistent spacing rhythm
+  const SP = { xs: 3, sm: 6, md: 9, lg: 14, label: 3 }; // consistent spacing rhythm
+  // SP.label is the gap directly under a small caption-style label (e.g. "Caption:",
+  // "Pretext:") before its content starts — kept tighter than SP.sm on purpose, since
+  // that one is shared with unrelated things like section-title underlines and
+  // between-block spacing that still need the roomier value.
   const CARD_PAD = 5;                  // gap between a card's border and its content
   const CARD_RADIUS = 2.5;
   const CARD_BORDER = [225, 229, 236];
@@ -4827,7 +4831,7 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
     y += SP.sm;
     pdf.setDrawColor(LINE_COLOR[0], LINE_COLOR[1], LINE_COLOR[2]); pdf.setLineWidth(0.3);
     pdf.line(M, y, PW - M, y);
-    y += SP.md;
+    y += SP.label; // gap from the underline to the first label/row below it
   }
 
   function kvRow(label, value, fontSize, colWidth, boldLabel) {
@@ -4864,10 +4868,10 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
     // Reserve space for the label AND its first line together, so the label
     // never gets stranded alone at the bottom of a page (see embedImageWithLabel
     // for the same pattern applied to images).
-    ensureSpace(SP.xs + SP.sm + 5);
+    ensureSpace(SP.xs + SP.label + 5);
     y += SP.xs; // space above the label
     pdf.setFont('Outfit', 'bold'); pdf.setFontSize(9); pdf.setTextColor(TEXT_GRAY[0], TEXT_GRAY[1], TEXT_GRAY[2]);
-    pdf.text(label, M, y); y += SP.sm;
+    pdf.text(label, M, y); y += SP.label;
     pdf.setFont('Outfit', 'normal'); pdf.setFontSize(10); pdf.setTextColor(TEXT_DARK[0], TEXT_DARK[1], TEXT_DARK[2]);
     for (let i = 0; i < lines.length; i++) {
       if (i > 0) ensureSpace(5);
@@ -4882,10 +4886,10 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
     if (!text) return;
     pdf.setFont('Outfit', 'normal'); pdf.setFontSize(10);
     const rawLines = String(text).split('\n');
-    ensureSpace(SP.xs + SP.sm + 5);
+    ensureSpace(SP.xs + SP.label + 5);
     y += SP.xs; // space above the label
     pdf.setFont('Outfit', 'bold'); pdf.setFontSize(9); pdf.setTextColor(TEXT_GRAY[0], TEXT_GRAY[1], TEXT_GRAY[2]);
-    pdf.text(label, M, y); y += SP.sm;
+    pdf.text(label, M, y); y += SP.label;
     pdf.setFont('Outfit', 'normal'); pdf.setFontSize(10); pdf.setTextColor(TEXT_DARK[0], TEXT_DARK[1], TEXT_DARK[2]);
     let isFirstLine = true;
     rawLines.forEach(raw => {
@@ -4961,10 +4965,10 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
   function paragraphWording(label, text) {
     if (!text) return;
     const fontSize = 10;
-    ensureSpace(SP.xs + SP.sm + 5);
+    ensureSpace(SP.xs + SP.label + 5);
     y += SP.xs;
     pdf.setFont('Outfit', 'bold'); pdf.setFontSize(9); pdf.setTextColor(TEXT_GRAY[0], TEXT_GRAY[1], TEXT_GRAY[2]);
-    pdf.text(label, M, y); y += SP.sm;
+    pdf.text(label, M, y); y += SP.label;
     pdf.setTextColor(TEXT_DARK[0], TEXT_DARK[1], TEXT_DARK[2]);
 
     const hardLines = String(text).split(/\r?\n/);
@@ -5043,10 +5047,10 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
       const maxH = 80;
       if (h > maxH) { h = maxH; w = h / ratio; }
 
-      ensureSpace(5 + h + 4);
+      ensureSpace(SP.label + h + 4);
 
       pdf.setFont('Outfit', 'bold'); pdf.setFontSize(8); pdf.setTextColor(TEXT_GRAY[0], TEXT_GRAY[1], TEXT_GRAY[2]);
-      pdf.text(label.toUpperCase(), M, y + 3); y += 5;
+      pdf.text(label.toUpperCase(), M, y + 3); y += SP.label + 2;
 
       pdf.addImage(data, fmt, M, y, w, h, undefined, 'FAST');
       pdf.setDrawColor(LINE_COLOR[0], LINE_COLOR[1], LINE_COLOR[2]); pdf.setLineWidth(0.25);
@@ -5094,13 +5098,16 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
   const isWlType = campaignData.campaign_type === 'WhatsApp LBA' || campaignData.campaign_type === 'WhatsApp Targeted';
   const skipGenericSections = isLbaType || isMedsosType || isWlType;
   if (!skipGenericSections) {
+    beginCard();
     sectionTitle('Brand Information');
     kvRow('Brand Name', campaignData.brand_name);
     kvRow('MID', campaignData.mid);
     kvRow('Brand Masking', campaignData.brand_masking);
-    y += 4;
+    endCard();
+    y += SP.sm;
 
     // ===== Campaign Details =====
+    beginCard();
     sectionTitle('Campaign Details');
     if (campaignData.invoice_number !== undefined) kvRow('Invoice Number', campaignData.invoice_number);
     kvRow('Payment Method', campaignData.payment_method);
@@ -5109,7 +5116,8 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
     if (campaignData.location) kvRow('Location', campaignData.location);
     if (campaignData.max_redeem) kvRow('Max Redeem', campaignData.max_redeem);
     if (campaignData.whitelist) paragraph('Whitelist:', campaignData.whitelist);
-    y += 4;
+    endCard();
+    y += SP.sm;
   }
 
   // ===== Campaign Content (SMS type) =====
@@ -5135,36 +5143,44 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
 
   // ===== Meta type sections =====
   if (campaignData.meta_ads) {
+    beginCard();
     sectionTitle('Meta Ads');
     if (campaignData.meta_ads.key_visual) {
       embedImageWithLabel(campaignData.meta_ads.key_visual, 'Key Visual:', 75);
     }
     paragraph('Caption:', campaignData.meta_ads.caption);
     paragraph('Pretext:', campaignData.meta_ads.pretext);
-    y += 4;
+    endCard();
+    y += SP.sm;
   }
   if (campaignData.whatsapp) {
+    beginCard();
     sectionTitle('WhatsApp');
     if (campaignData.whatsapp.campaign_image) {
       embedImageWithLabel(campaignData.whatsapp.campaign_image, 'Campaign Image:', 75);
     }
     paragraphWording('Release Content (' + (campaignData.whatsapp.campaign_wording ? campaignData.whatsapp.campaign_wording.length : 0) + ' char):', campaignData.whatsapp.campaign_wording);
-    y += 4;
+    endCard();
+    y += SP.sm;
   }
   if (campaignData.flow) {
+    beginCard();
     sectionTitle('Flow');
     if (campaignData.flow.campaign_image) {
       embedImageWithLabel(campaignData.flow.campaign_image, 'Campaign Image:', 75);
     }
     if (campaignData.flow.highlight_text) paragraph('Flow Title:', campaignData.flow.highlight_text);
     paragraph('Flow Description:', campaignData.flow.promo_screen_wording);
-    y += 4;
+    endCard();
+    y += SP.sm;
   }
   if (campaignData.after_validation) {
+    beginCard();
     sectionTitle('After Validation');
     paragraph('Redeem Content:', campaignData.after_validation.validation_success);
     paragraph('Expired/Ended Content:', campaignData.after_validation.validation_failed);
-    y += 4;
+    endCard();
+    y += SP.sm;
   }
   // Note: Customer Journey data fields are intentionally NOT shown as text in the
   // PDF (per request) — the visual "Campaign Mockup — Customer Journey" phone
@@ -5172,15 +5188,19 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
 
   // ===== SMS LBA / Targeted type =====
   if (isLbaType) {
+    beginCard();
     sectionTitle('Brand Information');
     kvRow('Brand Name', campaignData.brand_name);
     kvRow('MID', campaignData.mid);
-    y += 4;
+    endCard();
+    y += SP.sm;
 
+    beginCard();
     sectionTitle('Campaign Details');
     kvRow('Nomor Invoice', campaignData.invoice_number);
     kvRow('Harga Impression', campaignData.price_impression);
-    y += 4;
+    endCard();
+    y += SP.sm;
 
     if (Array.isArray(campaignData.campaign_contents)) {
       campaignData.campaign_contents.forEach((c, idx) => {
@@ -5206,18 +5226,22 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
 
   // ===== Medsos type =====
   if (isMedsosType) {
+    beginCard();
     sectionTitle('Brand Information');
     kvRow('Brand Name', campaignData.brand_name);
     kvRow('MID', campaignData.mid);
-    y += 4;
+    endCard();
+    y += SP.sm;
 
+    beginCard();
     sectionTitle('Campaign Details');
     kvRow('Nomor Invoice', campaignData.invoice_number);
     kvRow('Goal Campaign', campaignData.goal_campaign);
     kvRow('Campaign Period', campaignPeriod);
     kvRow('Placement', campaignData.placement);
     if (campaignData.link_fanpage) paragraph('Link Fanpage:', campaignData.link_fanpage);
-    y += 4;
+    endCard();
+    y += SP.sm;
     // Note: customer_journey (Key Visual/Caption) is intentionally NOT shown as text
     // here — it's mockup-only data; the "Campaign Mockup — Customer Journey" phone
     // screenshot further down still represents it visually.
@@ -5243,11 +5267,14 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
 
   // ===== WhatsApp LBA/TGT type =====
   if (isWlType) {
+    beginCard();
     sectionTitle('Brand Information');
     kvRow('Brand Name', campaignData.brand_name);
     kvRow('MID', campaignData.mid);
-    y += 4;
+    endCard();
+    y += SP.sm;
 
+    beginCard();
     sectionTitle('Campaign Details');
     kvRow('Nomor Invoice', campaignData.invoice_number);
     kvRow('Harga Per Impression', campaignData.price_impression);
@@ -5256,20 +5283,23 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
     kvRow('Periode Campaign', Array.isArray(campaignData.campaign_dates) ? campaignData.campaign_dates.join(', ') : campaignPeriod);
     kvRow('Nomor UAT', campaignData.uat_number);
     kvRow('Nomor Whitelist', campaignData.whitelist_number);
-    y += 4;
+    endCard();
+    y += SP.sm;
 
     // Profiling — only shown if present, and only individual fields that are non-empty
     if (campaignData.profiling) {
       const p = campaignData.profiling;
       const hasAny = p.gender || p.age || p.arpu || p.operating_system || p.card_brand;
       if (hasAny) {
+        beginCard();
         sectionTitle('Profiling');
         if (p.gender) kvRow('Gender', p.gender);
         if (p.age) kvRow('Usia', p.age);
         if (p.arpu) kvRow('ARPU', p.arpu);
         if (p.operating_system) kvRow('Operating System', p.operating_system);
         if (p.card_brand) kvRow('Card Brand', p.card_brand);
-        y += 4;
+        endCard();
+        y += SP.sm;
       }
     }
 
