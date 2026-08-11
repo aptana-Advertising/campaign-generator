@@ -1982,23 +1982,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
           </div>
         </div>
 
-        <!-- Section 3: Customer Journey (mockup-only fields, not shown in the PDF text) -->
-        <div class="card">
-          <div class="card-title">🧭 Customer Journey</div>
-          <div class="field">
-            <label>URL Key Visual <span style="font-weight:400; color:#9ca3af;">(untuk mockup Instagram Ads)</span></label>
-            <input type="url" id="medsosKeyVisual" placeholder="https://example.com/image.jpg">
-          </div>
-          <div class="field">
-            <div class="field-header">
-              <label>Caption</label>
-              <span class="char-count" id="medsosCaptionCount">0/100</span>
-            </div>
-            <textarea id="medsosCaption" style="height:60px;" maxlength="100" placeholder="Short caption (max 100 characters)..." oninput="document.getElementById('medsosCaptionCount').textContent = this.value.length + '/100'"></textarea>
-          </div>
-        </div>
-
-        <!-- Section 4: Campaign Content (dynamic, repeatable) -->
+        <!-- Section 3: Campaign Content (dynamic, repeatable) — each section now
+             carries its own Customer Journey Key Visual + Caption (see
+             createMedsosContentSectionHTML) instead of one shared per campaign. -->
         <div id="medsosContentList"></div>
 
         <div class="add-section-row">
@@ -2917,16 +2903,15 @@ function loadCampaignIntoForm(campaign, historyId) {
     document.getElementById('medsosPlacement').value = campaign.placement || '';
     document.getElementById('medsosLinkFanpage').value = campaign.link_fanpage || '';
 
-    const medsosCj = campaign.customer_journey || {};
-    document.getElementById('medsosKeyVisual').value = medsosCj.key_visual || '';
-    document.getElementById('medsosCaption').value = medsosCj.caption || '';
-    document.getElementById('medsosCaptionCount').textContent = (medsosCj.caption || '').length + '/100';
-
     // Rebuild Campaign Content sections from saved data
     document.getElementById('medsosContentList').innerHTML = '';
     medsosContentSectionCount = 0;
+    // Pre-existing campaigns saved before Customer Journey moved to be per-section
+    // kept one Key Visual/Caption for the whole campaign — treat that as belonging
+    // to the first section when there's no per-section value of its own.
+    const legacyCj = campaign.customer_journey || {};
     if (Array.isArray(campaign.campaign_contents) && campaign.campaign_contents.length) {
-      campaign.campaign_contents.forEach(c => {
+      campaign.campaign_contents.forEach((c, idx) => {
         addMedsosContentSection({
           linkContent: c.link_content || '',
           location: c.location || '',
@@ -2936,7 +2921,9 @@ function loadCampaignIntoForm(campaign, historyId) {
           ctaType: c.cta_type || 'URL',
           ctaValue: c.cta_value || '',
           pretext: c.pretext || '',
-          keyword: c.keyword || ''
+          keyword: c.keyword || '',
+          keyVisual: c.key_visual || (idx === 0 ? legacyCj.key_visual : '') || '',
+          caption: c.caption || (idx === 0 ? legacyCj.caption : '') || ''
         });
       });
     } else {
@@ -3943,6 +3930,20 @@ function createMedsosContentSectionHTML(id, data) {
         <label>Keyword</label>
         <input type="text" class="mc-keyword" placeholder="e.g. PROMO2026" value="${escapeAttr(data.keyword)}">
       </div>
+
+      <!-- Customer Journey (mockup-only — not shown as text in the PDF, see the
+           "Campaign Mockup — Customer Journey" phone screenshot instead) -->
+      <div class="field">
+        <label>🧭 Customer Journey — Key Visual (URL)</label>
+        <input type="url" class="mc-keyVisual" placeholder="https://example.com/image.jpg" value="${escapeAttr(data.keyVisual)}">
+      </div>
+      <div class="field">
+        <div class="field-header">
+          <label>🧭 Customer Journey — Caption</label>
+          <span class="char-count mc-captionCount">${(data.caption || '').length}/100</span>
+        </div>
+        <textarea class="mc-caption" style="height:60px;" maxlength="100" placeholder="Short caption (max 100 characters)..." oninput="this.closest('.content-section').querySelector('.mc-captionCount').textContent = this.value.length + '/100'">${escapeHtml(data.caption)}</textarea>
+      </div>
     </div>
   `;
 }
@@ -3977,7 +3978,9 @@ function duplicateMedsosContentSection(id) {
     ctaType: section.dataset.ctatype || 'URL',
     ctaValue: section.querySelector('.mc-ctaValue').value,
     pretext: section.querySelector('.mc-pretext').value,
-    keyword: section.querySelector('.mc-keyword').value
+    keyword: section.querySelector('.mc-keyword').value,
+    keyVisual: section.querySelector('.mc-keyVisual').value,
+    caption: section.querySelector('.mc-caption').value
   };
   addMedsosContentSection(data);
 }
@@ -5242,9 +5245,10 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
     if (campaignData.link_fanpage) paragraph('Link Fanpage:', campaignData.link_fanpage);
     endCard();
     y += SP.card;
-    // Note: customer_journey (Key Visual/Caption) is intentionally NOT shown as text
-    // here — it's mockup-only data; the "Campaign Mockup — Customer Journey" phone
-    // screenshot further down still represents it visually.
+    // Note: each Campaign Content section's Customer Journey (Key Visual/Caption) is
+    // intentionally NOT shown as text here — it's mockup-only data; the "Campaign
+    // Mockup — Customer Journey" phones further down (one per section) represent it
+    // visually instead.
 
     if (Array.isArray(campaignData.campaign_contents)) {
       campaignData.campaign_contents.forEach((c, idx) => {
@@ -5914,24 +5918,10 @@ function buildWaMeLink(number, pretext) {
 // bar, like/comment/share/bookmark row, bottom nav). Sourced from the first
 // Campaign Content section — if a CTA (URL or WhatsApp) is filled in, the CTA
 // bar becomes a real clickable link (WhatsApp CTAs go through buildWaMeLink()).
-function buildMedsosMockup(campaign) {
-  const c = (campaign.campaign_contents && campaign.campaign_contents[0]) || {};
-  const hasMultiple = campaign.campaign_contents && campaign.campaign_contents.length > 1;
-  const cj = campaign.customer_journey || {};
-  const igName = campaign.brand_name || 'yourbrand';
-  const initial = escapeHtml((igName[0] || 'B').toUpperCase());
-
-  let avatarHtml;
-  if (campaign.brand_logo_url) {
-    const logoSrc = toDirectImageUrl(campaign.brand_logo_url);
-    avatarHtml = `<img src="${escapeAttr(logoSrc)}" alt="Avatar" onerror="this.parentNode.textContent='${initial}'">`;
-  } else {
-    avatarHtml = initial;
-  }
-
+function buildOneMedsosPhone(igName, avatarHtml, c, idx) {
   let imageHtml;
-  if (cj.key_visual) {
-    const imgSrc = toDirectImageUrl(cj.key_visual);
+  if (c.key_visual) {
+    const imgSrc = toDirectImageUrl(c.key_visual);
     imageHtml = `<img src="${escapeAttr(imgSrc)}" alt="Post Image" onerror="this.outerHTML='<div class=&quot;ig-post-image-missing&quot;>Image not loaded (check Drive sharing)</div>'">`;
   } else {
     imageHtml = `<div class="ig-post-image-missing">No key visual</div>`;
@@ -5947,11 +5937,9 @@ function buildMedsosMockup(campaign) {
     ctaLink = c.cta_value;
   }
 
-  const captionText = cj.caption || '';
+  const captionText = c.caption || '';
 
   return `
-    <div class="mockup-hint">Simulated customer journey — likes/comments/shares are illustrative.${hasMultiple ? ' Mockup reflects Campaign Content 1 only.' : ''}</div>
-    <div class="mockup-scroll">
       <div class="phone" style="width:190px;">
         <div class="phone-frame" style="width:190px; height:400px;">
           <div class="phone-notch"></div>
@@ -5983,10 +5971,39 @@ function buildMedsosMockup(campaign) {
             </div>
           </div>
         </div>
-        <div class="phone-caption">Instagram Ads</div>
+        <div class="phone-caption">Content ${idx + 1}</div>
       </div>
+  `;
+}
 
-      ${ctaLink ? `<div class="mockup-instruction">Untuk melihat demo Campaign, silakan klik tombol '<strong>${escapeHtml(ctaLabel)}</strong>'.</div>` : ''}
+// Builds one Instagram Ads-style phone mockup PER Campaign Content section (each
+// section carries its own Key Visual + Caption — see createMedsosContentSectionHTML),
+// laid out in the same multi-phone grid used by Kuponku SMS's journey mockup. If a
+// CTA (URL or WhatsApp) is filled in for a section, that phone's CTA bar becomes a
+// real clickable link (WhatsApp CTAs go through buildWaMeLink()).
+function buildMedsosMockup(campaign) {
+  const contents = campaign.campaign_contents || [];
+  const igName = campaign.brand_name || 'yourbrand';
+  const initial = escapeHtml((igName[0] || 'B').toUpperCase());
+
+  let avatarHtml;
+  if (campaign.brand_logo_url) {
+    const logoSrc = toDirectImageUrl(campaign.brand_logo_url);
+    avatarHtml = `<img src="${escapeAttr(logoSrc)}" alt="Avatar" onerror="this.parentNode.textContent='${initial}'">`;
+  } else {
+    avatarHtml = initial;
+  }
+
+  const phonesHtml = contents.map((c, idx) => buildOneMedsosPhone(igName, avatarHtml, c, idx)).join('');
+  const anyClickable = contents.some(c =>
+    (c.cta_type === 'WhatsApp' && c.cta_value) || (c.cta_type === 'URL' && c.cta_value)
+  );
+
+  return `
+    <div class="mockup-hint">Simulated customer journey — likes/comments/shares are illustrative. Each phone reflects its own Campaign Content section.</div>
+    <div class="mockup-scroll">
+      ${phonesHtml}
+      ${anyClickable ? `<div class="mockup-instruction">Untuk melihat demo Campaign, silakan klik tombol CTA di tiap HP.</div>` : ''}
     </div>
   `;
 }
@@ -6841,7 +6858,9 @@ function generateCampaignMedsos() {
       cta_type: ctaType,
       cta_value: section.querySelector('.mc-ctaValue').value,
       pretext: ctaType === 'WhatsApp' ? section.querySelector('.mc-pretext').value : '',
-      keyword: section.querySelector('.mc-keyword').value
+      keyword: section.querySelector('.mc-keyword').value,
+      key_visual: section.querySelector('.mc-keyVisual').value,
+      caption: section.querySelector('.mc-caption').value
     });
   });
 
@@ -6857,10 +6876,6 @@ function generateCampaignMedsos() {
     campaign_period: formatPeriod(startDate, endDate),
     placement: document.getElementById('medsosPlacement').value,
     link_fanpage: document.getElementById('medsosLinkFanpage').value,
-    customer_journey: {
-      key_visual: document.getElementById('medsosKeyVisual').value,
-      caption: document.getElementById('medsosCaption').value
-    },
     campaign_contents: contentSections
   };
 
@@ -6964,9 +6979,6 @@ function resetFormMedsos() {
   document.getElementById('medsosEndDate').value = '';
   document.getElementById('medsosPlacement').value = '';
   document.getElementById('medsosLinkFanpage').value = '';
-  document.getElementById('medsosKeyVisual').value = '';
-  document.getElementById('medsosCaption').value = '';
-  document.getElementById('medsosCaptionCount').textContent = '0/100';
 
   document.getElementById('medsosContentList').innerHTML = '';
   medsosContentSectionCount = 0;
