@@ -4885,6 +4885,28 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
     y += SP.sm; // space below the block
   }
 
+  // Like paragraph(), but reserves room for the ENTIRE block (label + every line)
+  // up front instead of just the label + first line — so this specific field is
+  // pushed to the next page as a whole rather than split mid-paragraph. Used only
+  // for Kuponku SMS's "Wording SMS" (per explicit request); every other paragraph
+  // field keeps the normal per-line behavior above.
+  function paragraphNoSplit(label, text) {
+    if (!text) return;
+    pdf.setFont('Outfit', 'normal'); pdf.setFontSize(10);
+    const lines = pdf.splitTextToSize(text, CW);
+    ensureSpace(SP.xs + SP.label + lines.length * 5 + SP.sm);
+    y += SP.xs;
+    pdf.setFont('Outfit', 'bold'); pdf.setFontSize(9); pdf.setTextColor(TEXT_GRAY[0], TEXT_GRAY[1], TEXT_GRAY[2]);
+    pdf.text(label, M, y); y += SP.label;
+    pdf.setFont('Outfit', 'normal'); pdf.setFontSize(10); pdf.setTextColor(TEXT_DARK[0], TEXT_DARK[1], TEXT_DARK[2]);
+    for (let i = 0; i < lines.length; i++) {
+      pdf.setTextColor(TEXT_DARK[0], TEXT_DARK[1], TEXT_DARK[2]);
+      drawMixedText(lines[i], M, y + 4, 'Outfit', 'normal', 10);
+      y += 5;
+    }
+    y += SP.sm;
+  }
+
   function paragraphRich(label, text) {
     if (!text) return;
     pdf.setFont('Outfit', 'normal'); pdf.setFontSize(10);
@@ -5131,7 +5153,7 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
       if (c.url_key_visual) {
         embedImageWithLabel(c.url_key_visual, 'Key Visual:', 75);
       }
-      paragraph('Wording SMS (' + (c.wording_sms ? c.wording_sms.length : 0) + ' char):', c.wording_sms);
+      paragraphNoSplit('Wording SMS (' + (c.wording_sms ? c.wording_sms.length : 0) + ' char):', c.wording_sms);
       if (c.highlight_text) paragraph('Highlight Text:', c.highlight_text);
       paragraphRich('Syarat & Ketentuan:', c.syarat_ketentuan);
       kvRow('Outlet', c.outlet, 9, 28, true);
