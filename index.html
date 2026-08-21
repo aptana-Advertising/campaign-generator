@@ -6149,9 +6149,10 @@ function waIconTelkomselAvatar() {
 function buildWlMockup(campaign) {
   // WhatsApp broadcasts for this channel are actually sent from Telkomsel's
   // verified WhatsApp Business account, not the brand itself — the brand only
-  // shows up inside the message content (image/wording), so the chat header
-  // always reflects the real sender identity rather than campaign.brand_masking.
-  const waSenderName = 'Telkomsel Promo & Rewards';
+  // shows up inside the message content (image/wording). The chat header name
+  // reflects the Masking field from Campaign Details, falling back to the
+  // Telkomsel default if it was left blank.
+  const waSenderName = campaign.masking || 'Telkomsel Promo & Rewards';
   const optOutText = 'Penawaran bermanfaat? Jika tdk, sms stop tselpromorwd ke 8000';
   const avatarHtml = waIconTelkomselAvatar();
 
