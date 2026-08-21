@@ -2053,6 +2053,18 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
         <!-- Section 2: Campaign Details -->
         <div class="card">
           <div class="card-title">Campaign Details</div>
+          <div class="field">
+            <label>Masking</label>
+            <select class="preset-select" onchange="onPresetSelectChange(this, 'wlMasking')">
+              <option value="">Pilih cepat...</option>
+              <option value="Telkomsel Promo &amp; Rewards">Telkomsel Promo &amp; Rewards</option>
+              <option value="__manual__">Isi Manual</option>
+            </select>
+            <div class="manual-wrap" style="display:none;">
+              <input type="text" id="wlMasking" placeholder="e.g. Telkomsel Promo &amp; Rewards">
+              <a href="javascript:void(0)" class="preset-back-link" onclick="revertToPresetSelect(this)">↩ Pilih dari daftar</a>
+            </div>
+          </div>
           <div class="field-row">
             <div class="field">
               <label>Nomor Invoice</label>
@@ -2072,12 +2084,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
               <label>Jumlah Impression</label>
               <input type="text" id="wlImpression" placeholder="e.g. 100000">
             </div>
-          </div>
-
-          <div class="field">
-            <label>Periode Campaign <span style="font-weight:400; color:#9ca3af;">(bisa lebih dari 1 tanggal)</span></label>
-            <div id="wlDatesList"></div>
-            <button type="button" class="icon-btn" onclick="addWlDateRow()">+ Add Date</button>
           </div>
 
           <div class="field-row">
@@ -2220,7 +2226,6 @@ function selectCampaignType(type) {
     if (!document.getElementById('medsosContentList').children.length) addMedsosContentSection();
   } else if (type === 'whatsapp-lba') {
     document.getElementById('whatsapp-lba-form').style.display = 'block';
-    if (!document.getElementById('wlDatesList').children.length) addWlDateRow();
     if (!window.wlType) selectWlType('LBA');
     if (!window.wlFormat) selectWlFormat('Reguler');
     if (!document.getElementById('wlContentList').children.length) addWlContentSection();
@@ -2954,18 +2959,15 @@ function loadCampaignIntoForm(campaign, historyId) {
     document.getElementById('wlBrandName').value = campaign.brand_name || '';
     document.getElementById('wlMid').value = campaign.mid || '';
 
+    document.getElementById('wlMasking').value = campaign.masking || '';
+    syncPresetFieldVisibility(document.getElementById('wlMasking'));
+
     document.getElementById('wlInvoiceNumber').value = campaign.invoice_number || '';
     document.getElementById('wlPriceImpression').value = campaign.price_impression || '';
     document.getElementById('wlBudget').value = campaign.budget || '';
     document.getElementById('wlImpression').value = campaign.impression || '';
 
-    document.getElementById('wlDatesList').innerHTML = '';
     wlDateRowCount = 0;
-    if (Array.isArray(campaign.campaign_dates) && campaign.campaign_dates.length) {
-      campaign.campaign_dates.forEach(d => addWlDateRow(d));
-    } else {
-      addWlDateRow();
-    }
 
     document.getElementById('wlUatNumber').value = campaign.uat_number || '';
     document.getElementById('wlWhitelistNumber').value = campaign.whitelist_number || '';
@@ -2998,6 +3000,9 @@ function loadCampaignIntoForm(campaign, historyId) {
       addWlContentSection({
         keyVisual: ct.key_visual || '',
         wording: ct.wording || '',
+        campaignDates: Array.isArray(ct.campaign_dates) && ct.campaign_dates.length
+          ? ct.campaign_dates
+          : (Array.isArray(campaign.campaign_dates) ? campaign.campaign_dates : []),
         location: ct.location || '',
         longLat: ct.long_lat || '',
         blastTime: ct.blast_time || '',
@@ -3320,10 +3325,10 @@ function clearSelectedBrandWl() {
   document.getElementById('wlMid').value = '';
 }
 
-/* ---------------- WhatsApp LBA/TGT — Multi-Date Periode Campaign ---------------- */
+/* ---------------- WhatsApp LBA/TGT — Multi-Date Periode Campaign (per Campaign Content section) ---------------- */
 let wlDateRowCount = 0;
 
-function createWlDateRowHTML(id, value) {
+function createWlDateRowHTML(sectionId, id, value) {
   return `
     <div class="field-row" id="wl-date-row-${id}" style="align-items:flex-end; margin-bottom:8px;">
       <div class="field" style="flex:1; position:relative; margin-bottom:0;">
@@ -3331,21 +3336,23 @@ function createWlDateRowHTML(id, value) {
         <button type="button" class="date-picker-btn" onclick="openDatePicker('wlDate-${id}')" title="Pick a date">📅</button>
         <input type="date" id="wlDate-${id}_native" style="position:absolute; right:8px; top:6px; width:1px; height:1px; opacity:0; border:0; padding:0;" onchange="onNativeDatePicked('wlDate-${id}')" tabindex="-1">
       </div>
-      <button type="button" class="icon-btn danger" onclick="removeWlDateRow(${id})" title="Remove date" style="margin-bottom:2px;">🗑</button>
+      <button type="button" class="icon-btn danger" onclick="removeWlDateRow(${sectionId}, ${id})" title="Remove date" style="margin-bottom:2px;">🗑</button>
     </div>
   `;
 }
 
-function addWlDateRow(value) {
+function addWlDateRow(sectionId, value) {
   wlDateRowCount += 1;
   const id = wlDateRowCount;
   const wrapper = document.createElement('div');
-  wrapper.innerHTML = createWlDateRowHTML(id, value);
-  document.getElementById('wlDatesList').appendChild(wrapper.firstElementChild);
+  wrapper.innerHTML = createWlDateRowHTML(sectionId, id, value);
+  const list = document.getElementById('wl-dates-list-' + sectionId);
+  if (list) list.appendChild(wrapper.firstElementChild);
 }
 
-function removeWlDateRow(id) {
-  const list = document.getElementById('wlDatesList');
+function removeWlDateRow(sectionId, id) {
+  const list = document.getElementById('wl-dates-list-' + sectionId);
+  if (!list) return;
   if (list.children.length <= 1) {
     alert('At least one campaign date is required.');
     return;
@@ -3466,6 +3473,12 @@ function createWlContentSectionHTML(id, data) {
         <div class="field-hint">Tip: wrap text with asterisks for <strong>*bold*</strong> — sama seperti format bold di WhatsApp.</div>
       </div>
 
+      <div class="field">
+        <label>Periode Campaign <span style="font-weight:400; color:#9ca3af;">(bisa lebih dari 1 tanggal)</span></label>
+        <div id="wl-dates-list-${id}"></div>
+        <button type="button" class="icon-btn" onclick="addWlDateRow(${id})">+ Add Date</button>
+      </div>
+
       <div class="field-row">
         <div class="field">
           <label>Jumlah Impression</label>
@@ -3541,6 +3554,13 @@ function addWlContentSection(data) {
   document.getElementById('wlContentList').appendChild(wrapper.firstElementChild);
   updateWlSectionWordingCount(id);
 
+  const campaignDates = (data && data.campaignDates) || [];
+  if (campaignDates.length) {
+    campaignDates.forEach(d => addWlDateRow(id, d));
+  } else {
+    addWlDateRow(id);
+  }
+
   const cards = (data && data.cards) || [];
   if (cards.length) {
     cards.forEach(c => addWlCard(id, c));
@@ -3561,9 +3581,11 @@ function duplicateWlContentSection(id) {
     buttonText2: card.querySelector('.wc-buttonText2').value,
     cta2: card.querySelector('.wc-cta2').value
   }));
+  const campaignDates = Array.from(sec.querySelectorAll('.wl-date-input')).map(el => el.value.trim()).filter(Boolean);
   addWlContentSection({
     keyVisual: sec.querySelector('.wl-keyVisual').value,
     wording: sec.querySelector('.wl-wording').value,
+    campaignDates: campaignDates,
     location: sec.querySelector('.wl-location').value,
     longLat: sec.querySelector('.wl-longLat').value,
     blastTime: sec.querySelector('.wl-blastTime').value,
@@ -5311,11 +5333,11 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
 
     beginCard();
     sectionTitle('Campaign Details');
+    kvRow('Masking', campaignData.masking);
     kvRow('Nomor Invoice', campaignData.invoice_number);
     kvRow('Harga Per Impression', campaignData.price_impression);
     kvRow('Budget', campaignData.budget);
     kvRow('Jumlah Impression', campaignData.impression);
-    kvRow('Periode Campaign', Array.isArray(campaignData.campaign_dates) ? campaignData.campaign_dates.join(', ') : campaignPeriod);
     kvRow('Nomor UAT', campaignData.uat_number);
     kvRow('Nomor Whitelist', campaignData.whitelist_number);
     endCard();
@@ -5351,6 +5373,7 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
 
       if (campaignData.format === 'Carrousel') {
         paragraphWording('Campaign Wording (' + (ct.wording_length || 0) + ' char):', ct.wording);
+        kvRow('Periode Campaign', Array.isArray(ct.campaign_dates) ? ct.campaign_dates.join(', ') : '');
         kvRow('Lokasi', ct.location);
         if (campaignData.wl_type === 'LBA' && ct.long_lat) kvRow('Long-Lat', ct.long_lat);
         kvRow('Blast Time', ct.blast_time);
@@ -5374,6 +5397,7 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
           embedImageWithLabel(ct.key_visual, 'Key Visual:', 75);
         }
         paragraphWording('Campaign Wording (' + (ct.wording_length || 0) + ' char):', ct.wording);
+        kvRow('Periode Campaign', Array.isArray(ct.campaign_dates) ? ct.campaign_dates.join(', ') : '');
         kvRow('Lokasi', ct.location);
         if (campaignData.wl_type === 'LBA' && ct.long_lat) kvRow('Long-Lat', ct.long_lat);
         kvRow('Blast Time', ct.blast_time);
@@ -7030,13 +7054,7 @@ function generateCampaignWl() {
 
   const wlType = window.wlType || 'LBA';
   const format = window.wlFormat || 'Reguler';
-
-  const dateInputs = document.querySelectorAll('#wlDatesList .wl-date-input');
-  const campaignDates = Array.from(dateInputs).map(el => el.value.trim()).filter(Boolean);
-  if (campaignDates.length === 0) {
-    alert('Please fill at least one Campaign Date.');
-    return;
-  }
+  const masking = document.getElementById('wlMasking').value;
 
   // Profiling (Targeted only) — all fields optional, only stored if at least one is filled
   let profiling = null;
@@ -7074,6 +7092,12 @@ function generateCampaignWl() {
     const blastTime = sec.querySelector('.wl-blastTime').value;
     const impression = sec.querySelector('.wl-impression').value;
 
+    const campaignDates = Array.from(sec.querySelectorAll('.wl-date-input')).map(el => el.value.trim()).filter(Boolean);
+    if (campaignDates.length === 0) {
+      alert('Please fill at least one Campaign Date in ' + label + '.');
+      return;
+    }
+
     if (format === 'Reguler') {
       const keyVisual = sec.querySelector('.wl-keyVisual').value;
       if (!keyVisual) {
@@ -7093,6 +7117,7 @@ function generateCampaignWl() {
         key_visual: keyVisual,
         wording: wording,
         wording_length: wording.length,
+        campaign_dates: campaignDates,
         location: location,
         long_lat: longLat,
         blast_time: blastTime,
@@ -7130,6 +7155,7 @@ function generateCampaignWl() {
       contents.push({
         wording: wording,
         wording_length: wording.length,
+        campaign_dates: campaignDates,
         location: location,
         long_lat: longLat,
         blast_time: blastTime,
@@ -7153,14 +7179,14 @@ function generateCampaignWl() {
     format: format,
     brand_name: brandName,
     mid: mid,
+    masking: masking,
     invoice_number: document.getElementById('wlInvoiceNumber').value,
     price_impression: document.getElementById('wlPriceImpression').value,
     budget: document.getElementById('wlBudget').value,
     impression: document.getElementById('wlImpression').value,
-    campaign_dates: campaignDates,
     // Reused by the History/Drive-folder-by-date logic, which expects a single date —
-    // uses the first campaign date as the reference date.
-    campaign_period: campaignDates[0],
+    // uses the first campaign date of the first Campaign Content section.
+    campaign_period: (contents[0].campaign_dates && contents[0].campaign_dates[0]) || '',
     uat_number: document.getElementById('wlUatNumber').value,
     whitelist_number: document.getElementById('wlWhitelistNumber').value,
     profiling: profiling
@@ -7209,6 +7235,7 @@ function renderPreviewWl(campaign) {
     const overLimit = ct.wording_length > 980;
     const heading = `Campaign Content ${idx + 1} — ${escapeHtml(campaign.format)}`;
     const metaRows = `
+      <tr><td>Periode Campaign</td><td>${escapeHtml(Array.isArray(ct.campaign_dates) ? ct.campaign_dates.join(', ') : '') || '-'}</td></tr>
       <tr><td>Lokasi</td><td style="white-space:pre-line;">${escapeHtml(ct.location) || '-'}</td></tr>
       ${campaign.wl_type === 'LBA' && ct.long_lat ? `<tr><td>Long-Lat</td><td>${escapeHtml(ct.long_lat)}</td></tr>` : ''}
       <tr><td>Blast Time</td><td>${escapeHtml(ct.blast_time) || '-'}</td></tr>
@@ -7277,11 +7304,11 @@ function renderPreviewWl(campaign) {
     <div class="preview-section">
       <div class="preview-section-title">Campaign Details</div>
       <table class="preview-table">
+        <tr><td>Masking</td><td>${escapeHtml(campaign.masking) || '-'}</td></tr>
         <tr><td>Nomor Invoice</td><td>${escapeHtml(campaign.invoice_number) || '-'}</td></tr>
         <tr><td>Harga Per Impression</td><td>${escapeHtml(campaign.price_impression) || '-'}</td></tr>
         <tr><td>Budget</td><td>${escapeHtml(campaign.budget) || '-'}</td></tr>
         <tr><td>Jumlah Impression</td><td>${escapeHtml(campaign.impression) || '-'}</td></tr>
-        <tr><td>Periode Campaign</td><td>${escapeHtml(campaign.campaign_dates.join(', '))}</td></tr>
         <tr><td>Nomor UAT</td><td>${escapeHtml(campaign.uat_number) || '-'}</td></tr>
         <tr><td>Nomor Whitelist</td><td>${escapeHtml(campaign.whitelist_number) || '-'}</td></tr>
       </table>
@@ -7329,14 +7356,15 @@ function resetFormWl() {
   document.getElementById('wlBrandSearchInput').value = '';
   clearSelectedBrandWl();
 
+  document.getElementById('wlMasking').value = '';
+  syncPresetFieldVisibility(document.getElementById('wlMasking'));
+
   document.getElementById('wlInvoiceNumber').value = '';
   document.getElementById('wlPriceImpression').value = '';
   document.getElementById('wlBudget').value = '';
   document.getElementById('wlImpression').value = '';
 
-  document.getElementById('wlDatesList').innerHTML = '';
   wlDateRowCount = 0;
-  addWlDateRow();
 
   document.getElementById('wlUatNumber').value = '';
   document.getElementById('wlWhitelistNumber').value = '';
