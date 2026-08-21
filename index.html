@@ -2574,13 +2574,22 @@ function openOutlookComposeForCampaign(campaignData, pdfLink) {
   const type = campaignData.campaign_type || '';
   const period = (campaignData.campaign_period && campaignData.campaign_period.trim() !== '-') ? campaignData.campaign_period : '';
 
+  // Every other type saves campaign_type as one combined string that matches its
+  // tab name verbatim (e.g. SMS LBA/TGT always saves campaign_type: 'SMS LBA/TGT').
+  // WhatsApp LBA/TGT is the odd one out — it saves 'WhatsApp LBA' or 'WhatsApp
+  // Targeted' depending on the sub-type, neither of which matches a Google Sheet
+  // "Email CC" row named "WhatsApp LBA/TGT" (matching the tab name, same as every
+  // other type's row). Collapse it back to the combined name here so CC lookup
+  // and the subject line work the same way as every other campaign type.
+  const emailType = (type === 'WhatsApp LBA' || type === 'WhatsApp Targeted') ? 'WhatsApp LBA/TGT' : type;
+
   // Auto-CC based on campaign type (from the "Email CC" tab in Google Sheets)
-  const ccList = emailCCMap[type.toLowerCase()] || [];
+  const ccList = emailCCMap[emailType.toLowerCase()] || [];
   if (!ccList.length) {
-    console.log('No CC found for campaign type "' + type + '". Current Email CC map:', emailCCMap);
+    console.log('No CC found for campaign type "' + emailType + '". Current Email CC map:', emailCCMap);
   }
 
-  const subject = `Campaign Visual - ${type}${brand ? ' - ' + brand : ''}${period ? ' (' + period + ')' : ''}`;
+  const subject = `Campaign Visual - ${emailType}${brand ? ' - ' + brand : ''}${period ? ' (' + period + ')' : ''}`;
   const bodyLines = [
     'Dear Rekan - Rekan,',
     '',
@@ -6144,7 +6153,7 @@ function buildWlMockup(campaign) {
       <div class="wa-carousel-card">
         <div class="wa-card-image">${waImage(c.image, 'Campaign Image')}</div>
         <div class="wa-carousel-caption">${renderWaWordingHtml(c.promo_wording)}</div>
-        ${waButtons(c.buttons && c.buttons.length ? c.buttons : [{ text: 'Kunjungi Sekarang', cta: (c.buttons && c.buttons[0] && c.buttons[0].cta) }])}
+        ${waButtons(c.buttons)}
       </div>
     `).join('');
 
@@ -6158,14 +6167,10 @@ function buildWlMockup(campaign) {
       <div class="wa-carousel-scroll">${cardsHtml}</div>
     `;
   } else {
-    // Always show a clickable CTA row in the mockup, matching the real WhatsApp
-    // broadcast layout (e.g. "🔗 Kunjungi [Brand] Sekarang") — falls back to a
-    // generic label/placeholder link if the user hasn't filled in a button yet,
-    // so the preview always demonstrates the clickable button placement.
-    const brandForCta = campaign.brand_masking || campaign.brand_name || 'Brand';
-    const ctaButtons = (campaign.buttons && campaign.buttons.length)
-      ? campaign.buttons
-      : [{ text: 'Kunjungi ' + brandForCta + ' Sekarang', cta: '#' }];
+    // Shows a clickable CTA row matching the real WhatsApp broadcast layout when
+    // the user has actually filled in a button — if no CTA was set for this
+    // Campaign Content, the mockup leaves that row empty rather than fabricating
+    // a placeholder link, so an empty CTA in the form reads as empty in the PDF too.
     bodyHtml = `
       <div class="wa-card">
         <div class="wa-card-image">${waImage(campaign.key_visual, 'Key Visual')}</div>
@@ -6173,7 +6178,7 @@ function buildWlMockup(campaign) {
           <div class="wa-card-wording">${waWordingBlock(campaign.wording)}</div>
           <div class="wa-optout">${optOutText}</div>
         </div>
-        ${waButtons(ctaButtons)}
+        ${waButtons(campaign.buttons)}
       </div>
     `;
   }
