@@ -3949,8 +3949,9 @@ function createMedsosContentSectionHTML(id, data) {
         <div style="display:flex; gap:8px; margin-bottom:8px;">
           <button type="button" class="type-btn mc-cta-URL${ctaType === 'URL' ? ' active' : ''}" onclick="selectMedsosContentCtaType(${id}, 'URL')" style="flex:1;">🔗 URL</button>
           <button type="button" class="type-btn mc-cta-WhatsApp${ctaType === 'WhatsApp' ? ' active' : ''}" onclick="selectMedsosContentCtaType(${id}, 'WhatsApp')" style="flex:1;">💬 WhatsApp</button>
+          <button type="button" class="type-btn mc-cta-DMInstagram${ctaType === 'DM Instagram' ? ' active' : ''}" onclick="selectMedsosContentCtaType(${id}, 'DM Instagram')" style="flex:1;">📩 DM Instagram</button>
         </div>
-        <input type="text" class="mc-ctaValue" placeholder="${ctaType === 'WhatsApp' ? 'e.g. 08123456789' : 'https://example.com/cta'}" value="${escapeAttr(data.ctaValue)}">
+        <input type="text" class="mc-ctaValue" placeholder="${ctaType === 'WhatsApp' ? 'e.g. 08123456789' : ctaType === 'DM Instagram' ? 'e.g. kuponku.id' : 'https://example.com/cta'}" value="${escapeAttr(data.ctaValue)}">
       </div>
 
       <div class="field mc-pretextField" style="display:${ctaType === 'WhatsApp' ? 'block' : 'none'};">
@@ -3992,15 +3993,20 @@ function addMedsosContentSection(data) {
   document.getElementById('medsosContentList').appendChild(wrapper.firstElementChild);
 }
 
-// Toggles a specific section's CTA type between "URL" and "WhatsApp" — WhatsApp
-// shows an extra Pretext field and changes the CTA field's placeholder.
+// Toggles a specific section's CTA type. WhatsApp shows an extra Pretext field;
+// DM Instagram accepts an Instagram username or profile URL.
 function selectMedsosContentCtaType(id, ctaType) {
   const section = document.getElementById('medsos-content-section-' + id);
   section.dataset.ctatype = ctaType;
   section.querySelector('.mc-cta-URL').classList.toggle('active', ctaType === 'URL');
   section.querySelector('.mc-cta-WhatsApp').classList.toggle('active', ctaType === 'WhatsApp');
+  section.querySelector('.mc-cta-DMInstagram').classList.toggle('active', ctaType === 'DM Instagram');
   section.querySelector('.mc-pretextField').style.display = ctaType === 'WhatsApp' ? 'block' : 'none';
-  section.querySelector('.mc-ctaValue').placeholder = ctaType === 'WhatsApp' ? 'e.g. 08123456789' : 'https://example.com/cta';
+  section.querySelector('.mc-ctaValue').placeholder = ctaType === 'WhatsApp'
+    ? 'e.g. 08123456789'
+    : ctaType === 'DM Instagram'
+      ? 'e.g. kuponku.id'
+      : 'https://example.com/cta';
 }
 
 function duplicateMedsosContentSection(id) {
@@ -5974,11 +5980,19 @@ function buildWaMeLink(number, pretext) {
   return `https://wa.me/${withCountryCode}${text}`;
 }
 
+function buildInstagramProfileLink(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  if (/^https?:\/\//i.test(raw)) return raw;
+  const username = raw.replace(/^@/, '').replace(/^instagram\.com\//i, '').replace(/\/$/, '');
+  return username ? `https://instagram.com/${encodeURIComponent(username)}` : '';
+}
+
 // Builds a single-phone Instagram Ads-style mockup for Medsos, reusing the same
 // visual chrome as buildMetaMockup() above (Sponsored header, post image, CTA
 // bar, like/comment/share/bookmark row, bottom nav). Sourced from the first
-// Campaign Content section — if a CTA (URL or WhatsApp) is filled in, the CTA
-// bar becomes a real clickable link (WhatsApp CTAs go through buildWaMeLink()).
+// Campaign Content section — if a CTA is filled in, the CTA bar becomes a real
+// clickable link. DM Instagram is displayed as "Kunjungi Profil".
 function buildOneMedsosPhone(igName, avatarHtml, c, idx) {
   let imageHtml;
   if (c.key_visual) {
@@ -5993,6 +6007,9 @@ function buildOneMedsosPhone(igName, avatarHtml, c, idx) {
   if (c.cta_type === 'WhatsApp' && c.cta_value) {
     ctaLabel = 'Chat On WhatsApp';
     ctaLink = buildWaMeLink(c.cta_value, c.pretext);
+  } else if (c.cta_type === 'DM Instagram') {
+    ctaLabel = 'Kunjungi Profil';
+    ctaLink = buildInstagramProfileLink(c.cta_value || c.instagram_name);
   } else if (c.cta_type === 'URL' && c.cta_value) {
     ctaLabel = 'Learn More';
     ctaLink = c.cta_value;
@@ -6040,8 +6057,8 @@ function buildOneMedsosPhone(igName, avatarHtml, c, idx) {
 // Builds one Instagram Ads-style phone mockup PER Campaign Content section (each
 // section carries its own Key Visual + Caption — see createMedsosContentSectionHTML),
 // laid out in the same multi-phone grid used by Kuponku SMS's journey mockup. If a
-// CTA (URL or WhatsApp) is filled in for a section, that phone's CTA bar becomes a
-// real clickable link (WhatsApp CTAs go through buildWaMeLink()).
+// CTA is filled in for a section, that phone's CTA bar becomes a real clickable
+// link. DM Instagram can fall back to the Customer Journey Instagram name.
 function buildMedsosMockup(campaign) {
   const contents = campaign.campaign_contents || [];
   const phonesHtml = contents.map((c, idx) => {
@@ -6057,7 +6074,9 @@ function buildMedsosMockup(campaign) {
     return buildOneMedsosPhone(igName, avatarHtml, c, idx);
   }).join('');
   const anyClickable = contents.some(c =>
-    (c.cta_type === 'WhatsApp' && c.cta_value) || (c.cta_type === 'URL' && c.cta_value)
+    (c.cta_type === 'WhatsApp' && c.cta_value) ||
+    (c.cta_type === 'URL' && c.cta_value) ||
+    (c.cta_type === 'DM Instagram' && (c.cta_value || c.instagram_name))
   );
 
   return `
