@@ -2865,6 +2865,11 @@ function loadCampaignIntoForm(campaign, historyId) {
           deliveryTime: c.delivery_time || '',
           gender: c.gender || '',
           age: c.age || '',
+          handphoneOsType: c.handphone_os_type || '',
+          householdExpenditure: c.household_expenditure || '',
+          maritalStatus: c.marital_status || '',
+          lifestyleSegment: c.lifestyle_segment || '',
+          religion: c.religion || '',
           location: c.location || '',
           longLat: c.long_lat || '',
           // Fall back to the old top-level fields for campaigns saved before UAT/Whitelist
@@ -2884,6 +2889,11 @@ function loadCampaignIntoForm(campaign, historyId) {
         deliveryTime: campaign.delivery_time || '',
         gender: campaign.gender || '',
         age: campaign.age || '',
+        handphoneOsType: campaign.handphone_os_type || '',
+        householdExpenditure: campaign.household_expenditure || '',
+        maritalStatus: campaign.marital_status || '',
+        lifestyleSegment: campaign.lifestyle_segment || '',
+        religion: campaign.religion || '',
         location: campaign.location || '',
         longLat: campaign.long_lat || '',
         uatNumber: campaign.uat_number || '',
@@ -3798,6 +3808,35 @@ function createLbaContentSectionHTML(id, data) {
         </div>
       </div>
 
+      <div class="lc-targetedProfileFields" style="display:${subType === 'Targeted' ? 'block' : 'none'};">
+        <div class="field-row">
+          <div class="field">
+            <label>Tipe OS Handphone</label>
+            <input type="text" class="lc-handphoneOsType" placeholder="e.g. Android, iOS" value="${escapeAttr(data.handphoneOsType)}">
+          </div>
+          <div class="field">
+            <label>Tingkat Pengeluaran Rumah Tangga</label>
+            <input type="text" class="lc-householdExpenditure" placeholder="e.g. Rp 5.000.000 - Rp 10.000.000" value="${escapeAttr(data.householdExpenditure)}">
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>Status Pernikahan</label>
+            <input type="text" class="lc-maritalStatus" placeholder="e.g. Menikah, Belum Menikah" value="${escapeAttr(data.maritalStatus)}">
+          </div>
+          <div class="field">
+            <label>Lifestyle Segment</label>
+            <input type="text" class="lc-lifestyleSegment" placeholder="e.g. Family, Traveler, Gamer" value="${escapeAttr(data.lifestyleSegment)}">
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Agama</label>
+          <input type="text" class="lc-religion" placeholder="e.g. Islam, Kristen, Hindu, Buddha" value="${escapeAttr(data.religion)}">
+        </div>
+      </div>
+
       <div class="field">
         <label>Location</label>
         <input type="text" class="lc-location" placeholder="e.g. Jakarta Selatan" value="${escapeAttr(data.location)}">
@@ -3866,6 +3905,9 @@ function selectLbaGlobalSubType(subType) {
   document.querySelectorAll('#lbaContentList .lc-longLatField').forEach(el => {
     el.style.display = subType === 'LBA' ? 'block' : 'none';
   });
+  document.querySelectorAll('#lbaContentList .lc-targetedProfileFields').forEach(el => {
+    el.style.display = subType === 'Targeted' ? 'block' : 'none';
+  });
 }
 
 function duplicateLbaContentSection(id) {
@@ -3879,6 +3921,11 @@ function duplicateLbaContentSection(id) {
     deliveryTime: section.querySelector('.lc-deliveryTime').value,
     gender: section.querySelector('.lc-gender').value,
     age: section.querySelector('.lc-age').value,
+    handphoneOsType: section.querySelector('.lc-handphoneOsType').value,
+    householdExpenditure: section.querySelector('.lc-householdExpenditure').value,
+    maritalStatus: section.querySelector('.lc-maritalStatus').value,
+    lifestyleSegment: section.querySelector('.lc-lifestyleSegment').value,
+    religion: section.querySelector('.lc-religion').value,
     location: section.querySelector('.lc-location').value,
     longLat: section.querySelector('.lc-longLat').value,
     uatNumber: section.querySelector('.lc-uatNumber').value,
@@ -6768,6 +6815,11 @@ function generateCampaignLba() {
       delivery_time: section.querySelector('.lc-deliveryTime').value,
       gender: section.querySelector('.lc-gender').value,
       age: section.querySelector('.lc-age').value,
+      handphone_os_type: subType === 'Targeted' ? section.querySelector('.lc-handphoneOsType').value : '',
+      household_expenditure: subType === 'Targeted' ? section.querySelector('.lc-householdExpenditure').value : '',
+      marital_status: subType === 'Targeted' ? section.querySelector('.lc-maritalStatus').value : '',
+      lifestyle_segment: subType === 'Targeted' ? section.querySelector('.lc-lifestyleSegment').value : '',
+      religion: subType === 'Targeted' ? section.querySelector('.lc-religion').value : '',
       location: section.querySelector('.lc-location').value,
       long_lat: subType === 'LBA' ? section.querySelector('.lc-longLat').value : '',
       uat_number: section.querySelector('.lc-uatNumber').value,
@@ -6814,6 +6866,13 @@ function renderPreviewLba(campaign) {
           <tr><td>Delivery Time</td><td>${escapeHtml(c.delivery_time) || '-'}</td></tr>
           <tr><td>Gender</td><td>${escapeHtml(c.gender)}</td></tr>
           <tr><td>Age</td><td>${escapeHtml(c.age) || '-'}</td></tr>
+          ${c.sub_type === 'Targeted' ? `
+            <tr><td>Tipe OS Handphone</td><td>${escapeHtml(c.handphone_os_type) || '-'}</td></tr>
+            <tr><td>Tingkat Pengeluaran Rumah Tangga</td><td>${escapeHtml(c.household_expenditure) || '-'}</td></tr>
+            <tr><td>Status Pernikahan</td><td>${escapeHtml(c.marital_status) || '-'}</td></tr>
+            <tr><td>Lifestyle Segment</td><td>${escapeHtml(c.lifestyle_segment) || '-'}</td></tr>
+            <tr><td>Agama</td><td>${escapeHtml(c.religion) || '-'}</td></tr>
+          ` : ''}
           <tr><td>Location</td><td>${escapeHtml(c.location) || '-'}</td></tr>
           ${c.sub_type === 'LBA' ? `<tr><td>Long-Lat</td><td>${escapeHtml(c.long_lat) || '-'}</td></tr>` : ''}
           <tr><td>Nomor UAT</td><td>${escapeHtml(c.uat_number) || '-'}</td></tr>
