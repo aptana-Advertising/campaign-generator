@@ -5,3 +5,4 @@ Update 21 Agt : update field WA dan masking
 Update 26 Agt: tambah field nama instagram untuk medsos
 Update 31 Agt: tambah button "DM Intadram" CTA medsos
 Update 4 Sept: tambah field profiling SMS LBA/TGT
+Update 11 Sept: Tambah Field jam tayang SMS
