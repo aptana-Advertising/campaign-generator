@@ -1564,6 +1564,18 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
             </div>
           </div>
           <div class="field">
+            <label>Jam Tayang</label>
+            <select id="airingTimePreset" onchange="handleSmsAiringTimeChange(this)">
+              <option value="">Pilih jam tayang...</option>
+              <option value="06:00 WIB">06:00 WIB</option>
+              <option value="08:00 WIB">08:00 WIB</option>
+              <option value="custom">Custom</option>
+            </select>
+            <div id="airingTimeCustomWrap" style="display:none; margin-top:8px;">
+              <input type="time" id="airingTimeCustom" aria-label="Jam tayang custom">
+            </div>
+          </div>
+          <div class="field">
             <label>Whitelist Numbers</label>
             <textarea id="whitelist" style="height:60px;" placeholder="Comma-separated phone numbers"></textarea>
           </div>
@@ -3060,6 +3072,7 @@ function loadCampaignIntoForm(campaign, historyId) {
     syncPresetFieldVisibility(document.getElementById('paymentMethod'));
     document.getElementById('price').value = campaign.price || '';
     syncPresetFieldVisibility(document.getElementById('price'));
+    setSmsAiringTime(campaign.airing_time || campaign.jam_tayang || '');
 
     const [pStart, pEnd] = (campaign.campaign_period || '').split(' - ');
     document.getElementById('startDate').value = pStart ? pStart.trim() : '';
@@ -4350,6 +4363,42 @@ function formatPeriod(startVal, endVal) {
   return `${s} - ${e}`;
 }
 
+// Kuponku SMS airing-time picker: two quick choices plus a custom clock time.
+function handleSmsAiringTimeChange(selectEl) {
+  const customWrap = document.getElementById('airingTimeCustomWrap');
+  const customInput = document.getElementById('airingTimeCustom');
+  const isCustom = selectEl && selectEl.value === 'custom';
+  if (customWrap) customWrap.style.display = isCustom ? 'block' : 'none';
+  if (!isCustom && customInput) customInput.value = '';
+  if (isCustom && customInput) customInput.focus();
+}
+
+function getSmsAiringTime() {
+  const preset = document.getElementById('airingTimePreset');
+  if (!preset || !preset.value) return '';
+  if (preset.value !== 'custom') return preset.value;
+  const customValue = (document.getElementById('airingTimeCustom')?.value || '').trim();
+  return customValue ? customValue + ' WIB' : '';
+}
+
+function setSmsAiringTime(value) {
+  const preset = document.getElementById('airingTimePreset');
+  const customInput = document.getElementById('airingTimeCustom');
+  if (!preset || !customInput) return;
+  const normalized = (value || '').trim();
+  if (normalized === '06:00 WIB' || normalized === '08:00 WIB') {
+    preset.value = normalized;
+    customInput.value = '';
+  } else if (normalized) {
+    preset.value = 'custom';
+    customInput.value = normalized.replace(/\s*WIB$/i, '').trim();
+  } else {
+    preset.value = '';
+    customInput.value = '';
+  }
+  handleSmsAiringTimeChange(preset);
+}
+
 // Live-format a price input as Indonesian Rupiah, e.g. "9000000" -> "Rp 9.000.000"
 function formatRupiahInput(input) {
   // Keep only digits
@@ -5228,6 +5277,7 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
     kvRow('Payment Method', campaignData.payment_method);
     if (campaignData.price !== undefined) kvRow('Price', campaignData.price);
     kvRow('Campaign Period', campaignPeriod);
+    if (campaignData.airing_time) kvRow('Jam Tayang', campaignData.airing_time);
     if (campaignData.location) kvRow('Location', campaignData.location);
     if (campaignData.max_redeem) kvRow('Max Redeem', campaignData.max_redeem);
     if (campaignData.whitelist) paragraph('Whitelist:', campaignData.whitelist);
@@ -5700,6 +5750,13 @@ function generateCampaign() {
     return;
   }
 
+  const airingTimePreset = document.getElementById('airingTimePreset');
+  const airingTime = getSmsAiringTime();
+  if (airingTimePreset && airingTimePreset.value === 'custom' && !airingTime) {
+    alert('Please select a custom Jam Tayang.');
+    return;
+  }
+
   const contentSections = [];
   document.querySelectorAll('#campaignContentList .content-section').forEach(section => {
     const wordingSms = section.querySelector('.cc-wordingSms').value;
@@ -5749,6 +5806,7 @@ function generateCampaign() {
     payment_method: document.getElementById('paymentMethod').value,
     price: document.getElementById('price').value,
     campaign_period: formatPeriod(document.getElementById('startDate').value, document.getElementById('endDate').value),
+    airing_time: airingTime,
     whitelist: document.getElementById('whitelist').value,
     campaign_contents: contentSections
   };
@@ -6411,6 +6469,7 @@ function renderPreview(campaign) {
         <tr><td>Payment Method</td><td>${escapeHtml(campaign.payment_method) || '-'}</td></tr>
         <tr><td>Price</td><td>${escapeHtml(campaign.price) || '-'}</td></tr>
         <tr><td>Campaign Period</td><td>${escapeHtml(campaign.campaign_period)}</td></tr>
+        <tr><td>Jam Tayang</td><td>${escapeHtml(campaign.airing_time) || '-'}</td></tr>
       </table>
       ${campaign.whitelist ? `<div style="margin-top:10px; font-size:13px;"><strong style="color:#6b7280;">Whitelist:</strong><div style="margin-top:4px; white-space:pre-wrap;">${escapeHtml(campaign.whitelist)}</div></div>` : ''}
     </div>
@@ -6467,6 +6526,7 @@ function resetForm() {
   syncPresetFieldVisibility(document.getElementById('price'));
   document.getElementById('startDate').value = '';
   document.getElementById('endDate').value = '';
+  setSmsAiringTime('');
   document.getElementById('whitelist').value = '';
 
   document.getElementById('campaignContentList').innerHTML = '';
