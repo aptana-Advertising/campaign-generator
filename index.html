@@ -2957,6 +2957,7 @@ function loadCampaignIntoForm(campaign, historyId) {
           age: c.age || '',
           ctaType: c.cta_type || 'URL',
           ctaValue: c.cta_value || '',
+          instagramProfileLink: c.instagram_profile_link || (c.cta_type === 'Profil Instagram' ? c.cta_value : '') || '',
           pretext: c.pretext || '',
           keyword: c.keyword || '',
           instagramName: c.instagram_name || (idx === 0 ? legacyCj.instagram_name : '') || '',
@@ -4018,12 +4019,20 @@ function createMedsosContentSectionHTML(id, data) {
 
       <div class="field">
         <label>CTA</label>
-        <div style="display:flex; gap:8px; margin-bottom:8px;">
+        <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
           <button type="button" class="type-btn mc-cta-URL${ctaType === 'URL' ? ' active' : ''}" onclick="selectMedsosContentCtaType(${id}, 'URL')" style="flex:1;">🔗 URL</button>
           <button type="button" class="type-btn mc-cta-WhatsApp${ctaType === 'WhatsApp' ? ' active' : ''}" onclick="selectMedsosContentCtaType(${id}, 'WhatsApp')" style="flex:1;">💬 WhatsApp</button>
           <button type="button" class="type-btn mc-cta-DMInstagram${ctaType === 'DM Instagram' ? ' active' : ''}" onclick="selectMedsosContentCtaType(${id}, 'DM Instagram')" style="flex:1;">📩 DM Instagram</button>
+          <button type="button" class="type-btn mc-cta-ProfilInstagram${ctaType === 'Profil Instagram' ? ' active' : ''}" onclick="selectMedsosContentCtaType(${id}, 'Profil Instagram')" style="flex:1 1 180px;">📷 Profil Instagram</button>
         </div>
-        <input type="text" class="mc-ctaValue" placeholder="${ctaType === 'WhatsApp' ? 'e.g. 08123456789' : ctaType === 'DM Instagram' ? 'e.g. kuponku.id' : 'https://example.com/cta'}" value="${escapeAttr(data.ctaValue)}">
+        <div class="mc-ctaValueField" style="display:${ctaType === 'Profil Instagram' ? 'none' : 'block'};">
+          <input type="text" class="mc-ctaValue" placeholder="${ctaType === 'WhatsApp' ? 'e.g. 08123456789' : ctaType === 'DM Instagram' ? 'e.g. kuponku.id' : 'https://example.com/cta'}" value="${escapeAttr(data.ctaValue)}">
+        </div>
+      </div>
+
+      <div class="field mc-instagramProfileLinkField" style="display:${ctaType === 'Profil Instagram' ? 'block' : 'none'};">
+        <label>Link Profil Instagram</label>
+        <input type="url" class="mc-instagramProfileLink" placeholder="https://instagram.com/namaakun" value="${escapeAttr(data.instagramProfileLink)}">
       </div>
 
       <div class="field mc-pretextField" style="display:${ctaType === 'WhatsApp' ? 'block' : 'none'};">
@@ -4068,14 +4077,17 @@ function addMedsosContentSection(data) {
 }
 
 // Toggles a specific section's CTA type. WhatsApp shows an extra Pretext field;
-// DM Instagram accepts an Instagram username or profile URL.
+// Profil Instagram uses its own dedicated profile-link field.
 function selectMedsosContentCtaType(id, ctaType) {
   const section = document.getElementById('medsos-content-section-' + id);
   section.dataset.ctatype = ctaType;
   section.querySelector('.mc-cta-URL').classList.toggle('active', ctaType === 'URL');
   section.querySelector('.mc-cta-WhatsApp').classList.toggle('active', ctaType === 'WhatsApp');
   section.querySelector('.mc-cta-DMInstagram').classList.toggle('active', ctaType === 'DM Instagram');
+  section.querySelector('.mc-cta-ProfilInstagram').classList.toggle('active', ctaType === 'Profil Instagram');
   section.querySelector('.mc-pretextField').style.display = ctaType === 'WhatsApp' ? 'block' : 'none';
+  section.querySelector('.mc-ctaValueField').style.display = ctaType === 'Profil Instagram' ? 'none' : 'block';
+  section.querySelector('.mc-instagramProfileLinkField').style.display = ctaType === 'Profil Instagram' ? 'block' : 'none';
   section.querySelector('.mc-ctaValue').placeholder = ctaType === 'WhatsApp'
     ? 'e.g. 08123456789'
     : ctaType === 'DM Instagram'
@@ -4094,6 +4106,7 @@ function duplicateMedsosContentSection(id) {
     age: section.querySelector('.mc-age').value,
     ctaType: section.dataset.ctatype || 'URL',
     ctaValue: section.querySelector('.mc-ctaValue').value,
+    instagramProfileLink: section.querySelector('.mc-instagramProfileLink').value,
     pretext: section.querySelector('.mc-pretext').value,
     keyword: section.querySelector('.mc-keyword').value,
     instagramName: section.querySelector('.mc-instagramName').value,
@@ -5438,7 +5451,8 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
         kvRow('Gender', c.gender);
         kvRow('Age', c.age);
         kvRow('CTA Type', c.cta_type);
-        kvRow('CTA Value', c.cta_value);
+        if (c.cta_type === 'Profil Instagram') kvRow('Link Profil Instagram', c.instagram_profile_link);
+        else kvRow('CTA Value', c.cta_value);
         if (c.cta_type === 'WhatsApp' && c.pretext) paragraph('Pretext:', c.pretext);
         kvRow('Keyword', c.keyword);
         endCard();
@@ -6113,7 +6127,7 @@ function buildInstagramProfileLink(value) {
 // visual chrome as buildMetaMockup() above (Sponsored header, post image, CTA
 // bar, like/comment/share/bookmark row, bottom nav). Sourced from the first
 // Campaign Content section — if a CTA is filled in, the CTA bar becomes a real
-// clickable link. DM Instagram is displayed as "Kunjungi Profil".
+// clickable link. Profil Instagram uses its own profile link and button label.
 function buildOneMedsosPhone(igName, avatarHtml, c, idx) {
   let imageHtml;
   if (c.key_visual) {
@@ -6131,6 +6145,9 @@ function buildOneMedsosPhone(igName, avatarHtml, c, idx) {
   } else if (c.cta_type === 'DM Instagram') {
     ctaLabel = 'Kunjungi Profil';
     ctaLink = buildInstagramProfileLink(c.cta_value || c.instagram_name);
+  } else if (c.cta_type === 'Profil Instagram') {
+    ctaLabel = 'Kunjungi Profil Instagram';
+    ctaLink = buildInstagramProfileLink(c.instagram_profile_link);
   } else if (c.cta_type === 'URL' && c.cta_value) {
     ctaLabel = 'Learn More';
     ctaLink = c.cta_value;
@@ -6197,7 +6214,8 @@ function buildMedsosMockup(campaign) {
   const anyClickable = contents.some(c =>
     (c.cta_type === 'WhatsApp' && c.cta_value) ||
     (c.cta_type === 'URL' && c.cta_value) ||
-    (c.cta_type === 'DM Instagram' && (c.cta_value || c.instagram_name))
+    (c.cta_type === 'DM Instagram' && (c.cta_value || c.instagram_name)) ||
+    (c.cta_type === 'Profil Instagram' && c.instagram_profile_link)
   );
 
   return `
@@ -7070,6 +7088,7 @@ function generateCampaignMedsos() {
       age: section.querySelector('.mc-age').value,
       cta_type: ctaType,
       cta_value: section.querySelector('.mc-ctaValue').value,
+      instagram_profile_link: section.querySelector('.mc-instagramProfileLink').value,
       pretext: ctaType === 'WhatsApp' ? section.querySelector('.mc-pretext').value : '',
       keyword: section.querySelector('.mc-keyword').value,
       instagram_name: section.querySelector('.mc-instagramName').value,
@@ -7115,7 +7134,9 @@ function renderPreviewMedsos(campaign) {
           <tr><td>Gender</td><td>${escapeHtml(c.gender)}</td></tr>
           <tr><td>Age</td><td>${escapeHtml(c.age) || '-'}</td></tr>
           <tr><td>CTA Type</td><td>${escapeHtml(c.cta_type)}</td></tr>
-          <tr><td>CTA Value</td><td>${escapeHtml(c.cta_value) || '-'}</td></tr>
+          ${c.cta_type === 'Profil Instagram'
+            ? `<tr><td>Link Profil Instagram</td><td>${escapeHtml(c.instagram_profile_link) || '-'}</td></tr>`
+            : `<tr><td>CTA Value</td><td>${escapeHtml(c.cta_value) || '-'}</td></tr>`}
           ${c.cta_type === 'WhatsApp' ? `<tr><td>Pretext</td><td>${escapeHtml(c.pretext) || '-'}</td></tr>` : ''}
           <tr><td>Keyword</td><td>${escapeHtml(c.keyword) || '-'}</td></tr>
           <tr><td>Nama Instagram</td><td>${escapeHtml(c.instagram_name) || '-'}</td></tr>
