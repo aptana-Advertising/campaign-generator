@@ -2952,6 +2952,7 @@ function loadCampaignIntoForm(campaign, historyId) {
           linkContent: c.link_content || '',
           location: c.location || '',
           budget: c.budget || '',
+          budgetDescription: c.budget_description || '',
           gender: c.gender || '',
           age: c.age || '',
           ctaType: c.cta_type || 'URL',
@@ -3960,6 +3961,12 @@ function removeLbaContentSection(id) {
 /* ---------------- Medsos — Campaign Content Sections (dynamic, repeatable) ---------------- */
 let medsosContentSectionCount = 0;
 
+function autoResizeMedsosTextarea(textarea) {
+  if (!textarea) return;
+  textarea.style.height = 'auto';
+  textarea.style.height = Math.max(72, textarea.scrollHeight) + 'px';
+}
+
 function createMedsosContentSectionHTML(id, data) {
   data = data || {};
   const ctaType = data.ctaType || 'URL';
@@ -3975,17 +3982,22 @@ function createMedsosContentSectionHTML(id, data) {
 
       <div class="field">
         <label>Link Content (URL)</label>
-        <input type="url" class="mc-linkContent" placeholder="https://example.com/post" value="${escapeAttr(data.linkContent)}">
+        <textarea class="mc-linkContent mc-flex-textarea" rows="3" style="min-height:72px; resize:vertical;" placeholder="Masukkan satu atau beberapa URL (satu URL per baris)" oninput="autoResizeMedsosTextarea(this)">${escapeHtml(data.linkContent)}</textarea>
+      </div>
+
+      <div class="field">
+        <label>Location</label>
+        <textarea class="mc-location mc-flex-textarea" rows="3" style="min-height:72px; resize:vertical;" placeholder="Masukkan satu atau beberapa lokasi (satu lokasi per baris)" oninput="autoResizeMedsosTextarea(this)">${escapeHtml(data.location)}</textarea>
       </div>
 
       <div class="field-row">
         <div class="field">
-          <label>Location</label>
-          <input type="text" class="mc-location" placeholder="e.g. Jakarta" value="${escapeAttr(data.location)}">
-        </div>
-        <div class="field">
           <label>Budget</label>
           <input type="text" class="mc-budget" placeholder="e.g. Rp 5.000.000" oninput="formatRupiahInput(this)" value="${escapeAttr(data.budget)}">
+        </div>
+        <div class="field">
+          <label>Keterangan Budget</label>
+          <textarea class="mc-budgetDescription mc-flex-textarea" rows="3" style="min-height:72px; resize:vertical;" placeholder="Tambahkan keterangan budget..." oninput="autoResizeMedsosTextarea(this)">${escapeHtml(data.budgetDescription)}</textarea>
         </div>
       </div>
 
@@ -4050,7 +4062,9 @@ function addMedsosContentSection(data) {
   const id = medsosContentSectionCount;
   const wrapper = document.createElement('div');
   wrapper.innerHTML = createMedsosContentSectionHTML(id, data);
-  document.getElementById('medsosContentList').appendChild(wrapper.firstElementChild);
+  const section = wrapper.firstElementChild;
+  document.getElementById('medsosContentList').appendChild(section);
+  section.querySelectorAll('.mc-flex-textarea').forEach(autoResizeMedsosTextarea);
 }
 
 // Toggles a specific section's CTA type. WhatsApp shows an extra Pretext field;
@@ -4075,6 +4089,7 @@ function duplicateMedsosContentSection(id) {
     linkContent: section.querySelector('.mc-linkContent').value,
     location: section.querySelector('.mc-location').value,
     budget: section.querySelector('.mc-budget').value,
+    budgetDescription: section.querySelector('.mc-budgetDescription').value,
     gender: section.querySelector('.mc-gender').value,
     age: section.querySelector('.mc-age').value,
     ctaType: section.dataset.ctatype || 'URL',
@@ -5419,6 +5434,7 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
         if (c.link_content) paragraph('Link Content:', c.link_content);
         kvRow('Location', c.location);
         kvRow('Budget', c.budget);
+        if (c.budget_description) paragraph('Keterangan Budget:', c.budget_description);
         kvRow('Gender', c.gender);
         kvRow('Age', c.age);
         kvRow('CTA Type', c.cta_type);
@@ -7049,6 +7065,7 @@ function generateCampaignMedsos() {
       link_content: section.querySelector('.mc-linkContent').value,
       location: section.querySelector('.mc-location').value,
       budget: section.querySelector('.mc-budget').value,
+      budget_description: section.querySelector('.mc-budgetDescription').value,
       gender: section.querySelector('.mc-gender').value,
       age: section.querySelector('.mc-age').value,
       cta_type: ctaType,
@@ -7091,9 +7108,10 @@ function renderPreviewMedsos(campaign) {
       <div class="content-block">
         <div class="content-block-title">Campaign Content ${idx + 1}</div>
         <table class="preview-table">
-          <tr><td>Link Content</td><td>${c.link_content ? `<a href="${escapeAttr(c.link_content)}" target="_blank" class="preview-link">🔗 ${escapeHtml(c.link_content)}</a>` : '-'}</td></tr>
-          <tr><td>Location</td><td>${escapeHtml(c.location) || '-'}</td></tr>
+          <tr><td>Link Content</td><td style="white-space:pre-line; overflow-wrap:anywhere;">${escapeHtml(c.link_content) || '-'}</td></tr>
+          <tr><td>Location</td><td style="white-space:pre-line;">${escapeHtml(c.location) || '-'}</td></tr>
           <tr><td>Budget</td><td>${escapeHtml(c.budget) || '-'}</td></tr>
+          <tr><td>Keterangan Budget</td><td style="white-space:pre-line;">${escapeHtml(c.budget_description) || '-'}</td></tr>
           <tr><td>Gender</td><td>${escapeHtml(c.gender)}</td></tr>
           <tr><td>Age</td><td>${escapeHtml(c.age) || '-'}</td></tr>
           <tr><td>CTA Type</td><td>${escapeHtml(c.cta_type)}</td></tr>
