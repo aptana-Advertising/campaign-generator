@@ -5622,6 +5622,36 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
   const sourceEl = document.getElementById(previewElementId);
   const mockupEls = sourceEl ? Array.from(sourceEl.querySelectorAll('.mockup-section')) : [];
   if (!mockupEls.length) { finishSaveTextOnly(); return; }
+  const groupWlMockups = isWlType;
+  let mockupsOnPage = 0;
+
+  function addMockupToPdf(canvas, hostRect, linkRects) {
+    if (!groupWlMockups || mockupsOnPage === 0) {
+      pdf.addPage();
+      drawHeader();
+    }
+    const slot = groupWlMockups ? mockupsOnPage : 0;
+    const gap = 6;
+    const slotW = groupWlMockups ? (PW - M * 2 - gap) / 2 : PW - M * 2;
+    const slotH = groupWlMockups ? ((PH - BOTTOM) - (TOP - 6) - gap) / 2 : (PH - BOTTOM) - (TOP - 6);
+    const slotX = M + (slot % 2) * (slotW + gap);
+    const slotY = TOP - 6 + Math.floor(slot / 2) * (slotH + gap);
+    const scale = Math.min(slotW / canvas.width, slotH / canvas.height);
+    const drawW = canvas.width * scale;
+    const drawH = canvas.height * scale;
+    const x = slotX + (slotW - drawW) / 2;
+    const y = slotY;
+    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', x, y, drawW, drawH);
+
+    linkRects.forEach(lr => {
+      if (!lr.href || lr.href === '#' || !hostRect.width || !hostRect.height) return;
+      try {
+        pdf.link(x + lr.x / hostRect.width * drawW, y + lr.y / hostRect.height * drawH,
+          lr.w / hostRect.width * drawW, lr.h / hostRect.height * drawH, { url: lr.href });
+      } catch (e) { console.warn('Could not add PDF link overlay:', e); }
+    });
+    if (groupWlMockups) mockupsOnPage = (mockupsOnPage + 1) % 4;
+  }
 
   function captureMockup(index) {
   if (index >= mockupEls.length) { finishSaveTextOnly(); return; }
@@ -5635,7 +5665,7 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
     .map(el => el.offsetHeight);
 
   const mockupHost = document.createElement('div');
-  mockupHost.style.cssText = 'position:absolute; top:0; left:0; width:794px; z-index:99998; background:#ffffff; padding:4px 10px; font-family:\'Outfit\',-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,Helvetica,Arial,sans-serif;';
+  mockupHost.style.cssText = 'position:absolute; top:0; left:0; width:' + (groupWlMockups ? '250px' : '794px') + '; z-index:99998; background:#ffffff; padding:4px 10px; font-family:\'Outfit\',-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,Helvetica,Arial,sans-serif;';
   const clone = mockupEl.cloneNode(true);
   // Tighten spacing inside the cloned mockup section
   clone.style.margin = '0';
@@ -5744,28 +5774,7 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
         .then(canvas => ({ canvas, hostRect, linkRects }));
     })
     .then(({ canvas, hostRect, linkRects }) => {
-      const imgData = canvas.toDataURL('image/png');
-      pdf.addPage();
-      drawHeader();
-      let yy = TOP - 6; // tighter: sit closer to the header
-      const availH = (PH - BOTTOM) - yy;
-      const imgW = PW - M * 2;
-      let drawW = imgW;
-      let drawH = canvas.height * drawW / canvas.width;
-      if (drawH > availH) { drawH = availH; drawW = canvas.width * drawH / canvas.height; }
-      pdf.addImage(imgData, 'PNG', M, yy, drawW, drawH);
-
-      // Overlay real clickable regions (e.g. "Chat On WhatsApp", WhatsApp CTA
-      // buttons, auto-linked URLs in SMS wording) on top of the screenshot, mapped
-      // proportionally from their measured DOM position into PDF mm coordinates.
-      linkRects.forEach(lr => {
-        if (!lr.href || lr.href === '#' || !hostRect.width || !hostRect.height) return;
-        const px = M + (lr.x / hostRect.width) * drawW;
-        const py = yy + (lr.y / hostRect.height) * drawH;
-        const pw = (lr.w / hostRect.width) * drawW;
-        const ph = (lr.h / hostRect.height) * drawH;
-        try { pdf.link(px, py, pw, ph, { url: lr.href }); } catch (e) { console.warn('Could not add PDF link overlay:', e); }
-      });
+      addMockupToPdf(canvas, hostRect, linkRects);
 
       if (mockupHost.parentNode) document.body.removeChild(mockupHost);
       captureMockup(index + 1);
