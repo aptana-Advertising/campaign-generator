@@ -4739,7 +4739,11 @@ function exportPreviewToPDF(previewElementId, campaignData, _retry, mode) {
     const imageUrls = [];
     if (campaignData.brand_logo_url) imageUrls.push(campaignData.brand_logo_url);
     if (Array.isArray(campaignData.campaign_contents)) {
-      campaignData.campaign_contents.forEach(c => { if (c.url_key_visual) imageUrls.push(c.url_key_visual); });
+      campaignData.campaign_contents.forEach(c => {
+        if (c.url_key_visual) imageUrls.push(c.url_key_visual);
+        if (c.key_visual) imageUrls.push(c.key_visual);
+        (c.cards || []).forEach(card => { if (card.image) imageUrls.push(card.image); });
+      });
     }
     if (campaignData.meta_ads && campaignData.meta_ads.key_visual) imageUrls.push(campaignData.meta_ads.key_visual);
     if (campaignData.whatsapp && campaignData.whatsapp.campaign_image) imageUrls.push(campaignData.whatsapp.campaign_image);
@@ -5616,9 +5620,12 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
 
   // ===== Customer Journey mockup as an image on a new page =====
   const sourceEl = document.getElementById(previewElementId);
-  const mockupEl = sourceEl ? sourceEl.querySelector('.mockup-section') : null;
+  const mockupEls = sourceEl ? Array.from(sourceEl.querySelectorAll('.mockup-section')) : [];
+  if (!mockupEls.length) { finishSaveTextOnly(); return; }
 
-  if (!mockupEl) { finishSaveTextOnly(); return; }
+  function captureMockup(index) {
+  if (index >= mockupEls.length) { finishSaveTextOnly(); return; }
+  const mockupEl = mockupEls[index];
 
   // Record each phone frame's natural on-screen height (as the user sees it in the
   // live Customer Journey preview) BEFORE we override heights in the clone below.
@@ -5761,13 +5768,15 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
       });
 
       if (mockupHost.parentNode) document.body.removeChild(mockupHost);
-      finishSaveTextOnly();
+      captureMockup(index + 1);
     })
     .catch(err => {
       console.error(err);
       if (mockupHost.parentNode) document.body.removeChild(mockupHost);
-      finishSaveTextOnly();
+      captureMockup(index + 1);
     });
+  }
+  captureMockup(0);
 }
 /* ---------------- Generate / Preview ---------------- */
 function generateCampaign() {
@@ -7508,10 +7517,11 @@ function renderPreviewWl(campaign) {
 
     ${contentHtml}
 
+    ${wlContents.map((ct, idx) => `
     <div class="preview-section mockup-section">
-      <div class="preview-section-title">Campaign Mockup — Customer Journey</div>
-      ${buildWlMockup(campaign)}
-    </div>
+      <div class="preview-section-title">Campaign Mockup — Customer Journey ${idx + 1}</div>
+      ${buildWlMockup(Object.assign({}, campaign, ct))}
+    </div>`).join('')}
   `;
 
   document.getElementById('wlPreview').innerHTML = html;
