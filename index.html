@@ -4613,18 +4613,18 @@ function createMedsosContentSectionHTML(id, data) {
 
       <div class="field-row">
         <div class="field">
-          <label>Location</label>
-          <textarea class="mc-location" rows="2" placeholder="Masukkan satu atau beberapa lokasi (tekan Enter untuk baris baru)">${escapeHtml(data.location)}</textarea>
-        </div>
-        <div class="field">
           <label>Budget</label>
           <input type="text" class="mc-budget" placeholder="e.g. Rp 5.000.000" oninput="formatRupiahInput(this)" value="${escapeAttr(data.budget)}">
+        </div>
+        <div class="field">
+          <label>Keterangan Budget</label>
+          <textarea class="mc-budgetDescription" rows="2" placeholder="Tambahkan keterangan untuk budget">${escapeHtml(data.budgetDescription)}</textarea>
         </div>
       </div>
 
       <div class="field">
-        <label>Keterangan Budget</label>
-        <textarea class="mc-budgetDescription" rows="2" placeholder="Tambahkan keterangan untuk budget">${escapeHtml(data.budgetDescription)}</textarea>
+        <label>Location</label>
+        <textarea class="mc-location" rows="2" placeholder="Masukkan satu atau beberapa lokasi (tekan Enter untuk baris baru)">${escapeHtml(data.location)}</textarea>
       </div>
 
       <div class="field-row">
