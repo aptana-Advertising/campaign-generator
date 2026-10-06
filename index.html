@@ -3073,7 +3073,10 @@ function saveCampaignToHistory(campaignData, pdfBase64, pdfFilename) {
     method: 'POST',
     body: JSON.stringify({ campaignData, pdfBase64, pdfFilename, updateId })
   }).then(r => r.json()).then(res => {
-    if (res && res.success) { for (const k in historyCampaignCache) delete historyCampaignCache[k]; }
+    if (res && res.success) {
+      for (const k in historyCampaignCache) delete historyCampaignCache[k];
+      fetchHistoryList().catch(() => {}); // keep the History list fresh
+    }
     if (res && res.success && res.pdfLink) {
       // Cache the uploaded PDF link so "Send Email" can use it
       lastPdfLink[key] = { link: res.pdfLink, filename: pdfFilename, campaign: campaignData };
@@ -3164,8 +3167,9 @@ function autoGenerateAndSavePDF(kind, previewElementId, campaignData) {
   window.pdfBlobUrl[kind] = null; // reset while (re)generating
   setSendEmailButtonEnabled(kind, false); // block Send Email until this finishes
   const p = exportPreviewToPDF(previewElementId, campaignData, 0, 'auto').then(res => {
-    if (res && res.blobUrl) window.pdfBlobUrl[kind] = res.blobUrl;
-    return res;
+    if (res && res.blobUrl) window.pdfBlobUrl[kind] = res.blobUrl; // Preview PDF is usable now
+    // Keep this promise (and the disabled Send Email button) alive until the Drive upload settles.
+    return (res && res.uploadPromise) ? res.uploadPromise.then(() => res, () => res) : res;
   }).catch(err => {
     console.warn('Auto PDF generation failed:', err);
   }).finally(() => {
@@ -3296,10 +3300,10 @@ function openOutlookComposeForCampaign(campaignData, pdfLink) {
 
 /* ---- History performance helpers: cache + dedupe + background refresh ---- */
 const HISTORY_CACHE_KEY = 'kuponku_historyListCache';
-const HISTORY_PAGE_SIZE = 50;
+const HISTORY_PAGE_SIZE = 50;       // default view shows the 50 newest; search always shows ALL matches
+let historyVisibleCount = HISTORY_PAGE_SIZE;
 const HISTORY_CAMPAIGN_TTL = 60 * 1000;
 let historyListPromise = null;      // in-flight request (dedupes prefetch vs. tab open)
-let historyVisibleCount = HISTORY_PAGE_SIZE;
 let historySearchTimer = null;
 const historyCampaignCache = {};    // id -> { t, p } (single-campaign fetches, short TTL)
 
@@ -3410,6 +3414,7 @@ function debouncedFilterHistory() {
   clearTimeout(historySearchTimer);
   historySearchTimer = setTimeout(() => { historyVisibleCount = HISTORY_PAGE_SIZE; filterHistoryList(); }, 150);
 }
+
 function showMoreHistory() { historyVisibleCount += HISTORY_PAGE_SIZE; filterHistoryList(); }
 
 function filterHistoryList() {
@@ -3433,11 +3438,16 @@ function renderHistoryList(list, query) {
     return;
   }
 
-  const shownList = list.slice(0, historyVisibleCount);
-  const moreBtn = list.length > shownList.length
+  // Searching (query present) shows every match; the default view is paged to 50 at a time.
+  const shownList = query ? list : list.slice(0, historyVisibleCount);
+  const countText = query
+    ? `${list.length} campaign ditemukan`
+    : (list.length > shownList.length ? `Menampilkan ${shownList.length} dari ${list.length} campaign` : `${list.length} campaign tersimpan`);
+  const countLine = `<div style="font-size:12px; color:#9ca3af; margin-bottom:8px;">${countText}</div>`;
+  const moreBtn = (!query && list.length > shownList.length)
     ? `<div style="text-align:center; padding:6px 0 2px;"><button class="icon-btn" onclick="showMoreHistory()">Tampilkan lebih banyak (${list.length - shownList.length})</button></div>`
     : '';
-  container.innerHTML = shownList.map(item => {
+  container.innerHTML = countLine + shownList.map(item => {
     let dateStr = '';
     try {
       const d = new Date(item.timestamp);
@@ -5344,15 +5354,19 @@ async function fetchImageAsDataURL(url) {
   const proxied = 'https://images.weserv.nl/?url=' + encodeURIComponent(direct.replace(/^https?:\/\//, ''));
 
   const tryFetch = async (fetchUrl) => {
-    const resp = await fetch(fetchUrl, { mode: 'cors' });
-    if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    const blob = await resp.blob();
-    return await new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 12000); // don't let one slow image stall the PDF
+    try {
+      const resp = await fetch(fetchUrl, { mode: 'cors', signal: ctrl.signal });
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const blob = await resp.blob();
+      return await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } finally { clearTimeout(timer); }
   };
 
   try {
@@ -6301,7 +6315,9 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
         } catch (e) { console.warn('Could not prepare campaign for auto-save:', e); }
       }
 
-      driveLinkPromise.then(driveLink => { resolve({ blobUrl, driveLink }); });
+      // Resolve right away so "Preview PDF" is instant; the Drive upload keeps running in the
+      // background and is exposed as uploadPromise (autoGenerateAndSavePDF waits on it for Send Email).
+      resolve({ blobUrl, uploadPromise: driveLinkPromise });
       return;
     }
 
@@ -6438,7 +6454,7 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
         .then(canvas => ({ canvas, hostRect, linkRects }));
     })
     .then(({ canvas, hostRect, linkRects }) => {
-      const imgData = canvas.toDataURL('image/png');
+      const imgData = canvas.toDataURL('image/jpeg', 0.92);
       pdf.addPage();
       drawHeader();
       let yy = TOP - 6; // tighter: sit closer to the header
@@ -6447,7 +6463,7 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
       let drawW = imgW;
       let drawH = canvas.height * drawW / canvas.width;
       if (drawH > availH) { drawH = availH; drawW = canvas.width * drawH / canvas.height; }
-      pdf.addImage(imgData, 'PNG', M, yy, drawW, drawH);
+      pdf.addImage(imgData, 'JPEG', M, yy, drawW, drawH);
 
       // Overlay real clickable regions (e.g. "Chat On WhatsApp", WhatsApp CTA
       // buttons, auto-linked URLs in SMS wording) on top of the screenshot, mapped
