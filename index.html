@@ -1699,7 +1699,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   <div id="history-tab" style="display:none;">
     <div class="card">
       <div class="card-title">📜 Campaign History</div>
-      <input type="text" id="historySearchInput" placeholder="🔍 Search by brand name or campaign type..." oninput="filterHistoryList()" autocomplete="off" style="margin-bottom:14px;">
+      <input type="text" id="historySearchInput" placeholder="🔍 Search by brand name or campaign type..." oninput="debouncedFilterHistory()" autocomplete="off" style="margin-bottom:14px;">
+      <div id="historyRefreshing" style="display:none; font-size:12px; color:#9ca3af; margin:-6px 0 10px;">⟳ Memperbarui data…</div>
       <div id="historyListContainer">
         <div style="text-align:center; color:#9ca3af; padding:30px 0;">Loading...</div>
       </div>
@@ -3038,12 +3039,17 @@ function reloadBrandData() { connectGoogleSheets(); }
 function connectHistory(silent) {
   const url = document.getElementById('historyUrl').value.trim();
   if (!url) { if (!silent) alert('Please paste your Apps Script Web App URL'); return; }
+  if (historyBackendUrl && historyBackendUrl !== url) { historyFullList = []; clearHistoryCaches(); }
   historyBackendUrl = url;
   document.getElementById('historyStatus').classList.add('show');
   document.getElementById('historyStatusText').textContent = '✓ Connected!';
 
   // Remember this URL so the app auto-reconnects next time it's opened.
   try { localStorage.setItem('kuponku_historyUrl', url); } catch (e) { /* localStorage unavailable — ignore */ }
+
+  // Warm up the Apps Script backend (cold start is the slowest part) and pre-load the list
+  // in the background, so the History tab is usually instant when opened.
+  fetchHistoryList().catch(() => {});
 }
 
 // Called automatically after a PDF is generated. Fire-and-forget: never blocks the download.
@@ -3067,6 +3073,7 @@ function saveCampaignToHistory(campaignData, pdfBase64, pdfFilename) {
     method: 'POST',
     body: JSON.stringify({ campaignData, pdfBase64, pdfFilename, updateId })
   }).then(r => r.json()).then(res => {
+    if (res && res.success) { for (const k in historyCampaignCache) delete historyCampaignCache[k]; }
     if (res && res.success && res.pdfLink) {
       // Cache the uploaded PDF link so "Send Email" can use it
       lastPdfLink[key] = { link: res.pdfLink, filename: pdfFilename, campaign: campaignData };
@@ -3287,26 +3294,123 @@ function openOutlookComposeForCampaign(campaignData, pdfLink) {
 }
 
 
+/* ---- History performance helpers: cache + dedupe + background refresh ---- */
+const HISTORY_CACHE_KEY = 'kuponku_historyListCache';
+const HISTORY_PAGE_SIZE = 50;
+const HISTORY_CAMPAIGN_TTL = 60 * 1000;
+let historyListPromise = null;      // in-flight request (dedupes prefetch vs. tab open)
+let historyVisibleCount = HISTORY_PAGE_SIZE;
+let historySearchTimer = null;
+const historyCampaignCache = {};    // id -> { t, p } (single-campaign fetches, short TTL)
+
+function readHistoryCache() {
+  try {
+    const raw = localStorage.getItem(HISTORY_CACHE_KEY);
+    if (!raw) return null;
+    const obj = JSON.parse(raw);
+    if (obj && obj.url === historyBackendUrl && Array.isArray(obj.list)) return obj.list;
+  } catch (e) { /* ignore */ }
+  return null;
+}
+function writeHistoryCache(list) {
+  try { localStorage.setItem(HISTORY_CACHE_KEY, JSON.stringify({ url: historyBackendUrl, ts: Date.now(), list })); } catch (e) { /* quota/unavailable — ignore */ }
+}
+function clearHistoryCaches() {
+  try { localStorage.removeItem(HISTORY_CACHE_KEY); } catch (e) {}
+  for (const k in historyCampaignCache) delete historyCampaignCache[k];
+}
+
+// Parses an Apps Script response as JSON. If the backend returns HTML instead (login page,
+// wrong /dev URL, access not "Anyone", etc.) throw a friendly, actionable message.
+const HISTORY_BAD_RESPONSE_MSG = 'Apps Script tidak mengembalikan data yang valid (kemungkinan halaman login/error dari Google). Pastikan URL berakhiran /exec dan "Who has access" diset ke "Anyone", lalu klik Connect lagi di tab Database.';
+function historyJson(r) {
+  return r.text().then(t => {
+    try { return JSON.parse(t); }
+    catch (e) { const err = new Error(HISTORY_BAD_RESPONSE_MSG); err.friendly = true; throw err; }
+  });
+}
+function historyErrorMessage(err) {
+  if (err && err.friendly) return err.message;
+  if (err && err.name === 'TypeError') return 'Tidak bisa terhubung ke Apps Script. Cek koneksi internet dan pastikan URL di tab Database sudah benar.';
+  return (err && err.message) || 'Unknown error';
+}
+
+function fetchHistoryList() {
+  if (!historyBackendUrl) return Promise.reject(new Error('Not connected'));
+  if (historyListPromise) return historyListPromise;
+  historyListPromise = fetch(historyBackendUrl + '?action=list')
+    .then(historyJson)
+    .then(res => {
+      if (!res.success) throw new Error(res.error || 'Failed to load history');
+      const list = res.list || [];
+      historyFullList = list;
+      writeHistoryCache(list);
+      return list;
+    })
+    .finally(() => { historyListPromise = null; });
+  return historyListPromise;
+}
+
+function fetchHistoryCampaign(id) {
+  const hit = historyCampaignCache[id];
+  if (hit && Date.now() - hit.t < HISTORY_CAMPAIGN_TTL) return hit.p;
+  const p = fetch(historyBackendUrl + '?action=get&id=' + encodeURIComponent(id))
+    .then(historyJson)
+    .then(res => {
+      if (!res.success) throw new Error(res.error || 'Failed to load campaign');
+      return res.campaign;
+    });
+  historyCampaignCache[id] = { t: Date.now(), p };
+  p.catch(() => { delete historyCampaignCache[id]; });
+  return p;
+}
+// Called on hover/touch of Edit/Duplicate so the data is usually ready by the time of the click.
+function prefetchHistoryCampaign(id) {
+  if (!historyBackendUrl || !id) return;
+  fetchHistoryCampaign(id).catch(() => {});
+}
+
+function setHistoryRefreshing(on) {
+  const el = document.getElementById('historyRefreshing');
+  if (el) el.style.display = on ? 'block' : 'none';
+}
+
 function loadHistoryTab() {
   if (!historyBackendUrl) {
     document.getElementById('historyListContainer').innerHTML = '<div style="text-align:center; color:#9ca3af; padding:30px 0;">Connect to Campaign History first (paste the Apps Script Web App URL above), then reopen this tab.</div>';
     return;
   }
   document.getElementById('historySearchInput').value = '';
+  historyVisibleCount = HISTORY_PAGE_SIZE;
   const container = document.getElementById('historyListContainer');
-  container.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:30px 0;">Loading...</div>';
 
-  fetch(historyBackendUrl + '?action=list')
-    .then(r => r.json())
-    .then(res => {
-      if (!res.success) throw new Error(res.error || 'Failed to load history');
-      historyFullList = res.list || [];
-      renderHistoryList(historyFullList);
+  // Stale-while-revalidate: show whatever we already have instantly, refresh in the background.
+  const cached = historyFullList.length ? historyFullList : readHistoryCache();
+  const hasCached = !!(cached && cached.length);
+  if (hasCached) {
+    historyFullList = cached;
+    renderHistoryList(historyFullList);
+    setHistoryRefreshing(true);
+  } else {
+    container.innerHTML = '<div style="text-align:center; color:#9ca3af; padding:30px 0;">Loading...</div>';
+  }
+
+  fetchHistoryList()
+    .then(() => {
+      if (document.getElementById('history-tab').style.display !== 'none') filterHistoryList();
     })
     .catch(err => {
-      container.innerHTML = `<div style="text-align:center; color:#dc2626; padding:30px 0;">⚠️ Failed to load history: ${escapeHtml(err.message)}</div>`;
-    });
+      if (hasCached) { showToast('⚠️ Gagal memperbarui history, menampilkan data tersimpan', true); return; }
+      container.innerHTML = `<div style="text-align:center; color:#dc2626; padding:30px 20px; line-height:1.5;">⚠️ Gagal memuat history.<br><span style="font-size:12px; color:#6b7280;">${escapeHtml(historyErrorMessage(err))}</span></div>`;
+    })
+    .finally(() => setHistoryRefreshing(false));
 }
+
+function debouncedFilterHistory() {
+  clearTimeout(historySearchTimer);
+  historySearchTimer = setTimeout(() => { historyVisibleCount = HISTORY_PAGE_SIZE; filterHistoryList(); }, 150);
+}
+function showMoreHistory() { historyVisibleCount += HISTORY_PAGE_SIZE; filterHistoryList(); }
 
 function filterHistoryList() {
   const query = document.getElementById('historySearchInput').value.trim().toLowerCase();
@@ -3329,7 +3433,11 @@ function renderHistoryList(list, query) {
     return;
   }
 
-  container.innerHTML = list.map(item => {
+  const shownList = list.slice(0, historyVisibleCount);
+  const moreBtn = list.length > shownList.length
+    ? `<div style="text-align:center; padding:6px 0 2px;"><button class="icon-btn" onclick="showMoreHistory()">Tampilkan lebih banyak (${list.length - shownList.length})</button></div>`
+    : '';
+  container.innerHTML = shownList.map(item => {
     let dateStr = '';
     try {
       const d = new Date(item.timestamp);
@@ -3348,24 +3456,21 @@ function renderHistoryList(list, query) {
         </div>
         <div style="display:flex; gap:6px; flex-shrink:0;">
           ${item.pdf_link ? `<a href="${escapeAttr(item.pdf_link)}" target="_blank" class="icon-btn" style="text-decoration:none;">📄 PDF</a>` : ''}
-          <button class="icon-btn" onclick="duplicateFromHistory('${escapeAttr(item.id)}')">⧉ Duplicate</button>
-          <button class="icon-btn" onclick="editFromHistory('${escapeAttr(item.id)}')">✎ Edit</button>
+          <button class="icon-btn" onmouseenter="prefetchHistoryCampaign('${escapeAttr(item.id)}')" ontouchstart="prefetchHistoryCampaign('${escapeAttr(item.id)}')" onclick="duplicateFromHistory('${escapeAttr(item.id)}')">⧉ Duplicate</button>
+          <button class="icon-btn" onmouseenter="prefetchHistoryCampaign('${escapeAttr(item.id)}')" ontouchstart="prefetchHistoryCampaign('${escapeAttr(item.id)}')" onclick="editFromHistory('${escapeAttr(item.id)}')">✎ Edit</button>
           <button class="icon-btn danger" onclick="deleteFromHistory('${escapeAttr(item.id)}', '${escapeAttr(item.brand_name || 'this campaign')}')">🗑 Delete</button>
         </div>
       </div>
     `;
-  }).join('');
+  }).join('') + moreBtn;
 }
 
 function editFromHistory(id) {
   if (!historyBackendUrl) return;
-  fetch(historyBackendUrl + '?action=get&id=' + encodeURIComponent(id))
-    .then(r => r.json())
-    .then(res => {
-      if (!res.success) throw new Error(res.error || 'Failed to load campaign');
-      loadCampaignIntoForm(res.campaign, id);
-    })
-    .catch(err => alert('Failed to load campaign: ' + err.message));
+  showToast('⏳ Memuat campaign…');
+  fetchHistoryCampaign(id)
+    .then(campaign => loadCampaignIntoForm(campaign, id))
+    .catch(err => alert('Failed to load campaign: ' + historyErrorMessage(err)));
 }
 
 // Loads a saved campaign's data as a starting template for a brand NEW campaign.
@@ -3373,13 +3478,10 @@ function editFromHistory(id) {
 // Generate will create a fresh History entry + Drive file, leaving the original untouched.
 function duplicateFromHistory(id) {
   if (!historyBackendUrl) return;
-  fetch(historyBackendUrl + '?action=get&id=' + encodeURIComponent(id))
-    .then(r => r.json())
-    .then(res => {
-      if (!res.success) throw new Error(res.error || 'Failed to load campaign');
-      loadCampaignIntoForm(res.campaign); // no historyId passed — stays in "new entry" mode
-    })
-    .catch(err => alert('Failed to load campaign: ' + err.message));
+  showToast('⏳ Memuat campaign…');
+  fetchHistoryCampaign(id)
+    .then(campaign => loadCampaignIntoForm(campaign)) // no historyId passed — stays in "new entry" mode
+    .catch(err => alert('Failed to load campaign: ' + historyErrorMessage(err)));
 }
 
 function deleteFromHistory(id, brandName) {
@@ -3397,15 +3499,17 @@ function deleteFromHistory(id, brandName) {
     method: 'POST',
     body: JSON.stringify({ deleteId: id })
   })
-    .then(r => r.json())
+    .then(historyJson)
     .then(res => {
       if (!res.success) throw new Error(res.error || 'Failed to delete campaign');
       showToast('🗑 Campaign deleted from history');
       // Remove locally and re-render without a full reload
       historyFullList = historyFullList.filter(item => item.id !== id);
+      delete historyCampaignCache[id];
+      writeHistoryCache(historyFullList);
       filterHistoryList();
     })
-    .catch(err => alert('Failed to delete campaign: ' + err.message));
+    .catch(err => alert('Failed to delete campaign: ' + historyErrorMessage(err)));
 }
 
 // Populate the correct form (SMS or Meta) with a previously-saved campaign's data.
