@@ -6002,15 +6002,16 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
     y += SP.label; // gap from the underline to the first label/row below it
   }
 
-  function kvRow(label, value, fontSize, colWidth, boldLabel) {
+  function kvRow(label, value, fontSize, colWidth, boldLabel, valueWeight) {
     const fs = fontSize || 10;
     const cw = colWidth || 60;
     value = (value === undefined || value === null || value === '') ? '-' : String(value);
     const labelStyle = boldLabel ? 'bold' : 'normal';
+    const valueStyle = valueWeight === 'normal' ? 'normal' : 'bold';
     const labelColor = boldLabel ? TEXT_DARK : TEXT_GRAY;
     pdf.setFont('Outfit', labelStyle); pdf.setFontSize(fs); pdf.setTextColor(labelColor[0], labelColor[1], labelColor[2]);
     const labelLines = pdf.splitTextToSize(label, cw - 5);
-    pdf.setFont('Outfit', 'bold'); pdf.setTextColor(TEXT_DARK[0], TEXT_DARK[1], TEXT_DARK[2]);
+    pdf.setFont('Outfit', valueStyle); pdf.setTextColor(TEXT_DARK[0], TEXT_DARK[1], TEXT_DARK[2]);
     const valueLines = pdf.splitTextToSize(value, CW - cw);
     const lineH = fs * 0.5;
     const rowH = Math.max(labelLines.length, valueLines.length) * lineH + 2;
@@ -6024,7 +6025,7 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
     pdf.text(labelLines, M, y + 4);
     pdf.setFontSize(fs); pdf.setTextColor(TEXT_DARK[0], TEXT_DARK[1], TEXT_DARK[2]);
     valueLines.forEach((vl, i) => {
-      drawMixedText(vl, M + cw, y + 4 + i * lineH, 'Outfit', 'bold', fs);
+      drawMixedText(vl, M + cw, y + 4 + i * lineH, 'Outfit', valueStyle, fs);
     });
     y += rowH;
   }
@@ -6350,9 +6351,9 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
     const labels = { sms: 'SMS', 'meta-ads': 'Meta Ads', 'tiktok-ads': 'TikTok Ads', 'google-ads': 'Google Ads', 'openai-ads': 'OpenAI Ads' };
     beginCard();
     sectionTitle('Type Campaign');
-    kvRow('Tipe yang dipilih', campaignData.selected_channels.map(key => labels[key] || key).join(', '));
+    kvRow('Tipe yang dipilih', campaignData.selected_channels.map(key => labels[key] || key).join(', '), 10, 60, false, 'normal');
     // Key Visual bersama Meta Ads / Google Ads ditampilkan di sini (sama seperti di web app).
-    kvRow('Key Visual URL (Meta Ads / Google Ads)', campaignData.key_visual);
+    kvRow('Key Visual URL (Meta Ads / Google Ads)', campaignData.key_visual, 10, 60, false, 'normal');
     endCard();
     y += SP.card;
     campaignData.selected_channels.forEach(key => {
@@ -6370,9 +6371,14 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
         kvRow('Key Visual URL', data.key_visual);
         paragraph('Caption:', data.caption);
       } else if (key === 'google-ads') {
-        (data.headlines || []).forEach((value, i) => { if (value) kvRow('Headline ' + (i + 1), value); });
-        (data.long_headlines || []).forEach((value, i) => { if (value) kvRow('Long Headline ' + (i + 1), value); });
-        (data.descriptions || []).forEach((value, i) => { if (value) kvRow('Description ' + (i + 1), value); });
+        const numbered = values => (values || [])
+          .map(value => String(value || '').trim())
+          .filter(Boolean)
+          .map((value, index) => `${index + 1}. ${value}`)
+          .join('\n');
+        paragraph('Headline', numbered(data.headlines));
+        paragraph('Long Headline', numbered(data.long_headlines));
+        paragraph('Description', numbered(data.descriptions));
       } else if (key === 'openai-ads') {
         kvRow('Key Visual URL', data.key_visual);
         paragraph('Title / Headline:', data.title);
