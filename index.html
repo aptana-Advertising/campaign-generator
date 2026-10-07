@@ -1533,21 +1533,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
             <div class="field"><label>Payment Method <span class="required">*</span></label><select id="performaxPaymentMethod"><option value="">Pilih payment method</option><option>Cost per Redeem</option><option>Cost per Click</option></select></div>
           </div>
           <div class="field-row">
-            <div class="field">
-              <label>Campaign Period <span class="required">*</span></label>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
-                <div style="position:relative;">
-                  <input type="text" id="performaxStartDate" placeholder="dd/mm/yyyy" maxlength="10" inputmode="numeric" oninput="formatDateInput(this)" style="padding-right:32px;width:100%;">
-                  <button type="button" class="date-picker-btn" onclick="openDatePicker('performaxStartDate')" title="Pilih tanggal mulai">📅</button>
-                  <input type="date" id="performaxStartDate_native" style="position:absolute;right:8px;top:6px;width:1px;height:1px;opacity:0;border:0;padding:0;" onchange="onNativeDatePicked('performaxStartDate')" tabindex="-1">
-                </div>
-                <div style="position:relative;">
-                  <input type="text" id="performaxEndDate" placeholder="dd/mm/yyyy" maxlength="10" inputmode="numeric" oninput="formatDateInput(this)" style="padding-right:32px;width:100%;">
-                  <button type="button" class="date-picker-btn" onclick="openDatePicker('performaxEndDate')" title="Pilih tanggal selesai">📅</button>
-                  <input type="date" id="performaxEndDate_native" style="position:absolute;right:8px;top:6px;width:1px;height:1px;opacity:0;border:0;padding:0;" onchange="onNativeDatePicked('performaxEndDate')" tabindex="-1">
-                </div>
-              </div>
-            </div>
+            <div class="field"><label>Campaign Period <span class="required">*</span></label><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;"><div style="position:relative;"><input type="text" id="performaxStartDate" placeholder="Tanggal mulai (dd/mm/yyyy)" maxlength="10" inputmode="numeric" oninput="formatDateInput(this)" style="padding-right:32px;width:100%;"><button type="button" class="date-picker-btn" onclick="openDatePicker('performaxStartDate')" title="Pilih tanggal mulai">📅</button><input type="date" id="performaxStartDate_native" style="position:absolute;right:8px;top:6px;width:1px;height:1px;opacity:0;border:0;padding:0;" onchange="onNativeDatePicked('performaxStartDate')" tabindex="-1"></div><div style="position:relative;"><input type="text" id="performaxEndDate" placeholder="Tanggal selesai (dd/mm/yyyy)" maxlength="10" inputmode="numeric" oninput="formatDateInput(this)" style="padding-right:32px;width:100%;"><button type="button" class="date-picker-btn" onclick="openDatePicker('performaxEndDate')" title="Pilih tanggal selesai">📅</button><input type="date" id="performaxEndDate_native" style="position:absolute;right:8px;top:6px;width:1px;height:1px;opacity:0;border:0;padding:0;" onchange="onNativeDatePicked('performaxEndDate')" tabindex="-1"></div></div></div>
             <div class="field">
               <label>Price</label>
               <select id="performaxPricePreset" class="preset-select" onchange="onPresetSelectChange(this, 'performaxPrice')">
@@ -1572,6 +1558,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
             <label class="performax-option"><input type="checkbox" value="meta-ads" onchange="updatePerformaxSelection()"> Meta Ads</label>
             <label class="performax-option"><input type="checkbox" value="tiktok-ads" onchange="updatePerformaxSelection()"> TikTok Ads</label>
             <label class="performax-option"><input type="checkbox" value="google-ads" onchange="updatePerformaxSelection()"> Google Ads</label>
+            <label class="performax-option"><input type="checkbox" value="openai-ads" onchange="updatePerformaxSelection()"> OpenAI Ads</label>
           </div>
 
           <div id="performaxSmsFields" class="performax-channel-fields">
@@ -1630,6 +1617,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
             </div>
             <h4 style="margin-top:18px;">Mockup Google Ads</h4>
             <div class="field"><label>Nama Web</label><textarea id="performaxGoogleWebsiteName" class="performax-auto-field" rows="1" placeholder="e.g. Kuponku" oninput="autoResizePerformaxField(this)"></textarea></div>
+          </div>
+
+          <div id="performaxOpenaiFields" class="performax-channel-fields">
+            <h4>OpenAI Ads</h4>
+            <div class="field"><label>Key Visual URL</label><textarea id="performaxOpenaiKeyVisual" class="performax-auto-field" rows="1" placeholder="https://example.com/image.jpg" oninput="autoResizePerformaxField(this)"></textarea></div>
+            <div class="field"><label>Title / Headline <span style="font-weight:400;color:#6b7280;">(maks. 50 karakter)</span></label><div class="performax-counted-field"><textarea id="performaxOpenaiTitle" class="performax-auto-field" rows="2" data-limit="50" maxlength="50" placeholder="Tulis title atau headline" oninput="autoResizePerformaxField(this); updatePerformaxCounter(this, 'performaxOpenaiTitleCount')"></textarea><span class="char-count" id="performaxOpenaiTitleCount">0/50</span></div></div>
+            <div class="field"><label>Description <span style="font-weight:400;color:#6b7280;">(maks. 100 karakter)</span></label><div class="performax-counted-field"><textarea id="performaxOpenaiDescription" class="performax-auto-field" rows="3" data-limit="100" maxlength="100" placeholder="Tulis description OpenAI Ads" oninput="autoResizePerformaxField(this); updatePerformaxCounter(this, 'performaxOpenaiDescriptionCount')"></textarea><span class="char-count" id="performaxOpenaiDescriptionCount">0/100</span></div></div>
           </div>
         </div>
 
@@ -2514,6 +2508,7 @@ function updatePerformaxSelection() {
   document.getElementById('performaxMetaFields').classList.toggle('active', selected.includes('meta-ads'));
   document.getElementById('performaxTiktokFields').classList.toggle('active', selected.includes('tiktok-ads'));
   document.getElementById('performaxGoogleFields').classList.toggle('active', selected.includes('google-ads'));
+  document.getElementById('performaxOpenaiFields').classList.toggle('active', selected.includes('openai-ads'));
 }
 
 function updatePerformaxCounter(field, counterId) {
@@ -2610,6 +2605,11 @@ function collectPerformaxCampaign() {
       long_headline: googleLongHeadlines[0] || '',
       descriptions: googleDescriptions
     } : null,
+    openai_ads: selected.includes('openai-ads') ? {
+      key_visual: document.getElementById('performaxOpenaiKeyVisual').value.trim(),
+      title: document.getElementById('performaxOpenaiTitle').value.trim(),
+      description: document.getElementById('performaxOpenaiDescription').value.trim()
+    } : null,
     customer_journey: {
       key_visual: document.getElementById('performaxJourneyKeyVisual').value.trim(),
       terms: document.getElementById('performaxTerms').value.trim(),
@@ -2619,7 +2619,7 @@ function collectPerformaxCampaign() {
 }
 
 function buildPerformaxUnifiedMockup(campaign) {
-  const channelLabels = { sms:'SMS', 'meta-ads':'Meta Ads', 'tiktok-ads':'TikTok Ads', 'google-ads':'Google Ads' };
+  const channelLabels = { sms:'SMS', 'meta-ads':'Meta Ads', 'tiktok-ads':'TikTok Ads', 'google-ads':'Google Ads', 'openai-ads':'OpenAI Ads' };
   const sourcePhones = campaign.selected_channels.map(key => {
     let body = '';
     if (key === 'sms') {
@@ -2642,7 +2642,7 @@ function buildPerformaxUnifiedMockup(campaign) {
         ? `<img src="${escapeAttr(toDirectImageUrl(mockupImage))}" alt="TikTok Ads Mockup Image" onerror="this.style.display='none'">`
         : '';
       body = `<div class="tt-media">${visual}</div><div class="tt-top-tabs"><span>Following</span><span>For You</span></div><div class="tt-side-actions"><div class="tt-profile">${initial}</div><div class="tt-action"><span class="tt-action-icon">${igIconHeart('#ffffff')}</span><span>24.8K</span></div><div class="tt-action"><span class="tt-action-icon">${igIconComment('#ffffff')}</span><span>186</span></div><div class="tt-action"><span class="tt-action-icon">${igIconShare('#ffffff')}</span><span>Share</span></div></div><div class="tt-copy"><div class="tt-brand">@${escapeHtml(accountName)}</div><div class="tt-sponsored">Sponsored</div><div class="tt-caption">${escapeHtml(content.caption) || 'Caption TikTok Ads'}</div></div><div class="tt-cta"><span>Learn more</span><span>›</span></div>`;
-    } else {
+    } else if (key === 'google-ads') {
       const content = campaign.google_ads;
       const brandName = campaign.brand_name || 'Brand';
       const websiteName = content.website_name || brandName;
@@ -2655,6 +2655,10 @@ function buildPerformaxUnifiedMockup(campaign) {
         ? `<div class="ga-visual"><img src="${escapeAttr(toDirectImageUrl(content.key_visual))}" alt="Google Ads Key Visual" onerror="this.parentElement.style.display='none'"></div>`
         : '';
       body = `<div class="ga-browser"><div class="ga-google"><span style="color:#4285f4">G</span><span style="color:#ea4335">o</span><span style="color:#fbbc05">o</span><span style="color:#4285f4">g</span><span style="color:#34a853">l</span><span style="color:#ea4335">e</span></div><div class="ga-searchbar"><span>⌕</span><span>${escapeHtml(campaign.customer_journey.highlight_text || brandName)}</span></div></div><div class="ga-results"><div class="ga-result-count">About 1,240 results</div><div class="ga-ad"><div class="ga-site-row"><div class="ga-favicon">${escapeHtml((websiteName[0] || 'B').toUpperCase())}</div><div><div class="ga-site-name">${escapeHtml(websiteName)}</div><div class="ga-url">https://www.${escapeHtml(safeSlug)}.com › promo</div></div></div><div class="ga-sponsored">Sponsored</div><div class="ga-headline">${headlineText}</div><div class="ga-description">${descriptionText}</div>${visual}<div class="ga-sitelinks"><span>Promo Terbaru</span><span>Lihat Penawaran</span><span>Syarat Promo</span><span>Lokasi Outlet</span></div></div></div>`;
+    } else {
+      const content = campaign.openai_ads;
+      const visual = content.key_visual ? `<img src="${escapeAttr(toDirectImageUrl(content.key_visual))}" alt="OpenAI Ads Key Visual" style="width:100%;height:92px;object-fit:cover;display:block;" onerror="this.style.display='none'">` : '<div style="height:92px;background:linear-gradient(135deg,#e8fff6,#dbeafe);display:flex;align-items:center;justify-content:center;color:#64748b;font-size:8px;">Key Visual</div>';
+      body = `<div style="min-height:100%;background:#fff;color:#111827;font-size:8px;line-height:1.45;"><div style="padding:12px 12px 9px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e5e7eb;"><strong style="font-size:12px;letter-spacing:-.3px;">OpenAI</strong><span style="font-size:7px;color:#64748b;">Sponsored</span></div><div style="padding:10px 10px 0;"><div style="display:flex;gap:6px;align-items:center;margin-bottom:8px;"><div style="width:18px;height:18px;border-radius:50%;background:#111;color:#fff;display:flex;align-items:center;justify-content:center;font-size:8px;">✦</div><strong>${escapeHtml(campaign.brand_name || 'Brand')}</strong></div><div style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;box-shadow:0 2px 7px rgba(15,23,42,.08);">${visual}<div style="padding:9px 9px 10px;"><div style="font-size:10px;font-weight:800;line-height:1.3;margin-bottom:5px;">${escapeHtml(content.title) || 'Title / Headline'}</div><div style="color:#475569;">${escapeHtml(content.description) || 'Description OpenAI Ads akan muncul di sini.'}</div></div></div><div style="margin-top:8px;color:#64748b;font-size:7px;">Promoted content</div></div></div>`;
     }
     const screenClass = key === 'tiktok-ads' ? 'phone-screen tt-screen' : key === 'google-ads' ? 'phone-screen ga-screen' : 'phone-screen';
     return `<div class="phone"><div class="phone-frame"><div class="phone-notch"></div><div class="${screenClass}">${body}</div></div><div class="phone-caption">${channelLabels[key]}</div></div>`;
@@ -2683,14 +2687,14 @@ function generatePerformaxCampaign() {
   if (!campaign.brand_name || !campaign.mid) { alert('Lengkapi Brand Name dan MID.'); return; }
   if (!campaign.payment_method || !campaign.campaign_period) { alert('Lengkapi Payment Method dan Campaign Period.'); return; }
   if (!campaign.selected_channels.length) { alert('Pilih minimal satu Type Campaign.'); return; }
-  const labels = { sms:'SMS', 'meta-ads':'Meta Ads', 'tiktok-ads':'TikTok Ads', 'google-ads':'Google Ads' };
+  const labels = { sms:'SMS', 'meta-ads':'Meta Ads', 'tiktok-ads':'TikTok Ads', 'google-ads':'Google Ads', 'openai-ads':'OpenAI Ads' };
   if (campaign.google_ads) {
     if (campaign.google_ads.headlines.filter(Boolean).length < 3) { alert('Google Ads membutuhkan minimal 3 Headline.'); return; }
     if (campaign.google_ads.long_headlines.filter(Boolean).length < 1) { alert('Google Ads membutuhkan minimal 1 Long Headline.'); return; }
     if (campaign.google_ads.descriptions.filter(Boolean).length < 2) { alert('Google Ads membutuhkan minimal 2 Descriptions.'); return; }
   }
   const channelSections = campaign.selected_channels.map(key => {
-    const data = key === 'sms' ? campaign.sms : key === 'meta-ads' ? campaign.meta_ads : key === 'tiktok-ads' ? campaign.tiktok_ads : campaign.google_ads;
+    const data = key === 'sms' ? campaign.sms : key === 'meta-ads' ? campaign.meta_ads : key === 'tiktok-ads' ? campaign.tiktok_ads : key === 'google-ads' ? campaign.google_ads : campaign.openai_ads;
     let rows;
     if (key === 'sms') {
       rows = `<tr><td>Whitelist Numbers</td><td style="white-space:pre-line;">${escapeHtml(data.whitelist_numbers) || '-'}</td></tr><tr><td>Wording SMS</td><td>${escapeHtml(data.wording) || '-'}</td></tr><tr><td>Outlet</td><td style="white-space:pre-line;">${escapeHtml(data.outlet) || '-'}</td></tr>`;
@@ -2698,8 +2702,10 @@ function generatePerformaxCampaign() {
       rows = `<tr><td>Key Visual URL</td><td>${data.key_visual ? `<a class="preview-link" href="${escapeAttr(data.key_visual)}" target="_blank">${escapeHtml(data.key_visual)}</a>` : '-'}</td></tr><tr><td>Nama Web (Mockup)</td><td>${escapeHtml(data.website_name) || '-'}</td></tr><tr><td>Headlines</td><td>${data.headlines.map((value, index) => `${index + 1}. ${escapeHtml(value)}`).join('<br>')}</td></tr><tr><td>Long Headlines</td><td>${data.long_headlines.map((value, index) => `${index + 1}. ${escapeHtml(value)}`).join('<br>')}</td></tr><tr><td>Descriptions</td><td>${data.descriptions.map((value, index) => `${index + 1}. ${escapeHtml(value)}`).join('<br>')}</td></tr>`;
     } else if (key === 'meta-ads') {
       rows = `<tr><td>Key Visual URL</td><td>${data.key_visual ? `<a class="preview-link" href="${escapeAttr(data.key_visual)}" target="_blank">${escapeHtml(data.key_visual)}</a>` : '-'}</td></tr><tr><td>Caption</td><td>${escapeHtml(data.caption) || '-'}</td></tr><tr><td>Nama Instagram (Mockup)</td><td>${escapeHtml(data.mockup_instagram_name) || '-'}</td></tr><tr><td>Key Visual Mockup</td><td>${data.mockup_key_visual ? `<a class="preview-link" href="${escapeAttr(data.mockup_key_visual)}" target="_blank">${escapeHtml(data.mockup_key_visual)}</a>` : '-'}</td></tr><tr><td>Caption Mockup</td><td>${escapeHtml(data.mockup_caption) || '-'}</td></tr>`;
-    } else {
+    } else if (key === 'tiktok-ads') {
       rows = `<tr><td>Key Visual URL</td><td>${data.key_visual ? `<a class="preview-link" href="${escapeAttr(data.key_visual)}" target="_blank">${escapeHtml(data.key_visual)}</a>` : '-'}</td></tr><tr><td>Caption</td><td>${escapeHtml(data.caption) || '-'}</td></tr><tr><td>Nama Akun TikTok (Mockup)</td><td>${escapeHtml(data.account_name) || '-'}</td></tr><tr><td>URL Image Mockup</td><td>${data.mockup_image ? `<a class="preview-link" href="${escapeAttr(data.mockup_image)}" target="_blank">${escapeHtml(data.mockup_image)}</a>` : '-'}</td></tr>`;
+    } else {
+      rows = `<tr><td>Key Visual URL</td><td>${data.key_visual ? `<a class="preview-link" href="${escapeAttr(data.key_visual)}" target="_blank">${escapeHtml(data.key_visual)}</a>` : '-'}</td></tr><tr><td>Title / Headline</td><td>${escapeHtml(data.title) || '-'}</td></tr><tr><td>Description</td><td>${escapeHtml(data.description) || '-'}</td></tr>`;
     }
     return `<div class="preview-section"><div class="preview-section-title">${labels[key]}</div><table class="preview-table">${rows}</table></div>`;
   }).join('');
