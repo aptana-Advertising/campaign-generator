@@ -1519,6 +1519,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   <div id="performax-panel" class="performax-panel" style="display:none;">
     <div class="performax-title">Kuponku Performax</div>
     <div class="performax-note">Satu informasi campaign untuk beberapa channel dengan customer journey yang sama.</div>
+    <div id="performaxEditingRibbon" style="display:none; align-items:center; justify-content:space-between; gap:10px; background:#fffbeb; border:1px solid #fde68a; color:#92400e; padding:10px 14px; border-radius:8px; margin-bottom:16px; font-size:13px;">
+      <span>✎ Editing a saved campaign — generating will <strong>update/replace</strong> that existing entry (Drive file + History row).</span>
+      <button type="button" class="icon-btn" onclick="stopEditingMode('performax')" style="flex-shrink:0;">✕ Start New Instead</button>
+    </div>
 
     <div class="performax-form-grid">
       <div class="performax-form-stack">
@@ -2509,6 +2513,7 @@ function selectCampaignType(type) {
   updateEditingRibbon('lba');
   updateEditingRibbon('medsos');
   updateEditingRibbon('wl');
+  updateEditingRibbon('performax');
   setTimeout(() => document.querySelectorAll('textarea').forEach(autoResizeFlexibleField), 0);
 }
 
@@ -2535,7 +2540,7 @@ function updatePerformaxGoogleCounter(field, counterId) {
   updatePerformaxCounter(field, counterId);
 }
 
-function addPerformaxGoogleField(type) {
+function addPerformaxGoogleField(type, noFocus) {
   const configs = {
     headline: { containerId: 'performaxGoogleHeadlineList', label: 'Headline', limit: 30, rows: 1 },
     'long-headline': { containerId: 'performaxGoogleLongHeadlineList', label: 'Long Headline', limit: 90, rows: 2 },
@@ -2545,7 +2550,7 @@ function addPerformaxGoogleField(type) {
   const container = config && document.getElementById(config.containerId);
   if (!config || !container) return;
   const index = container.querySelectorAll(`[data-google-field="${type}"]`).length + 1;
-  const uniqueId = `performaxGoogleDynamic${type.replace(/-/g, '')}${Date.now()}`;
+  const uniqueId = `performaxGoogleDynamic${type.replace(/-/g, '')}${Date.now()}${Math.random().toString(36).slice(2, 7)}`;
   const counterId = `${uniqueId}Count`;
   const wrapper = document.createElement('div');
   wrapper.className = 'performax-counted-field';
@@ -2558,7 +2563,7 @@ function addPerformaxGoogleField(type) {
     updatePerformaxCounter(field, counterId);
   });
   container.appendChild(wrapper);
-  field.focus();
+  if (!noFocus) field.focus();
 }
 
 function collectPerformaxGoogleValues(type) {
@@ -2904,7 +2909,7 @@ function buildPerformaxMockup(channelKey, campaign, channelMockupHtml) {
 
 // Shows/hides the "Editing saved campaign" ribbon for the given form (sms/meta)
 function updateEditingRibbon(kind) {
-  const ribbonMap = { meta: 'metaEditingRibbon', lba: 'lbaEditingRibbon', medsos: 'medsosEditingRibbon', wl: 'wlEditingRibbon', sms: 'smsEditingRibbon' };
+  const ribbonMap = { meta: 'metaEditingRibbon', lba: 'lbaEditingRibbon', medsos: 'medsosEditingRibbon', wl: 'wlEditingRibbon', sms: 'smsEditingRibbon', performax: 'performaxEditingRibbon' };
   const ribbon = document.getElementById(ribbonMap[kind] || 'smsEditingRibbon');
   if (!ribbon) return;
   const isEditing = window.editingHistoryId && window.editingHistoryId[kind];
@@ -2912,7 +2917,7 @@ function updateEditingRibbon(kind) {
 }
 
 function stopEditingMode(kind) {
-  if (!window.editingHistoryId) window.editingHistoryId = { sms: null, meta: null, lba: null, medsos: null, wl: null };
+  if (!window.editingHistoryId) window.editingHistoryId = { sms: null, meta: null, lba: null, medsos: null, wl: null, performax: null };
   window.editingHistoryId[kind] = null;
   updateEditingRibbon(kind);
   showToast('Started a new campaign entry — next Generate will save as new.');
@@ -3811,6 +3816,100 @@ function loadCampaignIntoForm(campaign, historyId) {
     if (historyId) {
       window.editingHistoryId.wl = historyId;
       updateEditingRibbon('wl');
+    }
+    if (historyId) {
+      alert('✓ Campaign loaded for editing. Review the fields, then click Generate — this will UPDATE the original entry (Drive file + History row).');
+    } else {
+      alert('✓ Campaign loaded as a template. Review the fields, then click Generate — this will create a brand NEW entry (original stays untouched).');
+    }
+  } else if (campaign.campaign_type === 'Kuponku Performax') {
+    selectCampaignType('performax');
+    resetPerformaxForm(); // bersihkan sisa isian + field Google dinamis sebelum diisi ulang
+
+    const setVal = (id, v) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.value = v || '';
+      el.dispatchEvent(new Event('input', { bubbles: true })); // update counter + auto-resize
+    };
+
+    setVal('performaxBrandName', campaign.brand_name);
+    setVal('performaxMid', campaign.mid);
+    setVal('performaxBrandMasking', campaign.brand_masking);
+    setVal('performaxInvoiceNumber', campaign.invoice_number);
+    document.getElementById('performaxPaymentMethod').value = campaign.payment_method || '';
+
+    const [prStart, prEnd] = (campaign.campaign_period || '').split(' - ');
+    document.getElementById('performaxStartDate').value = prStart ? prStart.trim() : '';
+    document.getElementById('performaxEndDate').value = prEnd ? prEnd.trim() : '';
+
+    document.getElementById('performaxPrice').value = campaign.price || '';
+    syncPresetFieldVisibility(document.getElementById('performaxPrice'));
+
+    // Channel yang dipilih
+    const selectedChannels = Array.isArray(campaign.selected_channels) ? campaign.selected_channels : [];
+    document.querySelectorAll('#performax-panel .performax-options input[type="checkbox"]').forEach(cb => {
+      cb.checked = selectedChannels.includes(cb.value);
+    });
+    updatePerformaxSelection();
+
+    // Key Visual bersama (Meta Ads / Google Ads)
+    setVal('performaxSharedKeyVisual', campaign.key_visual || (campaign.meta_ads && campaign.meta_ads.key_visual) || (campaign.google_ads && campaign.google_ads.key_visual) || '');
+
+    if (campaign.sms) {
+      setVal('performaxSmsWhitelist', campaign.sms.whitelist_numbers);
+      setVal('performaxSmsWording', campaign.sms.wording);
+      setVal('performaxSmsOutlet', campaign.sms.outlet);
+    }
+    if (campaign.meta_ads) {
+      setVal('performaxMetaCaption', campaign.meta_ads.caption);
+      setVal('performaxMetaMockupInstagramName', campaign.meta_ads.mockup_instagram_name);
+      setVal('performaxMetaMockupKeyVisual', campaign.meta_ads.mockup_key_visual);
+      setVal('performaxMetaMockupCaption', campaign.meta_ads.mockup_caption);
+    }
+    if (campaign.tiktok_ads) {
+      setVal('performaxTiktokKeyVisual', campaign.tiktok_ads.key_visual);
+      setVal('performaxTiktokCaption', campaign.tiktok_ads.caption);
+      setVal('performaxTiktokAccountName', campaign.tiktok_ads.account_name);
+      setVal('performaxTiktokMockupImage', campaign.tiktok_ads.mockup_image);
+    }
+    if (campaign.google_ads) {
+      setVal('performaxGoogleWebsiteName', campaign.google_ads.website_name);
+      // Headline / Long Headline / Description bisa lebih dari jumlah field bawaan:
+      // tambah field dinamis dulu sampai cukup, lalu isi berurutan.
+      const fillGoogleList = (type, values) => {
+        const sel = `#performaxGoogleFields [data-google-field="${type}"]`;
+        while (document.querySelectorAll(sel).length < values.length) {
+          const before = document.querySelectorAll(sel).length;
+          addPerformaxGoogleField(type, true);
+          if (document.querySelectorAll(sel).length === before) break; // safety
+        }
+        document.querySelectorAll(sel).forEach((el, i) => {
+          el.value = values[i] || '';
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+      };
+      const longList = (Array.isArray(campaign.google_ads.long_headlines) && campaign.google_ads.long_headlines.length)
+        ? campaign.google_ads.long_headlines
+        : (campaign.google_ads.long_headline ? [campaign.google_ads.long_headline] : []);
+      fillGoogleList('headline', campaign.google_ads.headlines || []);
+      fillGoogleList('long-headline', longList);
+      fillGoogleList('description', campaign.google_ads.descriptions || []);
+    }
+    if (campaign.openai_ads) {
+      setVal('performaxOpenaiKeyVisual', campaign.openai_ads.key_visual);
+      setVal('performaxOpenaiTitle', campaign.openai_ads.title);
+      setVal('performaxOpenaiDescription', campaign.openai_ads.description);
+    }
+    if (campaign.customer_journey) {
+      setVal('performaxJourneyKeyVisual', campaign.customer_journey.key_visual);
+      setVal('performaxTerms', campaign.customer_journey.terms);
+      setVal('performaxHighlight', campaign.customer_journey.highlight_text);
+    }
+
+    if (historyId) {
+      window.editingHistoryId.performax = historyId;
+      updateEditingRibbon('performax');
     }
     if (historyId) {
       alert('✓ Campaign loaded for editing. Review the fields, then click Generate — this will UPDATE the original entry (Drive file + History row).');
