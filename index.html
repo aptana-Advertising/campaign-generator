@@ -535,7 +535,36 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
      (tidak ikut dikecilkan terpisah) supaya tidak saling menumpuk. */
   .performax-mockup-stage .phone { flex:0 0 auto; width:150px; zoom:.9; }
   .performax-mockup-stage .phone-frame { width:150px !important; height:310px !important; box-sizing:border-box; }
-  .performax-journey-row { gap:10px; }
+  /* Customer journey screens flow vertically to keep each phone readable. */
+  .performax-journey-row { display:grid; grid-template-columns:repeat(2, 150px); justify-content:center; align-items:start; gap:14px; }
+  /* Slightly reduce text inside the channel previews while keeping every phone frame the same size. */
+  .performax-mockup-stage .sms-sender { font-size:8px; }
+  .performax-mockup-stage .sms-bubble { font-size:7px; line-height:1.35; }
+  .performax-mockup-stage .ig-avatar { font-size:9px; }
+  .performax-mockup-stage .ig-username { font-size:9px; }
+  .performax-mockup-stage .ig-sponsored { font-size:7px; }
+  .performax-mockup-stage .ig-menu-dots { font-size:11px; }
+  .performax-mockup-stage .ig-post-image-missing { font-size:8px; }
+  .performax-mockup-stage .ig-cta-bar { font-size:8px; }
+  .performax-mockup-stage .ig-actions-row { font-size:7.5px; }
+  .performax-mockup-stage .ig-caption { font-size:7.5px; line-height:1.3; }
+  .performax-mockup-stage .ig-navbar { font-size:10px; }
+  .performax-mockup-stage .tt-top-tabs { font-size:7px; }
+  .performax-mockup-stage .tt-action { font-size:6px; }
+  .performax-mockup-stage .tt-profile { font-size:8px; }
+  .performax-mockup-stage .tt-brand { font-size:7.5px; }
+  .performax-mockup-stage .tt-sponsored { font-size:6px; }
+  .performax-mockup-stage .tt-caption { font-size:7px; line-height:1.3; }
+  .performax-mockup-stage .tt-cta { font-size:7px; }
+  .performax-mockup-stage .ga-google { font-size:9px; }
+  .performax-mockup-stage .ga-result-count { font-size:6px; }
+  .performax-mockup-stage .ga-favicon { font-size:8px; }
+  .performax-mockup-stage .ga-site-name { font-size:6.5px; }
+  .performax-mockup-stage .ga-url { font-size:6px; }
+  .performax-mockup-stage .ga-sponsored { font-size:6px; }
+  .performax-mockup-stage .ga-headline { font-size:9px; line-height:1.2; }
+  .performax-mockup-stage .ga-description { font-size:6.5px; line-height:1.35; }
+  .performax-mockup-stage .ga-sitelinks { font-size:6px; }
   .performax-mockup-arrow { font-size:30px; line-height:1; color:#111827; font-weight:800; }
   .performax-mockup-label { width:100%; text-align:center; color:#64748b; font-size:12px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; }
   .performax-login-btn { margin:8px 10px 4px; padding:7px 5px; border:1px solid #e5e7eb; border-radius:16px; text-align:center; font-size:7px; font-weight:700; color:#374151; background:#fff; }
@@ -2706,7 +2735,7 @@ function buildPerformaxUnifiedMockup(campaign) {
     } else {
       const content = campaign.openai_ads;
       const visual = content.key_visual ? `<img src="${escapeAttr(toDirectImageUrl(content.key_visual))}" alt="OpenAI Ads Key Visual" style="width:100%;height:92px;object-fit:cover;display:block;" onerror="this.style.display='none'">` : '<div style="height:92px;background:linear-gradient(135deg,#e8fff6,#dbeafe);display:flex;align-items:center;justify-content:center;color:#64748b;font-size:8px;">Key Visual</div>';
-      body = `<div style="min-height:100%;background:#fff;color:#111827;font-size:8px;line-height:1.45;"><div style="padding:12px 12px 9px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e5e7eb;"><strong style="font-size:12px;letter-spacing:-.3px;">OpenAI</strong><span style="font-size:7px;color:#64748b;">Sponsored</span></div><div style="padding:10px 10px 0;"><div style="display:flex;gap:6px;align-items:center;margin-bottom:8px;"><div style="width:18px;height:18px;border-radius:50%;background:#111;color:#fff;display:flex;align-items:center;justify-content:center;font-size:8px;">✦</div><strong>${escapeHtml(campaign.brand_name || 'Brand')}</strong></div><div style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;box-shadow:0 2px 7px rgba(15,23,42,.08);">${visual}<div style="padding:9px 9px 10px;"><div style="font-size:10px;font-weight:800;line-height:1.3;margin-bottom:5px;">${escapeHtml(content.title) || 'Title / Headline'}</div><div style="color:#475569;">${escapeHtml(content.description) || 'Description OpenAI Ads akan muncul di sini.'}</div></div></div><div style="margin-top:8px;color:#64748b;font-size:7px;">Promoted content</div></div></div>`;
+      body = `<div style="min-height:100%;background:#fff;color:#111827;font-size:7px;line-height:1.35;"><div style="padding:12px 12px 9px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e5e7eb;"><strong style="font-size:10px;letter-spacing:-.3px;">OpenAI</strong><span style="font-size:7px;color:#64748b;">Sponsored</span></div><div style="padding:10px 10px 0;"><div style="display:flex;gap:6px;align-items:center;margin-bottom:8px;"><div style="width:18px;height:18px;border-radius:50%;background:#111;color:#fff;display:flex;align-items:center;justify-content:center;font-size:8px;">✦</div><strong>${escapeHtml(campaign.brand_name || 'Brand')}</strong></div><div style="border:1px solid #e5e7eb;border-radius:8px;overflow:hidden;box-shadow:0 2px 7px rgba(15,23,42,.08);">${visual}<div style="padding:9px 9px 10px;"><div style="font-size:10px;font-weight:800;line-height:1.3;margin-bottom:5px;">${escapeHtml(content.title) || 'Title / Headline'}</div><div style="color:#475569;">${escapeHtml(content.description) || 'Description OpenAI Ads akan muncul di sini.'}</div></div></div><div style="margin-top:8px;color:#64748b;font-size:7px;">Promoted content</div></div></div>`;
     }
     const screenClass = key === 'tiktok-ads' ? 'phone-screen tt-screen' : key === 'google-ads' ? 'phone-screen ga-screen' : 'phone-screen';
     return `<div class="phone"><div class="phone-frame"><div class="phone-notch"></div><div class="${screenClass}">${body}</div></div><div class="phone-caption">${channelLabels[key]}</div></div>`;
@@ -6324,16 +6353,10 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
         paragraph('Outlet:', data.outlet);
       } else if (key === 'meta-ads') {
         paragraph('Caption:', data.caption);
-        kvRow('Nama Instagram (Mockup)', data.mockup_instagram_name);
-        kvRow('Key Visual Mockup', data.mockup_key_visual);
-        paragraph('Caption Mockup:', data.mockup_caption);
       } else if (key === 'tiktok-ads') {
         kvRow('Key Visual URL', data.key_visual);
         paragraph('Caption:', data.caption);
-        kvRow('Nama Akun TikTok', data.account_name);
-        kvRow('URL Image Mockup', data.mockup_image);
       } else if (key === 'google-ads') {
-        kvRow('Nama Web (Mockup)', data.website_name);
         (data.headlines || []).forEach((value, i) => { if (value) kvRow('Headline ' + (i + 1), value); });
         (data.long_headlines || []).forEach((value, i) => { if (value) kvRow('Long Headline ' + (i + 1), value); });
         (data.descriptions || []).forEach((value, i) => { if (value) kvRow('Description ' + (i + 1), value); });
