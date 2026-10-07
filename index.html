@@ -534,6 +534,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   /* Keep the five Performax journey phones compact and on one continuous row. */
   .performax-journey-row { flex-wrap:nowrap; justify-content:center; gap:8px; }
   .performax-journey-row .phone { width:86px; zoom:.57; }
+  .performax-journey-row .phone-frame { width:150px; height:310px; box-sizing:border-box; }
   .performax-mockup-arrow { font-size:30px; line-height:1; color:#111827; font-weight:800; }
   .performax-mockup-label { width:100%; text-align:center; color:#64748b; font-size:12px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; }
   .performax-login-btn { margin:8px 10px 4px; padding:7px 5px; border:1px solid #e5e7eb; border-radius:16px; text-align:center; font-size:7px; font-weight:700; color:#374151; background:#fff; }
@@ -1571,6 +1572,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
             <label class="performax-option"><input type="checkbox" value="google-ads" onchange="updatePerformaxSelection()"> Google Ads</label>
             <label class="performax-option"><input type="checkbox" value="openai-ads" onchange="updatePerformaxSelection()"> OpenAI Ads</label>
           </div>
+          <div class="field" style="margin-top:14px;"><label>Key Visual URL</label><textarea id="performaxSharedKeyVisual" class="performax-auto-field" rows="1" placeholder="https://example.com/image.jpg" oninput="autoResizePerformaxField(this)"></textarea><small style="color:#6b7280;">Key visual yang digunakan untuk Meta Ads dan Google Ads.</small></div>
 
           <div id="performaxSmsFields" class="performax-channel-fields">
             <h4>SMS</h4>
@@ -1581,7 +1583,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
 
           <div id="performaxMetaFields" class="performax-channel-fields">
             <h4>Meta Ads</h4>
-            <div class="field"><label>Key Visual URL</label><textarea id="performaxMetaKeyVisual" class="performax-auto-field" rows="1" placeholder="https://example.com/image.jpg" oninput="autoResizePerformaxField(this)"></textarea></div>
             <div class="field"><label>Caption</label><textarea id="performaxMetaCaption" class="performax-auto-field" rows="2" placeholder="Tulis caption Meta Ads" oninput="autoResizePerformaxField(this)"></textarea></div>
             <h4 style="margin-top:18px;">Mockup Meta Ads</h4>
             <div class="field"><label>Nama Instagram</label><textarea id="performaxMetaMockupInstagramName" class="performax-auto-field" rows="1" placeholder="e.g. kuponku.id" oninput="autoResizePerformaxField(this)"></textarea></div>
@@ -1603,7 +1604,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
 
           <div id="performaxGoogleFields" class="performax-channel-fields">
             <h4>Google Ads</h4>
-            <div class="field"><label>Key Visual URL</label><textarea id="performaxGoogleKeyVisual" class="performax-auto-field" rows="1" placeholder="https://example.com/image.jpg" oninput="autoResizePerformaxField(this)"></textarea></div>
             <div class="field">
               <label>Headline <span class="required">*</span> <span style="font-weight:400;color:#6b7280;">(minimal 3 headline, maks. 30 karakter)</span></label>
               <div id="performaxGoogleHeadlineList">
@@ -2577,6 +2577,7 @@ function autoResizePerformaxField(field) {
 
 function collectPerformaxCampaign() {
   const selected = getPerformaxSelectedCampaigns();
+  const sharedKeyVisual = document.getElementById('performaxSharedKeyVisual').value.trim();
   const googleHeadlines = collectPerformaxGoogleValues('headline');
   const googleLongHeadlines = collectPerformaxGoogleValues('long-headline');
   const googleDescriptions = collectPerformaxGoogleValues('description');
@@ -2590,13 +2591,14 @@ function collectPerformaxCampaign() {
     campaign_period: formatPeriod(document.getElementById('performaxStartDate').value, document.getElementById('performaxEndDate').value),
     price: document.getElementById('performaxPrice').value.trim(),
     selected_channels: selected,
+    key_visual: sharedKeyVisual,
     sms: selected.includes('sms') ? {
       whitelist_numbers: document.getElementById('performaxSmsWhitelist').value.trim(),
       wording: document.getElementById('performaxSmsWording').value.trim(),
       outlet: document.getElementById('performaxSmsOutlet').value.trim()
     } : null,
     meta_ads: selected.includes('meta-ads') ? {
-      key_visual: document.getElementById('performaxMetaKeyVisual').value.trim(),
+      key_visual: sharedKeyVisual,
       caption: document.getElementById('performaxMetaCaption').value.trim(),
       mockup_instagram_name: document.getElementById('performaxMetaMockupInstagramName').value.trim(),
       mockup_key_visual: document.getElementById('performaxMetaMockupKeyVisual').value.trim(),
@@ -2609,7 +2611,7 @@ function collectPerformaxCampaign() {
       mockup_image: document.getElementById('performaxTiktokMockupImage').value.trim()
     } : null,
     google_ads: selected.includes('google-ads') ? {
-      key_visual: document.getElementById('performaxGoogleKeyVisual').value.trim(),
+      key_visual: sharedKeyVisual,
       website_name: document.getElementById('performaxGoogleWebsiteName').value.trim(),
       headlines: googleHeadlines,
       long_headlines: googleLongHeadlines,
@@ -2710,9 +2712,9 @@ function generatePerformaxCampaign() {
     if (key === 'sms') {
       rows = `<tr><td>Whitelist Numbers</td><td style="white-space:pre-line;">${escapeHtml(data.whitelist_numbers) || '-'}</td></tr><tr><td>Wording SMS</td><td>${escapeHtml(data.wording) || '-'}</td></tr><tr><td>Outlet</td><td style="white-space:pre-line;">${escapeHtml(data.outlet) || '-'}</td></tr>`;
     } else if (key === 'google-ads') {
-      rows = `<tr><td>Key Visual URL</td><td>${data.key_visual ? `<a class="preview-link" href="${escapeAttr(data.key_visual)}" target="_blank">${escapeHtml(data.key_visual)}</a>` : '-'}</td></tr><tr><td>Nama Web (Mockup)</td><td>${escapeHtml(data.website_name) || '-'}</td></tr><tr><td>Headlines</td><td>${data.headlines.map((value, index) => `${index + 1}. ${escapeHtml(value)}`).join('<br>')}</td></tr><tr><td>Long Headlines</td><td>${data.long_headlines.map((value, index) => `${index + 1}. ${escapeHtml(value)}`).join('<br>')}</td></tr><tr><td>Descriptions</td><td>${data.descriptions.map((value, index) => `${index + 1}. ${escapeHtml(value)}`).join('<br>')}</td></tr>`;
+      rows = `<tr><td>Nama Web (Mockup)</td><td>${escapeHtml(data.website_name) || '-'}</td></tr><tr><td>Headlines</td><td>${data.headlines.map((value, index) => `${index + 1}. ${escapeHtml(value)}`).join('<br>')}</td></tr><tr><td>Long Headlines</td><td>${data.long_headlines.map((value, index) => `${index + 1}. ${escapeHtml(value)}`).join('<br>')}</td></tr><tr><td>Descriptions</td><td>${data.descriptions.map((value, index) => `${index + 1}. ${escapeHtml(value)}`).join('<br>')}</td></tr>`;
     } else if (key === 'meta-ads') {
-      rows = `<tr><td>Key Visual URL</td><td>${data.key_visual ? `<a class="preview-link" href="${escapeAttr(data.key_visual)}" target="_blank">${escapeHtml(data.key_visual)}</a>` : '-'}</td></tr><tr><td>Caption</td><td>${escapeHtml(data.caption) || '-'}</td></tr><tr><td>Nama Instagram (Mockup)</td><td>${escapeHtml(data.mockup_instagram_name) || '-'}</td></tr><tr><td>Key Visual Mockup</td><td>${data.mockup_key_visual ? `<a class="preview-link" href="${escapeAttr(data.mockup_key_visual)}" target="_blank">${escapeHtml(data.mockup_key_visual)}</a>` : '-'}</td></tr><tr><td>Caption Mockup</td><td>${escapeHtml(data.mockup_caption) || '-'}</td></tr>`;
+      rows = `<tr><td>Caption</td><td>${escapeHtml(data.caption) || '-'}</td></tr><tr><td>Nama Instagram (Mockup)</td><td>${escapeHtml(data.mockup_instagram_name) || '-'}</td></tr><tr><td>Key Visual Mockup</td><td>${data.mockup_key_visual ? `<a class="preview-link" href="${escapeAttr(data.mockup_key_visual)}" target="_blank">${escapeHtml(data.mockup_key_visual)}</a>` : '-'}</td></tr><tr><td>Caption Mockup</td><td>${escapeHtml(data.mockup_caption) || '-'}</td></tr>`;
     } else if (key === 'tiktok-ads') {
       rows = `<tr><td>Key Visual URL</td><td>${data.key_visual ? `<a class="preview-link" href="${escapeAttr(data.key_visual)}" target="_blank">${escapeHtml(data.key_visual)}</a>` : '-'}</td></tr><tr><td>Caption</td><td>${escapeHtml(data.caption) || '-'}</td></tr><tr><td>Nama Akun TikTok (Mockup)</td><td>${escapeHtml(data.account_name) || '-'}</td></tr><tr><td>URL Image Mockup</td><td>${data.mockup_image ? `<a class="preview-link" href="${escapeAttr(data.mockup_image)}" target="_blank">${escapeHtml(data.mockup_image)}</a>` : '-'}</td></tr>`;
     } else {
@@ -2723,7 +2725,7 @@ function generatePerformaxCampaign() {
   document.getElementById('performaxPreview').innerHTML = `
     <div class="preview-section"><div class="preview-section-title">Basic Information</div><table class="preview-table"><tr><td>Brand Name</td><td>${escapeHtml(campaign.brand_name)}</td></tr><tr><td>MID</td><td>${escapeHtml(campaign.mid)}</td></tr><tr><td>Brand Masking</td><td>${escapeHtml(campaign.brand_masking) || '-'}</td></tr></table></div>
     <div class="preview-section"><div class="preview-section-title">Campaign Details</div><table class="preview-table"><tr><td>Invoice Number</td><td>${escapeHtml(campaign.invoice_number) || '-'}</td></tr><tr><td>Payment Method</td><td>${escapeHtml(campaign.payment_method)}</td></tr><tr><td>Campaign Period</td><td>${escapeHtml(campaign.campaign_period)}</td></tr><tr><td>Price</td><td>${escapeHtml(campaign.price) || '-'}</td></tr></table></div>
-    <div class="preview-section"><div class="preview-section-title">Type Campaign</div><div style="display:flex;gap:6px;flex-wrap:wrap;">${campaign.selected_channels.map(key => `<span class="performax-step">${labels[key]}</span>`).join('')}</div></div>
+    <div class="preview-section"><div class="preview-section-title">Type Campaign</div><div style="display:flex;gap:6px;flex-wrap:wrap;">${campaign.selected_channels.map(key => `<span class="performax-step">${labels[key]}</span>`).join('')}</div><table class="preview-table"><tr><td>Key Visual URL (Meta Ads / Google Ads)</td><td>${campaign.key_visual ? `<a class="preview-link" href="${escapeAttr(campaign.key_visual)}" target="_blank">${escapeHtml(campaign.key_visual)}</a>` : '-'}</td></tr></table></div>
     ${channelSections}
     <div class="preview-section"><div class="preview-section-title">Landing Page</div><table class="preview-table"><tr><td>URL Key Visual</td><td>${campaign.customer_journey.key_visual ? `<a class="preview-link" href="${escapeAttr(campaign.customer_journey.key_visual)}" target="_blank">${escapeHtml(campaign.customer_journey.key_visual)}</a>` : '-'}</td></tr><tr><td>Syarat &amp; Ketentuan</td><td>${escapeHtml(campaign.customer_journey.terms) || '-'}</td></tr><tr><td>Highlight Text</td><td>${escapeHtml(campaign.customer_journey.highlight_text) || '-'}</td></tr></table></div>
     <div class="preview-section mockup-section"><div class="preview-section-title">Campaign Mockup — Customer Journey</div>${buildPerformaxUnifiedMockup(campaign)}</div>`;
@@ -6105,7 +6107,7 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
   }
 
   // ===== Meta type sections =====
-  if (campaignData.meta_ads) {
+  if (campaignData.meta_ads && campaignType !== 'Kuponku Performax') {
     beginCard();
     sectionTitle('Meta Ads');
     if (campaignData.meta_ads.key_visual) {
@@ -6115,6 +6117,50 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
     paragraph('Pretext:', campaignData.meta_ads.pretext);
     endCard();
     y += SP.card;
+  }
+  // Performax can contain several checked campaign types in one campaign.
+  // Render every selected type and its content explicitly in the PDF.
+  if (campaignType === 'Kuponku Performax' && Array.isArray(campaignData.selected_channels)) {
+    const labels = { sms: 'SMS', 'meta-ads': 'Meta Ads', 'tiktok-ads': 'TikTok Ads', 'google-ads': 'Google Ads', 'openai-ads': 'OpenAI Ads' };
+    beginCard();
+    sectionTitle('Type Campaign');
+    kvRow('Tipe yang dipilih', campaignData.selected_channels.map(key => labels[key] || key).join(', '));
+    endCard();
+    y += SP.card;
+    campaignData.selected_channels.forEach(key => {
+      const data = key === 'sms' ? campaignData.sms : key === 'meta-ads' ? campaignData.meta_ads : key === 'tiktok-ads' ? campaignData.tiktok_ads : key === 'google-ads' ? campaignData.google_ads : campaignData.openai_ads;
+      if (!data) return;
+      beginCard();
+      sectionTitle(labels[key] || key);
+      if (key === 'sms') {
+        paragraph('Whitelist Numbers:', data.whitelist_numbers);
+        paragraph('Wording SMS:', data.wording);
+        paragraph('Outlet:', data.outlet);
+      } else if (key === 'meta-ads') {
+        kvRow('Key Visual URL', campaignData.key_visual);
+        paragraph('Caption:', data.caption);
+        kvRow('Nama Instagram (Mockup)', data.mockup_instagram_name);
+        kvRow('Key Visual Mockup', data.mockup_key_visual);
+        paragraph('Caption Mockup:', data.mockup_caption);
+      } else if (key === 'tiktok-ads') {
+        kvRow('Key Visual URL', data.key_visual);
+        paragraph('Caption:', data.caption);
+        kvRow('Nama Akun TikTok', data.account_name);
+        kvRow('URL Image Mockup', data.mockup_image);
+      } else if (key === 'google-ads') {
+        kvRow('Key Visual URL', campaignData.key_visual);
+        kvRow('Nama Web (Mockup)', data.website_name);
+        (data.headlines || []).forEach((value, i) => { if (value) kvRow('Headline ' + (i + 1), value); });
+        (data.long_headlines || []).forEach((value, i) => { if (value) kvRow('Long Headline ' + (i + 1), value); });
+        (data.descriptions || []).forEach((value, i) => { if (value) kvRow('Description ' + (i + 1), value); });
+      } else if (key === 'openai-ads') {
+        kvRow('Key Visual URL', data.key_visual);
+        paragraph('Title / Headline:', data.title);
+        paragraph('Description:', data.description);
+      }
+      endCard();
+      y += SP.card;
+    });
   }
   if (campaignData.whatsapp) {
     beginCard();
@@ -6482,8 +6528,12 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
           el.offsetHeight,
           originalFrameHeights[i] || 0
         )));
-        frames.forEach(el => {
-          el.style.height = targetH + 'px';
+        frames.forEach((el, i) => {
+          // Keep Performax's five journey phones at their original 150:310 ratio.
+          // Long landing-page content must scroll/clip inside the screen, not
+          // stretch every phone vertically in the exported PDF.
+          const isPerformaxJourneyPhone = !!el.closest('.performax-journey-row');
+          el.style.height = (isPerformaxJourneyPhone ? (originalFrameHeights[i] || 310) : targetH) + 'px';
           const screen = el.querySelector('.phone-screen');
           if (screen) screen.style.height = '100%';
         });
