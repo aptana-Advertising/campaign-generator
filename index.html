@@ -553,7 +553,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   .performax-code-submit { background:#ef1748; }
   .performax-success-screen { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:22px 12px; text-align:center; color:#334155; }
   .performax-success-title { font-size:13px; font-weight:800; line-height:1.35; margin-bottom:22px; }
-  .performax-success-brand { font-size:12px; font-weight:800; color:#7c3aed; font-style:italic; margin-bottom:24px; }
+  .performax-success-brand { min-height:22px; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; color:#7c3aed; font-style:italic; margin-bottom:24px; }
+  .performax-success-logo { display:block; max-width:60%; max-height:18px; object-fit:contain; }
   .performax-success-back { font-size:8px; color:#2563eb; font-weight:700; }
   .performax-shared-cta { margin-top:16px; }
   .performax-shared-cta label { display:block; margin-bottom:7px; font-size:13px; font-weight:600; }
@@ -1347,8 +1348,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     min-height: auto;
   }
   .lp-logo-bar-white .lp-logo-img { max-height: 9px; max-width: 45%; }
-  .performax-lp-logo-bar { min-height: 34px; padding: 8px 6px; }
-  .performax-lp-logo { display: block; max-width: 72%; max-height: 22px; object-fit: contain; }
+  .performax-lp-logo-bar { min-height: auto; padding: 22px 4px 6px; }
+  .performax-lp-logo { display: block; max-width: 45%; max-height: 9px; object-fit: contain; }
   .performax-lp-brand-fallback { color: #7c3aed; font-size: 10px; font-style: italic; }
   .lp-visual {
     width: calc(100% - 20px);
@@ -2698,12 +2699,15 @@ function buildPerformaxUnifiedMockup(campaign) {
     ? `<img src="${escapeAttr(toDirectImageUrl(campaign.brand_logo_url))}" alt="${brand} logo" class="performax-lp-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='inline'"><span class="performax-lp-brand-fallback" style="display:none">${brand}</span>`
     : `<span class="performax-lp-brand-fallback">${brand}</span>`;
   const landingHeader = `<div class="lp-logo-bar lp-logo-bar-white performax-lp-logo-bar">${landingLogo}</div>`;
+  const successBrand = campaign.brand_logo_url
+    ? `<img src="${escapeAttr(toDirectImageUrl(campaign.brand_logo_url))}" alt="${brand} logo" class="performax-success-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='inline'"><span style="display:none">${brand}</span>`
+    : brand;
   const sharedPhones = [
     phone(`${landingHeader}<div class="lp-scroll">${visual}<div class="lp-headline">${headline}</div>${timer}<div class="performax-login-btn">G&nbsp;&nbsp; MASUK DENGAN GOOGLE</div><div class="lp-tnc">Syarat dan Ketentuan Promo ›</div></div>`, '1. Landing Page'),
     phone(`<div class="performax-google-login"><div class="performax-google-logo">G&nbsp; Sign in with Google</div><div class="performax-google-title">Sign in to kuponku.id</div><div class="performax-google-account"><div class="performax-google-avatar">G</div><div><strong>marketing@${escapeHtml((campaign.brand_name || 'brand').toLowerCase().replace(/\s+/g, ''))}.com</strong><br><span style="color:#9ca3af;">Select account</span></div></div><div style="color:#bdc1c6;">Google will allow kuponku.id to access basic profile information.</div><div class="performax-google-actions"><span>Cancel</span><span>Continue</span></div></div>`, '2. Login Google'),
     phone(`${landingHeader}<div class="lp-scroll">${visual}<div class="lp-headline">${headline}</div>${timer}<div class="lp-outlet">📍 Lokasi Penukaran</div><div class="lp-cta">TUKAR KUPON</div><div class="lp-tnc">Syarat dan Ketentuan Promo ›</div></div>`, '3. Landing Page'),
     phone(`${landingHeader}<div class="phone-modal-wrap"><div class="phone-modal"><div class="pm-title">Masukkan Code Outlet</div><div style="font-size:7px;text-align:center;color:#9ca3af;margin-bottom:8px;">Silakan masukkan kode dari kasir outlet</div><div class="performax-code-input">Kode Outlet</div><div class="kp-grid">${[1,2,3,4,5,6,7,8,9].map(n => `<div class="kp-key">${n}</div>`).join('')}</div><div class="performax-code-actions"><span class="performax-code-back">←</span><span class="performax-code-submit">✓</span></div></div></div>`, '4. Input Kode Outlet'),
-    phone(`<div class="performax-success-screen"><div class="performax-success-title">Selamat Anda Berhasil<br>Menukarkan Kupon Promo</div><div class="performax-success-brand">${brand}</div><div class="performax-success-back">BACK TO PROMO</div></div>`, '5. Berhasil')
+    phone(`<div class="performax-success-screen"><div class="performax-success-title">Selamat Anda Berhasil<br>Menukarkan Kupon Promo</div><div class="performax-success-brand">${successBrand}</div><div class="performax-success-back">BACK TO PROMO</div></div>`, '5. Berhasil')
   ];
   return `<div class="performax-mockup-stage"><div class="performax-mockup-row">${sourcePhones.join('')}</div><div class="performax-mockup-arrow">↓</div><div class="performax-mockup-row performax-journey-row">${sharedPhones.join('')}</div></div>`;
 }
