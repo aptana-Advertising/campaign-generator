@@ -6677,6 +6677,7 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
   const mockupHost = document.createElement('div');
   mockupHost.style.cssText = 'position:absolute; top:0; left:0; width:794px; z-index:99998; background:#ffffff; padding:4px 10px; font-family:\'Outfit\',-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,Helvetica,Arial,sans-serif;';
   const clone = mockupEl.cloneNode(true);
+  const isPerformaxSnapshot = !!clone.querySelector('.performax-mockup-stage');
   // Tighten spacing inside the cloned mockup section
   clone.style.margin = '0';
   clone.style.padding = '0';
@@ -6703,11 +6704,23 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
   // that's what clips its square-cornered children (header bar, input bar)
   // to the screen's rounded corners, matching the phone bezel. Only its fixed
   // height needs to go; with height:auto there's nothing left to clip anyway.
-  clone.querySelectorAll('.phone-frame').forEach(el => { el.style.height = 'auto'; });
-  clone.querySelectorAll('.phone-screen').forEach(el => { el.style.height = 'auto'; });
-  clone.querySelectorAll('.wa-chat-bg, .sms-bubble-area, .lp-scroll').forEach(el => {
-    el.style.overflow = 'visible'; el.style.maxHeight = 'none'; el.style.flex = 'none';
-  });
+  if (isPerformaxSnapshot) {
+    // The Performax preview intentionally keeps every screen at 150 × 310 with
+    // scroll/clipping inside the phone. Expanding the inner scroll area while
+    // retaining a fixed frame made PDF text spill onto nearby elements.
+    // Render at natural phone size for html2canvas; 5 × 150 + 4 × 6 = 774px,
+    // which fits inside the 794px snapshot host without CSS zoom.
+    clone.querySelectorAll('.performax-mockup-stage .phone').forEach(el => { el.style.zoom = '1'; });
+    clone.querySelectorAll('.performax-mockup-row').forEach(el => { el.style.gap = '6px'; });
+    const journeyRow = clone.querySelector('.performax-journey-row');
+    if (journeyRow) journeyRow.style.overflow = 'visible';
+  } else {
+    clone.querySelectorAll('.phone-frame').forEach(el => { el.style.height = 'auto'; });
+    clone.querySelectorAll('.phone-screen').forEach(el => { el.style.height = 'auto'; });
+    clone.querySelectorAll('.wa-chat-bg, .sms-bubble-area, .lp-scroll').forEach(el => {
+      el.style.overflow = 'visible'; el.style.maxHeight = 'none'; el.style.flex = 'none';
+    });
+  }
   mockupHost.appendChild(clone);
   document.body.appendChild(mockupHost);
   window.scrollTo(0, 0);
@@ -6730,6 +6743,10 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
             base: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/',
             folder: 'svg',
             ext: '.svg'
+          });
+          clone.querySelectorAll('img.emoji').forEach(img => {
+            img.style.width = '1em'; img.style.height = '1em';
+            img.style.display = 'inline'; img.style.verticalAlign = '-.1em';
           });
         } catch (e) { console.warn('Twemoji parse failed:', e); }
       }
