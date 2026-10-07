@@ -531,6 +531,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   .performax-mockup-stage { display:flex; flex-direction:column; align-items:center; gap:14px; }
   .performax-mockup-row { width:100%; display:flex; flex-wrap:wrap; justify-content:center; align-items:flex-start; gap:16px; }
   .performax-mockup-row .phone { flex:0 0 auto; }
+  /* Keep the five Performax journey phones compact and on one continuous row. */
+  .performax-journey-row { flex-wrap:nowrap; justify-content:center; gap:8px; }
+  .performax-journey-row .phone { width:86px; zoom:.57; }
   .performax-mockup-arrow { font-size:30px; line-height:1; color:#111827; font-weight:800; }
   .performax-mockup-label { width:100%; text-align:center; color:#64748b; font-size:12px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; }
   .performax-login-btn { margin:8px 10px 4px; padding:7px 5px; border:1px solid #e5e7eb; border-radius:16px; text-align:center; font-size:7px; font-weight:700; color:#374151; background:#fff; }
@@ -1519,6 +1522,14 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       <div class="performax-form-stack">
         <div class="card">
           <div class="card-title">1. Basic Information</div>
+          <div class="field">
+            <label>Search Brand <span class="required">*</span></label>
+            <div class="brand-search-wrap">
+              <input type="text" id="performaxBrandSearchInput" placeholder="Type to search brand name..." autocomplete="off" oninput="handleBrandSearchPerformax()" onfocus="handleBrandSearchPerformax()">
+              <div class="brand-search-results" id="performaxBrandSearchResults"></div>
+            </div>
+            <div class="brand-selected-tag" id="performaxBrandSelectedTag"><span id="performaxBrandSelectedText"></span><button type="button" onclick="clearSelectedBrandPerformax()">×</button></div>
+          </div>
           <div class="field"><label>Brand Name <span class="required">*</span></label><input type="text" id="performaxBrandName" placeholder="e.g. Chatime"></div>
           <div class="field-row">
             <div class="field"><label>MID <span class="required">*</span></label><input type="text" id="performaxMid" placeholder="e.g. 123456"></div>
@@ -1643,7 +1654,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
       <div class="preview-panel">
         <h3>Campaign Preview</h3>
         <div class="preview-content" id="performaxPreview"><div class="preview-empty">Pilih type campaign dan isi form untuk melihat preview.</div></div>
-        <div class="preview-actions"><button class="btn btn-primary btn-full" onclick="previewPerformaxPDF()">👁 Preview PDF</button></div>
+        <div class="preview-actions"><button class="btn btn-primary btn-full" onclick="previewPerformaxPDF()">👁 Preview PDF</button><button class="btn btn-secondary btn-full" id="sendEmailBtn-performax" onclick="sendEmailWithPdf('performax')">📧 Send Email</button></div>
       </div>
     </div>
   </div>
@@ -2442,7 +2453,7 @@ let brandsData = [];
 let historyBackendUrl = '';
 let historyFullList = [];
 let emailCCMap = {}; // { "kuponku sms": ["ops@x.com", ...], "kuponku meta": [...] }
-window.editingHistoryId = { sms: null, meta: null, lba: null, medsos: null, wl: null }; // tracks which History entry (if any) is being revised
+window.editingHistoryId = { sms: null, meta: null, lba: null, medsos: null, wl: null, performax: null }; // tracks which History entry (if any) is being revised
 let contentSectionCount = 0;
 
 /* ---------------- Campaign Type ---------------- */
@@ -2491,7 +2502,7 @@ function selectCampaignType(type) {
   // Selecting a campaign type is treated as "starting fresh" — clear any active
   // editing session. loadCampaignIntoForm() re-establishes it right afterward
   // when the switch happens as part of loading a saved campaign.
-  window.editingHistoryId = { sms: null, meta: null, lba: null, medsos: null, wl: null };
+  window.editingHistoryId = { sms: null, meta: null, lba: null, medsos: null, wl: null, performax: null };
   updateEditingRibbon('sms');
   updateEditingRibbon('meta');
   updateEditingRibbon('lba');
@@ -2679,7 +2690,7 @@ function buildPerformaxUnifiedMockup(campaign) {
     phone(`${landingHeader}<div class="phone-modal-wrap"><div class="phone-modal"><div class="pm-title">Masukkan Code Outlet</div><div style="font-size:7px;text-align:center;color:#9ca3af;margin-bottom:8px;">Silakan masukkan kode dari kasir outlet</div><div class="performax-code-input">Kode Outlet</div><div class="kp-grid">${[1,2,3,4,5,6,7,8,9].map(n => `<div class="kp-key">${n}</div>`).join('')}</div><div class="performax-code-actions"><span class="performax-code-back">←</span><span class="performax-code-submit">✓</span></div></div></div>`, '4. Input Kode Outlet'),
     phone(`<div class="performax-success-screen"><div class="performax-success-title">Selamat Anda Berhasil<br>Menukarkan Kupon Promo</div><div class="performax-success-brand">${brand}</div><div class="performax-success-back">BACK TO PROMO</div></div>`, '5. Berhasil')
   ];
-  return `<div class="performax-mockup-stage"><div class="performax-mockup-row">${sourcePhones.join('')}</div><div class="performax-mockup-arrow">↓</div><div class="performax-mockup-row">${sharedPhones.join('')}</div></div>`;
+  return `<div class="performax-mockup-stage"><div class="performax-mockup-row">${sourcePhones.join('')}</div><div class="performax-mockup-arrow">↓</div><div class="performax-mockup-row performax-journey-row">${sharedPhones.join('')}</div></div>`;
 }
 
 function generatePerformaxCampaign() {
@@ -2717,6 +2728,7 @@ function generatePerformaxCampaign() {
     <div class="preview-section"><div class="preview-section-title">Landing Page</div><table class="preview-table"><tr><td>URL Key Visual</td><td>${campaign.customer_journey.key_visual ? `<a class="preview-link" href="${escapeAttr(campaign.customer_journey.key_visual)}" target="_blank">${escapeHtml(campaign.customer_journey.key_visual)}</a>` : '-'}</td></tr><tr><td>Syarat &amp; Ketentuan</td><td>${escapeHtml(campaign.customer_journey.terms) || '-'}</td></tr><tr><td>Highlight Text</td><td>${escapeHtml(campaign.customer_journey.highlight_text) || '-'}</td></tr></table></div>
     <div class="preview-section mockup-section"><div class="preview-section-title">Campaign Mockup — Customer Journey</div>${buildPerformaxUnifiedMockup(campaign)}</div>`;
   window.performaxCampaignData = campaign;
+  autoGenerateAndSavePDF('performax', 'performaxPreview', campaign);
 }
 
 function resetPerformaxForm() {
@@ -2741,10 +2753,7 @@ function resetPerformaxForm() {
 }
 
 function previewPerformaxPDF() {
-  if (!window.performaxCampaignData) { alert('Generate campaign terlebih dahulu.'); return; }
-  exportPreviewToPDF('performaxPreview', window.performaxCampaignData, 0, 'auto').then(res => {
-    if (res && res.blobUrl) window.open(res.blobUrl, '_blank');
-  });
+  previewPDF('performax');
 }
 
 function updatePerformaxSharedSections(selected, formMap, labelMap) {
@@ -2886,7 +2895,7 @@ function buildPerformaxMockup(channelKey, campaign, channelMockupHtml) {
       <div class="performax-mockup-label">Mockup channel yang digunakan</div>
       <div class="performax-mockup-row">${channelPhone}</div>
       <div class="performax-mockup-arrow">↓</div>
-      <div class="performax-mockup-row">${sharedPhones.join('')}</div>
+      <div class="performax-mockup-row performax-journey-row">${sharedPhones.join('')}</div>
     </div>`;
 }
 
@@ -3067,6 +3076,7 @@ function getCampaignKind(campaignData) {
   if (type === 'SMS LBA/TGT' || type === 'SMS LBA' || type === 'SMS Targeted') return 'lba';
   if (type === 'Medsos') return 'medsos';
   if (type === 'WhatsApp LBA/TGT' || type === 'WhatsApp LBA' || type === 'WhatsApp Targeted') return 'wl';
+  if (type === 'Kuponku Performax') return 'performax';
   return 'sms';
 }
 
@@ -3098,7 +3108,7 @@ function saveCampaignToHistory(campaignData, pdfBase64, pdfFilename) {
 }
 
 /* ---------------- Send Email with PDF link ---------------- */
-const lastPdfLink = { sms: null, meta: null, lba: null, medsos: null, wl: null };
+const lastPdfLink = { sms: null, meta: null, lba: null, medsos: null, wl: null, performax: null };
 
 // Enables/disables the Send Email button for the given form (sms/meta), with a
 // label change so it's clear why it's temporarily unavailable.
@@ -3115,6 +3125,7 @@ function getCampaignDataByKind(kind) {
   if (kind === 'lba') return window.lbaCampaignData;
   if (kind === 'medsos') return window.medsosCampaignData;
   if (kind === 'wl') return window.wlCampaignData;
+  if (kind === 'performax') return window.performaxCampaignData;
   return window.campaignData;
 }
 
@@ -3124,6 +3135,7 @@ function getPreviewElementId(kind) {
   if (kind === 'lba') return 'lbaPreview';
   if (kind === 'medsos') return 'medsosPreview';
   if (kind === 'wl') return 'wlPreview';
+  if (kind === 'performax') return 'performaxPreview';
   return 'preview';
 }
 
@@ -3163,8 +3175,8 @@ async function sendEmailWithPdf(kind) {
 }
 
 /* ---------------- Auto-save-on-generate + Preview PDF ---------------- */
-window.pdfBlobUrl = { sms: null, meta: null, lba: null, medsos: null, wl: null };
-window.pdfAutoSavePromise = { sms: null, meta: null, lba: null, medsos: null, wl: null };
+window.pdfBlobUrl = { sms: null, meta: null, lba: null, medsos: null, wl: null, performax: null };
+window.pdfAutoSavePromise = { sms: null, meta: null, lba: null, medsos: null, wl: null, performax: null };
 
 // Called automatically right after Generate is clicked. Silently builds the PDF,
 // caches a blob URL for instant "Preview PDF", and (if connected) uploads to
@@ -3938,6 +3950,43 @@ function clearSelectedBrand() {
   document.getElementById('mid').value = '';
   document.getElementById('brandMasking').value = '';
   window.smsSelectedLogoUrl = '';
+}
+
+/* ---------------- Kuponku Performax — Brand Search ---------------- */
+function handleBrandSearchPerformax() {
+  refreshBrandDataIfStale(handleBrandSearchPerformax);
+  const query = document.getElementById('performaxBrandSearchInput').value.trim().toLowerCase();
+  const resultsBox = document.getElementById('performaxBrandSearchResults');
+  if (!brandsData.length) {
+    resultsBox.innerHTML = '<div class="brand-no-result">Connect Google Sheets first to search brands</div>';
+    resultsBox.classList.add('show');
+    return;
+  }
+  const filtered = query ? brandsData.filter(b => b.name.toLowerCase().includes(query) || b.mid.toLowerCase().includes(query)) : brandsData;
+  resultsBox.innerHTML = filtered.length ? filtered.slice(0, 30).map(b => {
+    const realIdx = brandsData.indexOf(b);
+    return `<div class="brand-result-item" onclick="selectBrandPerformax(${realIdx})"><div class="b-name">${escapeHtml(b.name)}</div><div class="b-mid">${escapeHtml(b.mid)}</div></div>`;
+  }).join('') : '<div class="brand-no-result">No matching brand found</div>';
+  resultsBox.classList.add('show');
+}
+
+function selectBrandPerformax(idx) {
+  const brand = brandsData[idx];
+  if (!brand) return;
+  document.getElementById('performaxBrandName').value = brand.name;
+  document.getElementById('performaxMid').value = brand.mid;
+  document.getElementById('performaxBrandMasking').value = brand.masking || '';
+  document.getElementById('performaxBrandSearchInput').value = '';
+  document.getElementById('performaxBrandSearchResults').classList.remove('show');
+  document.getElementById('performaxBrandSelectedText').textContent = `✓ ${brand.name} (${brand.mid})`;
+  document.getElementById('performaxBrandSelectedTag').classList.add('show');
+}
+
+function clearSelectedBrandPerformax() {
+  document.getElementById('performaxBrandSelectedTag').classList.remove('show');
+  document.getElementById('performaxBrandName').value = '';
+  document.getElementById('performaxMid').value = '';
+  document.getElementById('performaxBrandMasking').value = '';
 }
 
 /* ---------------- SMS LBA/TGT — Brand Search ---------------- */
