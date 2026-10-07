@@ -546,6 +546,23 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   .performax-google-avatar { width:18px; height:18px; border-radius:50%; background:#0f9d58; display:flex; align-items:center; justify-content:center; font-weight:700; }
   .performax-google-actions { display:flex; justify-content:flex-end; gap:6px; margin-top:14px; }
   .performax-google-actions span { border:1px solid #5f6368; border-radius:14px; padding:5px 10px; color:#8ab4f8; }
+  /* Keep the Performax journey text comfortably inside each phone screen. */
+  .performax-mockup-stage .lp-headline { font-size:8px; line-height:1.2; padding:5px 4px 3px; }
+  .performax-mockup-stage .performax-login-btn { font-size:5.5px; line-height:1.2; padding:5px 4px; }
+  .performax-mockup-stage .lp-outlet { font-size:6.5px; line-height:1.2; }
+  .performax-mockup-stage .lp-cta { font-size:8px; line-height:1.2; padding:5px; }
+  .performax-mockup-stage .lp-tnc { font-size:5.5px; line-height:1.2; }
+  .performax-mockup-stage .performax-success-title { font-size:9px; line-height:1.3; margin-bottom:16px; }
+  .performax-mockup-stage .performax-success-logo { max-height:14px; }
+  .performax-mockup-stage .performax-success-brand { margin-bottom:16px; }
+  .performax-mockup-stage .performax-success-back { font-size:6.5px; }
+  .performax-mockup-stage .performax-google-login { font-size:6px; line-height:1.35; }
+  .performax-mockup-stage .performax-google-logo { font-size:8px; margin-bottom:10px; }
+  .performax-mockup-stage .performax-google-title { font-size:10px; margin-bottom:8px; }
+  .performax-mockup-stage .performax-google-account { font-size:6px; }
+  .performax-mockup-stage .performax-google-actions span { padding:4px 7px; }
+  .performax-mockup-stage .pm-title { font-size:8px; }
+  .performax-mockup-stage .performax-code-input { font-size:7px; }
   .performax-code-input { text-align:center; border-bottom:1px solid #d1d5db; padding:4px; margin:0 14px 7px; color:#9ca3af; font-size:8px; }
   .performax-code-actions { display:flex; justify-content:center; align-items:center; gap:12px; margin-top:8px; }
   .performax-code-actions span { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-size:11px; font-weight:700; }
@@ -1650,7 +1667,14 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
         <div class="card">
           <div class="card-title">4. Landing Page</div>
           <div class="field"><label>URL Key Visual</label><input type="url" id="performaxJourneyKeyVisual" placeholder="https://example.com/image.jpg"></div>
-          <div class="field"><label>Syarat &amp; Ketentuan</label><textarea id="performaxTerms" style="height:90px;" placeholder="Masukkan syarat dan ketentuan"></textarea></div>
+          <div class="field">
+            <label>Syarat &amp; Ketentuan</label>
+            <div style="display:flex; gap:6px; margin-bottom:6px;">
+              <button type="button" class="icon-btn" onclick="applyListFormat(this, 'bullet')" title="Buat bullet list">• Bullet</button>
+              <button type="button" class="icon-btn" onclick="applyListFormat(this, 'number')" title="Buat numbered list">1. Number</button>
+            </div>
+            <textarea id="performaxTerms" style="height:90px;" placeholder="Masukkan syarat dan ketentuan" onkeydown="handlePerformaxTermsKeydown(this, event)"></textarea>
+          </div>
           <div class="field"><label>Highlight Text</label><input type="text" id="performaxHighlight" placeholder="e.g. Buy 1 Get 1"></div>
         </div>
 
@@ -2729,11 +2753,11 @@ function generatePerformaxCampaign() {
     if (key === 'sms') {
       rows = `<tr><td>Whitelist Numbers</td><td style="white-space:pre-line;">${escapeHtml(data.whitelist_numbers) || '-'}</td></tr><tr><td>Wording SMS</td><td>${escapeHtml(data.wording) || '-'}</td></tr><tr><td>Outlet</td><td style="white-space:pre-line;">${escapeHtml(data.outlet) || '-'}</td></tr>`;
     } else if (key === 'google-ads') {
-      rows = `<tr><td>Nama Web (Mockup)</td><td>${escapeHtml(data.website_name) || '-'}</td></tr><tr><td>Headlines</td><td>${data.headlines.map((value, index) => `${index + 1}. ${escapeHtml(value)}`).join('<br>')}</td></tr><tr><td>Long Headlines</td><td>${data.long_headlines.map((value, index) => `${index + 1}. ${escapeHtml(value)}`).join('<br>')}</td></tr><tr><td>Descriptions</td><td>${data.descriptions.map((value, index) => `${index + 1}. ${escapeHtml(value)}`).join('<br>')}</td></tr>`;
+      rows = `<tr><td>Headlines</td><td>${data.headlines.map((value, index) => `${index + 1}. ${escapeHtml(value)}`).join('<br>')}</td></tr><tr><td>Long Headlines</td><td>${data.long_headlines.map((value, index) => `${index + 1}. ${escapeHtml(value)}`).join('<br>')}</td></tr><tr><td>Descriptions</td><td>${data.descriptions.map((value, index) => `${index + 1}. ${escapeHtml(value)}`).join('<br>')}</td></tr>`;
     } else if (key === 'meta-ads') {
-      rows = `<tr><td>Caption</td><td>${escapeHtml(data.caption) || '-'}</td></tr><tr><td>Nama Instagram (Mockup)</td><td>${escapeHtml(data.mockup_instagram_name) || '-'}</td></tr><tr><td>Key Visual Mockup</td><td>${data.mockup_key_visual ? `<a class="preview-link" href="${escapeAttr(data.mockup_key_visual)}" target="_blank">${escapeHtml(data.mockup_key_visual)}</a>` : '-'}</td></tr><tr><td>Caption Mockup</td><td>${escapeHtml(data.mockup_caption) || '-'}</td></tr>`;
+      rows = `<tr><td>Caption</td><td>${escapeHtml(data.caption) || '-'}</td></tr>`;
     } else if (key === 'tiktok-ads') {
-      rows = `<tr><td>Key Visual URL</td><td>${data.key_visual ? `<a class="preview-link" href="${escapeAttr(data.key_visual)}" target="_blank">${escapeHtml(data.key_visual)}</a>` : '-'}</td></tr><tr><td>Caption</td><td>${escapeHtml(data.caption) || '-'}</td></tr><tr><td>Nama Akun TikTok (Mockup)</td><td>${escapeHtml(data.account_name) || '-'}</td></tr><tr><td>URL Image Mockup</td><td>${data.mockup_image ? `<a class="preview-link" href="${escapeAttr(data.mockup_image)}" target="_blank">${escapeHtml(data.mockup_image)}</a>` : '-'}</td></tr>`;
+      rows = `<tr><td>Key Visual URL</td><td>${data.key_visual ? `<a class="preview-link" href="${escapeAttr(data.key_visual)}" target="_blank">${escapeHtml(data.key_visual)}</a>` : '-'}</td></tr><tr><td>Caption</td><td>${escapeHtml(data.caption) || '-'}</td></tr>`;
     } else {
       rows = `<tr><td>Key Visual URL</td><td>${data.key_visual ? `<a class="preview-link" href="${escapeAttr(data.key_visual)}" target="_blank">${escapeHtml(data.key_visual)}</a>` : '-'}</td></tr><tr><td>Title / Headline</td><td>${escapeHtml(data.title) || '-'}</td></tr><tr><td>Description</td><td>${escapeHtml(data.description) || '-'}</td></tr>`;
     }
@@ -2744,7 +2768,7 @@ function generatePerformaxCampaign() {
     <div class="preview-section"><div class="preview-section-title">Campaign Details</div><table class="preview-table"><tr><td>Invoice Number</td><td>${escapeHtml(campaign.invoice_number) || '-'}</td></tr><tr><td>Payment Method</td><td>${escapeHtml(campaign.payment_method)}</td></tr><tr><td>Campaign Period</td><td>${escapeHtml(campaign.campaign_period)}</td></tr><tr><td>Price</td><td>${escapeHtml(campaign.price) || '-'}</td></tr></table></div>
     <div class="preview-section"><div class="preview-section-title">Type Campaign</div><div style="display:flex;gap:6px;flex-wrap:wrap;">${campaign.selected_channels.map(key => `<span class="performax-step">${labels[key]}</span>`).join('')}</div><table class="preview-table"><tr><td>Key Visual URL (Meta Ads / Google Ads)</td><td>${campaign.key_visual ? `<a class="preview-link" href="${escapeAttr(campaign.key_visual)}" target="_blank">${escapeHtml(campaign.key_visual)}</a>` : '-'}</td></tr></table></div>
     ${channelSections}
-    <div class="preview-section"><div class="preview-section-title">Landing Page</div><table class="preview-table"><tr><td>URL Key Visual</td><td>${campaign.customer_journey.key_visual ? `<a class="preview-link" href="${escapeAttr(campaign.customer_journey.key_visual)}" target="_blank">${escapeHtml(campaign.customer_journey.key_visual)}</a>` : '-'}</td></tr><tr><td>Syarat &amp; Ketentuan</td><td>${escapeHtml(campaign.customer_journey.terms) || '-'}</td></tr><tr><td>Highlight Text</td><td>${escapeHtml(campaign.customer_journey.highlight_text) || '-'}</td></tr></table></div>
+    <div class="preview-section"><div class="preview-section-title">Landing Page</div><table class="preview-table"><tr><td>URL Key Visual</td><td>${campaign.customer_journey.key_visual ? `<a class="preview-link" href="${escapeAttr(campaign.customer_journey.key_visual)}" target="_blank">${escapeHtml(campaign.customer_journey.key_visual)}</a>` : '-'}</td></tr><tr><td>Syarat &amp; Ketentuan</td><td style="white-space:pre-line;">${escapeHtml(campaign.customer_journey.terms) || '-'}</td></tr><tr><td>Highlight Text</td><td>${escapeHtml(campaign.customer_journey.highlight_text) || '-'}</td></tr></table></div>
     <div class="preview-section mockup-section"><div class="preview-section-title">Campaign Mockup — Customer Journey</div>${buildPerformaxUnifiedMockup(campaign)}</div>`;
   window.performaxCampaignData = campaign;
   autoGenerateAndSavePDF('performax', 'performaxPreview', campaign);
@@ -5180,12 +5204,20 @@ function updateTermsCount(textarea) {
 
 function applyListFormat(btn, type) {
   const field = btn.closest('.field');
-  const textarea = field.querySelector('.cc-syaratKetentuan, .lc-location, .lc-longLat');
+  const textarea = field.querySelector('.cc-syaratKetentuan, .lc-location, .lc-longLat, #performaxTerms');
   if (!textarea) return;
 
   const start = textarea.selectionStart;
   const end = textarea.selectionEnd;
   const value = textarea.value;
+
+  if (textarea.id === 'performaxTerms' && !value.trim()) {
+    textarea.value = type === 'bullet' ? '- ' : '1. ';
+    textarea.focus();
+    textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+    return;
+  }
 
   let blockStart, blockEnd;
   if (start === end) {
@@ -5214,6 +5246,41 @@ function applyListFormat(btn, type) {
   textarea.focus();
   textarea.dispatchEvent(new Event('input', { bubbles: true }));
   textarea.dispatchEvent(new Event('keyup', { bubbles: true }));
+}
+
+function handlePerformaxTermsKeydown(textarea, event) {
+  if (event.key !== 'Enter' || event.shiftKey) return;
+  const value = textarea.value;
+  const start = textarea.selectionStart;
+  const end = textarea.selectionEnd;
+  const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+  const nextBreak = value.indexOf('\n', end);
+  const lineEnd = nextBreak === -1 ? value.length : nextBreak;
+  const line = value.slice(lineStart, lineEnd);
+  const numberMatch = line.match(/^(\s*)(\d+)([.)]\s+)(.*)$/);
+  const bulletMatch = line.match(/^(\s*)([-•*])(\s+)(.*)$/);
+  if (!numberMatch && !bulletMatch) return;
+
+  event.preventDefault();
+  const currentPrefix = numberMatch
+    ? numberMatch[1] + numberMatch[2] + numberMatch[3]
+    : bulletMatch[1] + bulletMatch[2] + bulletMatch[3];
+  const currentText = numberMatch ? numberMatch[4] : bulletMatch[4];
+
+  if (!currentText.trim()) {
+    const withoutMarker = value.slice(0, lineStart) + value.slice(lineStart + currentPrefix.length);
+    textarea.value = withoutMarker;
+    textarea.setSelectionRange(lineStart, lineStart);
+  } else {
+    const nextPrefix = numberMatch
+      ? numberMatch[1] + (Number(numberMatch[2]) + 1) + numberMatch[3]
+      : currentPrefix;
+    const insert = '\n' + nextPrefix;
+    textarea.value = value.slice(0, start) + insert + value.slice(end);
+    const caret = start + insert.length;
+    textarea.setSelectionRange(caret, caret);
+  }
+  textarea.dispatchEvent(new Event('input', { bubbles: true }));
 }
 
 /* ---------------- Copy field value to clipboard ---------------- */
@@ -6278,6 +6345,15 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
       endCard();
       y += SP.card;
     });
+    if (campaignData.customer_journey) {
+      beginCard();
+      sectionTitle('Landing Page', SECTION_ACCENT);
+      kvRow('URL Key Visual', campaignData.customer_journey.key_visual);
+      paragraphRich('Syarat & Ketentuan:', campaignData.customer_journey.terms);
+      kvRow('Highlight Text', campaignData.customer_journey.highlight_text);
+      endCard();
+      y += SP.card;
+    }
   }
   if (campaignData.whatsapp) {
     beginCard();
@@ -6678,49 +6754,22 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
     })
     .then(({ canvas, hostRect, linkRects }) => {
       const imgData = canvas.toDataURL('image/jpeg', 0.92);
-      const isPerformaxJourney = campaignType === 'Kuponku Performax';
-      let mockupPageW, mockupPageH, mockupMargin, yy;
-      if (isPerformaxJourney) {
-        // A landscape page gives the five Performax journey phones enough room
-        // to keep their labels and screen text readable in the exported PDF.
-        pdf.addPage('a4', 'landscape');
-        pageNum++;
-        mockupPageW = pdf.internal.pageSize.getWidth();
-        mockupPageH = pdf.internal.pageSize.getHeight();
-        mockupMargin = 12;
-        pdf.setFont('Outfit', 'bold'); pdf.setFontSize(14); pdf.setTextColor(37, 99, 235);
-        pdf.text('Campaign Visual', mockupMargin, 12);
-        try {
-          const props = pdf.getImageProperties(KUPONKU_LOGO);
-          const ratio = props.height / props.width;
-          const logoW = 32, logoH = logoW * ratio;
-          pdf.addImage(KUPONKU_LOGO, 'PNG', mockupPageW - mockupMargin - logoW, 5, logoW, logoH);
-        } catch (e) { /* ignore */ }
-        pdf.setDrawColor(37, 99, 235); pdf.setLineWidth(0.6);
-        pdf.line(mockupMargin, 17, mockupPageW - mockupMargin, 17);
-        yy = 22;
-      } else {
-        pdf.addPage();
-        pageNum++;
-        drawHeader();
-        mockupPageW = PW;
-        mockupPageH = PH;
-        mockupMargin = M;
-        yy = TOP - 6; // tighter: sit closer to the header
-      }
-      const availH = (mockupPageH - BOTTOM) - yy;
-      const imgW = mockupPageW - mockupMargin * 2;
+      pdf.addPage();
+      drawHeader();
+      let yy = TOP - 6; // tighter: sit closer to the header
+      const availH = (PH - BOTTOM) - yy;
+      const imgW = PW - M * 2;
       let drawW = imgW;
       let drawH = canvas.height * drawW / canvas.width;
       if (drawH > availH) { drawH = availH; drawW = canvas.width * drawH / canvas.height; }
-      pdf.addImage(imgData, 'JPEG', mockupMargin, yy, drawW, drawH);
+      pdf.addImage(imgData, 'JPEG', M, yy, drawW, drawH);
 
       // Overlay real clickable regions (e.g. "Chat On WhatsApp", WhatsApp CTA
       // buttons, auto-linked URLs in SMS wording) on top of the screenshot, mapped
       // proportionally from their measured DOM position into PDF mm coordinates.
       linkRects.forEach(lr => {
         if (!lr.href || lr.href === '#' || !hostRect.width || !hostRect.height) return;
-        const px = mockupMargin + (lr.x / hostRect.width) * drawW;
+        const px = M + (lr.x / hostRect.width) * drawW;
         const py = yy + (lr.y / hostRect.height) * drawH;
         const pw = (lr.w / hostRect.width) * drawW;
         const ph = (lr.h / hostRect.height) * drawH;
