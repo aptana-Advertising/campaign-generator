@@ -1347,6 +1347,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
     min-height: auto;
   }
   .lp-logo-bar-white .lp-logo-img { max-height: 9px; max-width: 45%; }
+  .performax-lp-logo-bar { min-height: 34px; padding: 8px 6px; }
+  .performax-lp-logo { display: block; max-width: 72%; max-height: 22px; object-fit: contain; }
+  .performax-lp-brand-fallback { color: #7c3aed; font-size: 10px; font-style: italic; }
   .lp-visual {
     width: calc(100% - 20px);
     margin: 6px auto 0;
@@ -2590,6 +2593,7 @@ function collectPerformaxCampaign() {
   return {
     campaign_type: 'Kuponku Performax',
     brand_name: document.getElementById('performaxBrandName').value.trim(),
+    brand_logo_url: window.smsSelectedLogoUrl || '',
     mid: document.getElementById('performaxMid').value.trim(),
     brand_masking: document.getElementById('performaxBrandMasking').value.trim(),
     invoice_number: document.getElementById('performaxInvoiceNumber').value.trim(),
@@ -2690,7 +2694,10 @@ function buildPerformaxUnifiedMockup(campaign) {
     : '<div class="lp-visual-missing">No key visual</div>';
   const timer = '<div class="lp-timer"><div class="lp-timer-box"><div class="lp-timer-num">95</div><div class="lp-timer-lbl">Days</div></div><div class="lp-timer-box"><div class="lp-timer-num">7</div><div class="lp-timer-lbl">Hours</div></div><div class="lp-timer-box"><div class="lp-timer-num">10</div><div class="lp-timer-lbl">Min</div></div><div class="lp-timer-box"><div class="lp-timer-num">16</div><div class="lp-timer-lbl">Sec</div></div></div>';
   const phone = (content, caption) => `<div class="phone"><div class="phone-frame"><div class="phone-notch"></div><div class="phone-screen">${content}</div></div><div class="phone-caption">${caption}</div></div>`;
-  const landingHeader = `<div class="lp-logo-bar lp-logo-bar-white"><span style="color:#7c3aed;font-size:10px;font-style:italic;">${brand}</span></div>`;
+  const landingLogo = campaign.brand_logo_url
+    ? `<img src="${escapeAttr(toDirectImageUrl(campaign.brand_logo_url))}" alt="${brand} logo" class="performax-lp-logo" onerror="this.style.display='none';this.nextElementSibling.style.display='inline'"><span class="performax-lp-brand-fallback" style="display:none">${brand}</span>`
+    : `<span class="performax-lp-brand-fallback">${brand}</span>`;
+  const landingHeader = `<div class="lp-logo-bar lp-logo-bar-white performax-lp-logo-bar">${landingLogo}</div>`;
   const sharedPhones = [
     phone(`${landingHeader}<div class="lp-scroll">${visual}<div class="lp-headline">${headline}</div>${timer}<div class="performax-login-btn">G&nbsp;&nbsp; MASUK DENGAN GOOGLE</div><div class="lp-tnc">Syarat dan Ketentuan Promo ›</div></div>`, '1. Landing Page'),
     phone(`<div class="performax-google-login"><div class="performax-google-logo">G&nbsp; Sign in with Google</div><div class="performax-google-title">Sign in to kuponku.id</div><div class="performax-google-account"><div class="performax-google-avatar">G</div><div><strong>marketing@${escapeHtml((campaign.brand_name || 'brand').toLowerCase().replace(/\s+/g, ''))}.com</strong><br><span style="color:#9ca3af;">Select account</span></div></div><div style="color:#bdc1c6;">Google will allow kuponku.id to access basic profile information.</div><div class="performax-google-actions"><span>Cancel</span><span>Continue</span></div></div>`, '2. Login Google'),
@@ -2740,6 +2747,7 @@ function generatePerformaxCampaign() {
 }
 
 function resetPerformaxForm() {
+  window.smsSelectedLogoUrl = '';
   document.querySelectorAll('#performax-panel input, #performax-panel textarea').forEach(el => { if (el.type === 'checkbox') el.checked = false; else el.value = ''; });
   document.querySelectorAll('#performaxGoogleFields [data-performax-dynamic="true"]').forEach(el => el.remove());
   document.querySelectorAll('#performax-panel [data-limit]').forEach(el => {
@@ -3834,6 +3842,7 @@ function loadCampaignIntoForm(campaign, historyId) {
     };
 
     setVal('performaxBrandName', campaign.brand_name);
+    window.smsSelectedLogoUrl = campaign.brand_logo_url || '';
     setVal('performaxMid', campaign.mid);
     setVal('performaxBrandMasking', campaign.brand_masking);
     setVal('performaxInvoiceNumber', campaign.invoice_number);
@@ -4078,6 +4087,7 @@ function selectBrandPerformax(idx) {
   document.getElementById('performaxBrandName').value = brand.name;
   document.getElementById('performaxMid').value = brand.mid;
   document.getElementById('performaxBrandMasking').value = brand.masking || '';
+  window.smsSelectedLogoUrl = brand.logoUrl || '';
   document.getElementById('performaxBrandSearchInput').value = '';
   document.getElementById('performaxBrandSearchResults').classList.remove('show');
   document.getElementById('performaxBrandSelectedText').textContent = `✓ ${brand.name} (${brand.mid})`;
@@ -4089,6 +4099,7 @@ function clearSelectedBrandPerformax() {
   document.getElementById('performaxBrandName').value = '';
   document.getElementById('performaxMid').value = '';
   document.getElementById('performaxBrandMasking').value = '';
+  window.smsSelectedLogoUrl = '';
 }
 
 /* ---------------- SMS LBA/TGT — Brand Search ---------------- */
