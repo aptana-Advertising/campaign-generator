@@ -535,8 +535,21 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
      (tidak ikut dikecilkan terpisah) supaya tidak saling menumpuk. */
   .performax-mockup-stage .phone { flex:0 0 auto; width:150px; zoom:.9; }
   .performax-mockup-stage .phone-frame { width:150px !important; height:310px !important; box-sizing:border-box; }
-  /* Customer journey screens flow vertically to keep each phone readable. */
-  .performax-journey-row { display:grid; grid-template-columns:repeat(2, 150px); justify-content:center; align-items:start; gap:14px; }
+  /* Five shared journey screens remain in one row. Each frame keeps its natural
+     150px layout width before the same .9 zoom applies to its wrapper and frame. */
+  .performax-journey-row {
+    display:flex; flex-wrap:nowrap; justify-content:center; align-items:flex-start;
+    gap:6px; max-width:100%; overflow-x:auto; overflow-y:hidden; padding:2px 0 10px;
+  }
+  .performax-journey-row .phone { flex:0 0 150px; width:150px; min-width:150px; }
+  .performax-journey-row .phone-caption { font-size:9px; line-height:1.2; min-height:22px; }
+  .performax-journey-row .lp-headline,
+  .performax-journey-row .performax-google-title,
+  .performax-journey-row .performax-success-title,
+  .performax-journey-row .performax-success-brand,
+  .performax-journey-row .pm-title { overflow-wrap:anywhere; }
+  .performax-journey-row .performax-google-account > div:last-child { min-width:0; overflow-wrap:anywhere; }
+  .performax-journey-row .performax-google-account strong { word-break:break-word; }
   /* Slightly reduce text inside the channel previews while keeping every phone frame the same size. */
   .performax-mockup-stage .sms-sender { font-size:8px; }
   .performax-mockup-stage .sms-bubble { font-size:7px; line-height:1.35; }
