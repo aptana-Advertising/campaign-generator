@@ -5803,12 +5803,14 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
   }
 
   function drawFooter() {
+    const footerPageW = pdf.internal.pageSize.getWidth();
+    const footerPageH = pdf.internal.pageSize.getHeight();
     pdf.setDrawColor(LINE_COLOR[0], LINE_COLOR[1], LINE_COLOR[2]); pdf.setLineWidth(0.3);
-    pdf.line(M, PH - 12, PW - M, PH - 12);
+    pdf.line(M, footerPageH - 12, footerPageW - M, footerPageH - 12);
     pdf.setFont('Outfit', 'normal'); pdf.setFontSize(8); pdf.setTextColor(TEXT_LIGHT_GRAY[0], TEXT_LIGHT_GRAY[1], TEXT_LIGHT_GRAY[2]);
-    pdf.text('Generated ' + dateStr, M, PH - 7);
-    pdf.text('Halaman ' + pageNum + ' dari ' + TOTAL_PAGES_PLACEHOLDER, PW / 2, PH - 7, { align: 'center' });
-    pdf.text('Powered by Kuponku.id', PW - M, PH - 7, { align: 'right' });
+    pdf.text('Generated ' + dateStr, M, footerPageH - 7);
+    pdf.text('Halaman ' + pageNum + ' dari ' + TOTAL_PAGES_PLACEHOLDER, footerPageW / 2, footerPageH - 7, { align: 'center' });
+    pdf.text('Powered by Kuponku.id', footerPageW - M, footerPageH - 7, { align: 'right' });
   }
 
   function ensureSpace(h) {
@@ -6676,22 +6678,49 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
     })
     .then(({ canvas, hostRect, linkRects }) => {
       const imgData = canvas.toDataURL('image/jpeg', 0.92);
-      pdf.addPage();
-      drawHeader();
-      let yy = TOP - 6; // tighter: sit closer to the header
-      const availH = (PH - BOTTOM) - yy;
-      const imgW = PW - M * 2;
+      const isPerformaxJourney = campaignType === 'Kuponku Performax';
+      let mockupPageW, mockupPageH, mockupMargin, yy;
+      if (isPerformaxJourney) {
+        // A landscape page gives the five Performax journey phones enough room
+        // to keep their labels and screen text readable in the exported PDF.
+        pdf.addPage('a4', 'landscape');
+        pageNum++;
+        mockupPageW = pdf.internal.pageSize.getWidth();
+        mockupPageH = pdf.internal.pageSize.getHeight();
+        mockupMargin = 12;
+        pdf.setFont('Outfit', 'bold'); pdf.setFontSize(14); pdf.setTextColor(37, 99, 235);
+        pdf.text('Campaign Visual', mockupMargin, 12);
+        try {
+          const props = pdf.getImageProperties(KUPONKU_LOGO);
+          const ratio = props.height / props.width;
+          const logoW = 32, logoH = logoW * ratio;
+          pdf.addImage(KUPONKU_LOGO, 'PNG', mockupPageW - mockupMargin - logoW, 5, logoW, logoH);
+        } catch (e) { /* ignore */ }
+        pdf.setDrawColor(37, 99, 235); pdf.setLineWidth(0.6);
+        pdf.line(mockupMargin, 17, mockupPageW - mockupMargin, 17);
+        yy = 22;
+      } else {
+        pdf.addPage();
+        pageNum++;
+        drawHeader();
+        mockupPageW = PW;
+        mockupPageH = PH;
+        mockupMargin = M;
+        yy = TOP - 6; // tighter: sit closer to the header
+      }
+      const availH = (mockupPageH - BOTTOM) - yy;
+      const imgW = mockupPageW - mockupMargin * 2;
       let drawW = imgW;
       let drawH = canvas.height * drawW / canvas.width;
       if (drawH > availH) { drawH = availH; drawW = canvas.width * drawH / canvas.height; }
-      pdf.addImage(imgData, 'JPEG', M, yy, drawW, drawH);
+      pdf.addImage(imgData, 'JPEG', mockupMargin, yy, drawW, drawH);
 
       // Overlay real clickable regions (e.g. "Chat On WhatsApp", WhatsApp CTA
       // buttons, auto-linked URLs in SMS wording) on top of the screenshot, mapped
       // proportionally from their measured DOM position into PDF mm coordinates.
       linkRects.forEach(lr => {
         if (!lr.href || lr.href === '#' || !hostRect.width || !hostRect.height) return;
-        const px = M + (lr.x / hostRect.width) * drawW;
+        const px = mockupMargin + (lr.x / hostRect.width) * drawW;
         const py = yy + (lr.y / hostRect.height) * drawH;
         const pw = (lr.w / hostRect.width) * drawW;
         const ph = (lr.h / hostRect.height) * drawH;
