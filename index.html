@@ -529,12 +529,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   .performax-channel-group { display:flex; flex-wrap:wrap; gap:7px; }
   .performax-destination { padding:7px 10px; border-radius:8px; background:#dcfce7; color:#166534; font-size:13px; font-weight:700; }
   .performax-mockup-stage { display:flex; flex-direction:column; align-items:center; gap:14px; }
-  .performax-mockup-row { width:100%; display:flex; flex-wrap:wrap; justify-content:center; align-items:flex-start; gap:16px; }
-  .performax-mockup-row .phone { flex:0 0 auto; }
-  /* Keep the five Performax journey phones compact and on one continuous row. */
-  .performax-journey-row { flex-wrap:nowrap; justify-content:center; gap:8px; }
-  .performax-journey-row .phone { width:86px; zoom:.57; }
-  .performax-journey-row .phone-frame { width:150px; height:310px; box-sizing:border-box; }
+  .performax-mockup-row { width:100%; display:flex; flex-wrap:wrap; justify-content:center; align-items:flex-start; gap:12px; }
+  /* Semua hp di mockup Performax (baris channel & baris journey) berukuran SAMA:
+     frame 150x310 lalu diskalakan seragam. Lebar .phone sengaja tetap 150px
+     (tidak ikut dikecilkan terpisah) supaya tidak saling menumpuk. */
+  .performax-mockup-stage .phone { flex:0 0 auto; width:150px; zoom:.9; }
+  .performax-mockup-stage .phone-frame { width:150px !important; height:310px !important; box-sizing:border-box; }
+  .performax-journey-row { gap:10px; }
   .performax-mockup-arrow { font-size:30px; line-height:1; color:#111827; font-weight:800; }
   .performax-mockup-label { width:100%; text-align:center; color:#64748b; font-size:12px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; }
   .performax-login-btn { margin:8px 10px 4px; padding:7px 5px; border:1px solid #e5e7eb; border-radius:16px; text-align:center; font-size:7px; font-weight:700; color:#374151; background:#fff; }
@@ -6125,6 +6126,8 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
     beginCard();
     sectionTitle('Type Campaign');
     kvRow('Tipe yang dipilih', campaignData.selected_channels.map(key => labels[key] || key).join(', '));
+    // Key Visual bersama Meta Ads / Google Ads ditampilkan di sini (sama seperti di web app).
+    kvRow('Key Visual URL (Meta Ads / Google Ads)', campaignData.key_visual);
     endCard();
     y += SP.card;
     campaignData.selected_channels.forEach(key => {
@@ -6137,7 +6140,6 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
         paragraph('Wording SMS:', data.wording);
         paragraph('Outlet:', data.outlet);
       } else if (key === 'meta-ads') {
-        kvRow('Key Visual URL', campaignData.key_visual);
         paragraph('Caption:', data.caption);
         kvRow('Nama Instagram (Mockup)', data.mockup_instagram_name);
         kvRow('Key Visual Mockup', data.mockup_key_visual);
@@ -6148,7 +6150,6 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
         kvRow('Nama Akun TikTok', data.account_name);
         kvRow('URL Image Mockup', data.mockup_image);
       } else if (key === 'google-ads') {
-        kvRow('Key Visual URL', campaignData.key_visual);
         kvRow('Nama Web (Mockup)', data.website_name);
         (data.headlines || []).forEach((value, i) => { if (value) kvRow('Headline ' + (i + 1), value); });
         (data.long_headlines || []).forEach((value, i) => { if (value) kvRow('Long Headline ' + (i + 1), value); });
@@ -6532,8 +6533,9 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
           // Keep Performax's five journey phones at their original 150:310 ratio.
           // Long landing-page content must scroll/clip inside the screen, not
           // stretch every phone vertically in the exported PDF.
-          const isPerformaxJourneyPhone = !!el.closest('.performax-journey-row');
-          el.style.height = (isPerformaxJourneyPhone ? (originalFrameHeights[i] || 310) : targetH) + 'px';
+          // Semua hp Performax (baris channel + baris journey) dipaksa sama: 310px.
+          const isPerformaxPhone = !!el.closest('.performax-mockup-stage');
+          el.style.height = (isPerformaxPhone ? 310 : targetH) + 'px';
           const screen = el.querySelector('.phone-screen');
           if (screen) screen.style.height = '100%';
         });
