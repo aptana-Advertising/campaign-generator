@@ -1017,6 +1017,18 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   }
   .btn-add-section:hover { background: #e0effe; }
 
+  .btn-add-inline {
+    padding: 6px 12px;
+    border: 1.5px dashed #93c5fd;
+    border-radius: 8px;
+    background: #f0f7ff;
+    color: #1d4ed8;
+    font-weight: 600;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .btn-add-inline:hover { background: #e0effe; }
+
   /* Preview panel */
   .preview-panel {
     background: #ffffff;
@@ -3802,7 +3814,9 @@ function loadCampaignIntoForm(campaign, historyId) {
           keyword: c.keyword || '',
           instagramName: c.instagram_name || (idx === 0 ? legacyCj.instagram_name : '') || '',
           keyVisual: c.key_visual || (idx === 0 ? legacyCj.key_visual : '') || '',
-          caption: c.caption || (idx === 0 ? legacyCj.caption : '') || ''
+          caption: c.caption || (idx === 0 ? legacyCj.caption : '') || '',
+          extraCtas: (c.extra_ctas || []).map(x => ({ ctaType: x.cta_type, ctaValue: x.cta_value, pretext: x.pretext })),
+          extraJourneys: (c.extra_journeys || []).map(x => ({ instagramName: x.instagram_name, keyVisual: x.key_visual, caption: x.caption }))
         });
       });
     } else {
@@ -4960,7 +4974,8 @@ function createMedsosContentSectionHTML(id, data) {
 
       <div class="field">
         <label>Link Content (URL)</label>
-        <textarea class="mc-linkContent" rows="2" placeholder="Masukkan satu atau beberapa link (tekan Enter untuk baris baru)">${escapeHtml(data.linkContent)}</textarea>
+        <div class="mc-linkList">${medsosLinkRowsHTML(data.linkContent)}</div>
+        <button type="button" class="btn-add-inline" onclick="addMedsosLinkRow(${id})">+ Add Link</button>
       </div>
 
       <div class="field-row">
@@ -5018,6 +5033,11 @@ function createMedsosContentSectionHTML(id, data) {
       </div>
 
       <div class="field">
+        <div class="mc-extraCtaList">${(data.extraCtas || []).map(medsosExtraCtaHTML).join('')}</div>
+        <button type="button" class="btn-add-inline" onclick="addMedsosExtraCta(${id})">+ Add CTA</button>
+      </div>
+
+      <div class="field">
         <label>Keyword</label>
         <input type="text" class="mc-keyword" placeholder="e.g. PROMO2026" value="${escapeAttr(data.keyword)}">
       </div>
@@ -5039,8 +5059,137 @@ function createMedsosContentSectionHTML(id, data) {
         </div>
         <textarea class="mc-caption" style="height:60px;" maxlength="100" placeholder="Short caption (max 100 characters)..." oninput="this.closest('.content-section').querySelector('.mc-captionCount').textContent = this.value.length + '/100'">${escapeHtml(data.caption)}</textarea>
       </div>
+      <div class="field">
+        <div class="mc-extraJourneyList">${(data.extraJourneys || []).map(medsosExtraJourneyHTML).join('')}</div>
+        <button type="button" class="btn-add-inline" onclick="addMedsosExtraJourney(${id})">+ Add Customer Journey</button>
+      </div>
     </div>
   `;
+}
+
+/* ---- Medsos "Add" helpers: multiple Link Content / CTA / Customer Journey per section ---- */
+function medsosLinkRowHTML(value) {
+  return `<div class="mc-linkRow" style="display:flex; gap:6px; margin-bottom:6px;">
+    <input type="text" class="mc-linkContent" placeholder="https://example.com/content" value="${escapeAttr(value)}" style="flex:1;">
+    <button type="button" class="icon-btn danger" onclick="removeMedsosLinkRow(this)" title="Remove this link">🗑</button>
+  </div>`;
+}
+function medsosLinkRowsHTML(linkContent) {
+  const lines = String(linkContent || '').split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  if (!lines.length) lines.push('');
+  return lines.map(medsosLinkRowHTML).join('');
+}
+function addMedsosLinkRow(id) {
+  const section = document.getElementById('medsos-content-section-' + id);
+  const wrap = document.createElement('div');
+  wrap.innerHTML = medsosLinkRowHTML('');
+  const row = wrap.firstElementChild;
+  section.querySelector('.mc-linkList').appendChild(row);
+  row.querySelector('input').focus();
+}
+function removeMedsosLinkRow(btn) {
+  const row = btn.closest('.mc-linkRow');
+  const list = row.parentNode;
+  if (list.children.length <= 1) { row.querySelector('input').value = ''; return; }
+  row.remove();
+}
+function collectMedsosLinks(section) {
+  return Array.from(section.querySelectorAll('.mc-linkContent')).map(i => i.value.trim()).filter(Boolean).join('\n');
+}
+
+const MEDSOS_CTA_TYPES = ['URL', 'WhatsApp', 'DM Instagram', 'Profil Instagram'];
+function medsosCtaPlaceholder(t) {
+  return t === 'WhatsApp' ? 'e.g. 08123456789'
+    : t === 'DM Instagram' ? 'e.g. kuponku.id'
+    : t === 'Profil Instagram' ? 'https://instagram.com/namaprofil'
+    : 'https://example.com/cta';
+}
+function medsosExtraCtaHTML(d) {
+  d = d || {};
+  const t = MEDSOS_CTA_TYPES.includes(d.ctaType) ? d.ctaType : 'URL';
+  const opts = MEDSOS_CTA_TYPES.map(o => `<option value="${o}"${o === t ? ' selected' : ''}>${o}</option>`).join('');
+  return `<div class="mc-extraCta" style="border:1px dashed #d1d5db; border-radius:8px; padding:10px; margin-bottom:8px;">
+    <div style="display:flex; gap:6px; align-items:center; margin-bottom:6px;">
+      <span class="mc-extraTitle" style="flex:1; font-size:12px; font-weight:600; color:#374151;">CTA</span>
+      <select class="mc-xcta-type" onchange="onMedsosExtraCtaTypeChange(this)" style="width:auto;">${opts}</select>
+      <button type="button" class="icon-btn danger" onclick="removeMedsosExtra(this, '.mc-extraCta')" title="Remove this CTA">🗑</button>
+    </div>
+    <input type="text" class="mc-xcta-value" placeholder="${medsosCtaPlaceholder(t)}" value="${escapeAttr(d.ctaValue)}">
+    <textarea class="mc-xcta-pretext" style="height:60px; margin-top:6px; display:${t === 'WhatsApp' ? 'block' : 'none'};" placeholder="Pre-filled WhatsApp message...">${escapeHtml(d.pretext)}</textarea>
+  </div>`;
+}
+function onMedsosExtraCtaTypeChange(sel) {
+  const box = sel.closest('.mc-extraCta');
+  box.querySelector('.mc-xcta-value').placeholder = medsosCtaPlaceholder(sel.value);
+  box.querySelector('.mc-xcta-pretext').style.display = sel.value === 'WhatsApp' ? 'block' : 'none';
+}
+function medsosExtraJourneyHTML(d) {
+  d = d || {};
+  return `<div class="mc-extraJourney" style="border:1px dashed #d1d5db; border-radius:8px; padding:10px; margin-bottom:8px;">
+    <div style="display:flex; gap:6px; align-items:center; margin-bottom:6px;">
+      <span class="mc-extraTitle" style="flex:1; font-size:12px; font-weight:600; color:#374151;">🧭 Customer Journey</span>
+      <button type="button" class="icon-btn danger" onclick="removeMedsosExtra(this, '.mc-extraJourney')" title="Remove this Customer Journey">🗑</button>
+    </div>
+    <div class="field">
+      <label>🧭 Customer Journey — Nama Instagram</label>
+      <input type="text" class="mc-xj-name" placeholder="e.g. kuponku.id" value="${escapeAttr(d.instagramName)}">
+    </div>
+    <div class="field">
+      <label>🧭 Customer Journey — Key Visual (URL)</label>
+      <input type="url" class="mc-xj-keyVisual" placeholder="https://example.com/image.jpg" value="${escapeAttr(d.keyVisual)}">
+    </div>
+    <div class="field">
+      <div class="field-header">
+        <label>🧭 Customer Journey — Caption</label>
+        <span class="char-count mc-xj-count">${(d.caption || '').length}/100</span>
+      </div>
+      <textarea class="mc-xj-caption" style="height:60px;" maxlength="100" placeholder="Short caption (max 100 characters)..." oninput="this.closest('.mc-extraJourney').querySelector('.mc-xj-count').textContent = this.value.length + '/100'">${escapeHtml(d.caption)}</textarea>
+    </div>
+  </div>`;
+}
+function renumberMedsosExtras(section) {
+  section.querySelectorAll('.mc-extraCta').forEach((el, i) => { el.querySelector('.mc-extraTitle').textContent = 'CTA ' + (i + 2); });
+  section.querySelectorAll('.mc-extraJourney').forEach((el, i) => { el.querySelector('.mc-extraTitle').textContent = '🧭 Customer Journey ' + (i + 2); });
+}
+function addMedsosExtraCta(id) {
+  const section = document.getElementById('medsos-content-section-' + id);
+  const wrap = document.createElement('div');
+  wrap.innerHTML = medsosExtraCtaHTML({});
+  const el = wrap.firstElementChild;
+  section.querySelector('.mc-extraCtaList').appendChild(el);
+  renumberMedsosExtras(section);
+  el.querySelector('.mc-xcta-value').focus();
+}
+function addMedsosExtraJourney(id) {
+  const section = document.getElementById('medsos-content-section-' + id);
+  const wrap = document.createElement('div');
+  wrap.innerHTML = medsosExtraJourneyHTML({});
+  const el = wrap.firstElementChild;
+  section.querySelector('.mc-extraJourneyList').appendChild(el);
+  renumberMedsosExtras(section);
+  el.querySelector('.mc-xj-name').focus();
+}
+function removeMedsosExtra(btn, selector) {
+  const section = btn.closest('.content-section');
+  btn.closest(selector).remove();
+  renumberMedsosExtras(section);
+}
+function collectMedsosExtraCtas(section) {
+  return Array.from(section.querySelectorAll('.mc-extraCta')).map(el => {
+    const t = el.querySelector('.mc-xcta-type').value;
+    return {
+      cta_type: t,
+      cta_value: el.querySelector('.mc-xcta-value').value.trim(),
+      pretext: t === 'WhatsApp' ? el.querySelector('.mc-xcta-pretext').value : ''
+    };
+  }).filter(x => x.cta_value);
+}
+function collectMedsosExtraJourneys(section) {
+  return Array.from(section.querySelectorAll('.mc-extraJourney')).map(el => ({
+    instagram_name: el.querySelector('.mc-xj-name').value.trim(),
+    key_visual: el.querySelector('.mc-xj-keyVisual').value.trim(),
+    caption: el.querySelector('.mc-xj-caption').value
+  })).filter(x => x.instagram_name || x.key_visual || x.caption);
 }
 
 function addMedsosContentSection(data) {
@@ -5048,7 +5197,9 @@ function addMedsosContentSection(data) {
   const id = medsosContentSectionCount;
   const wrapper = document.createElement('div');
   wrapper.innerHTML = createMedsosContentSectionHTML(id, data);
-  document.getElementById('medsosContentList').appendChild(wrapper.firstElementChild);
+  const addedSection = wrapper.firstElementChild;
+  document.getElementById('medsosContentList').appendChild(addedSection);
+  renumberMedsosExtras(addedSection);
 }
 
 // Toggles a specific section's CTA type. WhatsApp shows an extra Pretext field;
@@ -5074,7 +5225,7 @@ function selectMedsosContentCtaType(id, ctaType) {
 function duplicateMedsosContentSection(id) {
   const section = document.getElementById('medsos-content-section-' + id);
   const data = {
-    linkContent: section.querySelector('.mc-linkContent').value,
+    linkContent: collectMedsosLinks(section),
     location: section.querySelector('.mc-location').value,
     budget: section.querySelector('.mc-budget').value,
     budgetDescription: section.querySelector('.mc-budgetDescription').value,
@@ -5087,7 +5238,9 @@ function duplicateMedsosContentSection(id) {
     keyword: section.querySelector('.mc-keyword').value,
     instagramName: section.querySelector('.mc-instagramName').value,
     keyVisual: section.querySelector('.mc-keyVisual').value,
-    caption: section.querySelector('.mc-caption').value
+    caption: section.querySelector('.mc-caption').value,
+    extraCtas: collectMedsosExtraCtas(section).map(x => ({ ctaType: x.cta_type, ctaValue: x.cta_value, pretext: x.pretext })),
+    extraJourneys: collectMedsosExtraJourneys(section).map(x => ({ instagramName: x.instagram_name, keyVisual: x.key_visual, caption: x.caption }))
   };
   addMedsosContentSection(data);
 }
@@ -6505,6 +6658,11 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
         if (c.cta_type === 'Profil Instagram') kvRow('Link Profil Instagram', c.instagram_profile_link);
         else kvRow('CTA Value', c.cta_value);
         if (c.cta_type === 'WhatsApp' && c.pretext) paragraph('Pretext:', c.pretext);
+        (c.extra_ctas || []).forEach((x, i) => {
+          kvRow('CTA ' + (i + 2) + ' Type', x.cta_type);
+          kvRow('CTA ' + (i + 2) + ' Value', x.cta_value);
+          if (x.cta_type === 'WhatsApp' && x.pretext) paragraph('CTA ' + (i + 2) + ' Pretext:', x.pretext);
+        });
         kvRow('Keyword', c.keyword);
         endCard();
         y += SP.card;
@@ -7197,7 +7355,7 @@ function buildInstagramProfileLink(value) {
 // bar, like/comment/share/bookmark row, bottom nav). Sourced from the first
 // Campaign Content section — if a CTA is filled in, the CTA bar becomes a real
 // clickable link. DM Instagram and Profil Instagram use their respective labels.
-function buildOneMedsosPhone(igName, avatarHtml, c, idx) {
+function buildOneMedsosPhone(igName, avatarHtml, c, idx, labelOverride) {
   let imageHtml;
   if (c.key_visual) {
     const imgSrc = toDirectImageUrl(c.key_visual);
@@ -7256,7 +7414,7 @@ function buildOneMedsosPhone(igName, avatarHtml, c, idx) {
             </div>
           </div>
         </div>
-        <div class="phone-caption">Content ${idx + 1}</div>
+        <div class="phone-caption">${escapeHtml(labelOverride || ('Content ' + (idx + 1)))}</div>
       </div>
   `;
 }
@@ -7268,17 +7426,27 @@ function buildOneMedsosPhone(igName, avatarHtml, c, idx) {
 // link. DM Instagram can fall back to the Customer Journey Instagram name.
 function buildMedsosMockup(campaign) {
   const contents = campaign.campaign_contents || [];
+  // One phone per Customer Journey: the section's primary journey plus any extras
+  // added with "+ Add Customer Journey". Extras reuse the section's primary CTA.
   const phonesHtml = contents.map((c, idx) => {
-    const igName = c.instagram_name || campaign.brand_name || 'yourbrand';
-    const initial = escapeHtml((igName[0] || 'B').toUpperCase());
-    let avatarHtml;
-    if (campaign.brand_logo_url) {
-      const logoSrc = toDirectImageUrl(campaign.brand_logo_url);
-      avatarHtml = `<img src="${escapeAttr(logoSrc)}" alt="Avatar" onerror="this.parentNode.textContent='${initial}'">`;
-    } else {
-      avatarHtml = initial;
-    }
-    return buildOneMedsosPhone(igName, avatarHtml, c, idx);
+    const journeys = [c].concat((c.extra_journeys || []).map(j => Object.assign({}, c, {
+      instagram_name: j.instagram_name,
+      key_visual: j.key_visual,
+      caption: j.caption
+    })));
+    return journeys.map((jc, j) => {
+      const igName = jc.instagram_name || campaign.brand_name || 'yourbrand';
+      const initial = escapeHtml((igName[0] || 'B').toUpperCase());
+      let avatarHtml;
+      if (campaign.brand_logo_url) {
+        const logoSrc = toDirectImageUrl(campaign.brand_logo_url);
+        avatarHtml = `<img src="${escapeAttr(logoSrc)}" alt="Avatar" onerror="this.parentNode.textContent='${initial}'">`;
+      } else {
+        avatarHtml = initial;
+      }
+      const label = journeys.length > 1 ? `Content ${idx + 1} · Journey ${j + 1}` : null;
+      return buildOneMedsosPhone(igName, avatarHtml, jc, idx, label);
+    }).join('');
   }).join('');
   const anyClickable = contents.some(c =>
     (c.cta_type === 'WhatsApp' && c.cta_value) ||
@@ -8141,7 +8309,7 @@ function generateCampaignMedsos() {
     return;
   }
   for (const section of sectionEls) {
-    const linkContent = section.querySelector('.mc-linkContent').value;
+    const linkContent = collectMedsosLinks(section);
     if (!linkContent.trim()) {
       alert('Please fill all required fields in each Campaign Content section (Link Content).');
       return;
@@ -8152,7 +8320,7 @@ function generateCampaignMedsos() {
   sectionEls.forEach(section => {
     const ctaType = section.dataset.ctatype || 'URL';
     contentSections.push({
-      link_content: section.querySelector('.mc-linkContent').value,
+      link_content: collectMedsosLinks(section),
       location: section.querySelector('.mc-location').value,
       budget: section.querySelector('.mc-budget').value,
       budget_description: section.querySelector('.mc-budgetDescription').value,
@@ -8162,10 +8330,12 @@ function generateCampaignMedsos() {
       cta_value: section.querySelector('.mc-ctaValue').value,
       instagram_profile_link: section.querySelector('.mc-instagramProfileLink').value,
       pretext: ctaType === 'WhatsApp' ? section.querySelector('.mc-pretext').value : '',
+      extra_ctas: collectMedsosExtraCtas(section),
       keyword: section.querySelector('.mc-keyword').value,
       instagram_name: section.querySelector('.mc-instagramName').value,
       key_visual: section.querySelector('.mc-keyVisual').value,
-      caption: section.querySelector('.mc-caption').value
+      caption: section.querySelector('.mc-caption').value,
+      extra_journeys: collectMedsosExtraJourneys(section)
     });
   });
 
@@ -8210,8 +8380,14 @@ function renderPreviewMedsos(campaign) {
             ? `<tr><td>Link Profil Instagram</td><td>${renderMultilineLinks(c.instagram_profile_link)}</td></tr>`
             : `<tr><td>CTA Value</td><td>${escapeHtml(c.cta_value) || '-'}</td></tr>`}
           ${c.cta_type === 'WhatsApp' ? `<tr><td>Pretext</td><td>${escapeHtml(c.pretext) || '-'}</td></tr>` : ''}
+          ${(c.extra_ctas || []).map((x, i) => `
+            <tr><td>CTA ${i + 2} Type</td><td>${escapeHtml(x.cta_type)}</td></tr>
+            <tr><td>CTA ${i + 2} Value</td><td>${x.cta_type === 'Profil Instagram' ? renderMultilineLinks(x.cta_value) : (escapeHtml(x.cta_value) || '-')}</td></tr>
+            ${x.cta_type === 'WhatsApp' && x.pretext ? `<tr><td>CTA ${i + 2} Pretext</td><td>${escapeHtml(x.pretext)}</td></tr>` : ''}
+          `).join('')}
           <tr><td>Keyword</td><td>${escapeHtml(c.keyword) || '-'}</td></tr>
           <tr><td>Nama Instagram</td><td>${escapeHtml(c.instagram_name) || '-'}</td></tr>
+          ${(c.extra_journeys || []).map((x, i) => `<tr><td>Nama Instagram (Journey ${i + 2})</td><td>${escapeHtml(x.instagram_name) || '-'}</td></tr>`).join('')}
         </table>
       </div>
     `;
