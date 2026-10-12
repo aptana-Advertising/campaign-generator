@@ -1641,6 +1641,17 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
               </div>
             </div>
           </div>
+          <div class="field" id="performaxOutletField">
+            <label>Outlet</label>
+            <select id="performaxOutletMode" class="preset-select" onchange="onPerformaxOutletModeChange(this)">
+              <option value="">Pilih outlet</option>
+              <option value="All Outlet">All Outlet</option>
+              <option value="Selected Store">Selected Store</option>
+            </select>
+            <div id="performaxOutletManualWrap" style="display:none; margin-top:8px;">
+              <textarea id="performaxSmsOutlet" style="height:64px;" placeholder="Masukkan daftar outlet (satu outlet per baris)"></textarea>
+            </div>
+          </div>
         </div>
 
         <div class="card">
@@ -1657,8 +1668,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
           <div id="performaxSmsFields" class="performax-channel-fields">
             <h4>SMS</h4>
             <div class="field"><label>Whitelist Numbers</label><textarea id="performaxSmsWhitelist" style="height:64px;" placeholder="Masukkan nomor whitelist"></textarea></div>
-            <div class="field"><label>Wording SMS</label><textarea id="performaxSmsWording" style="height:90px;" placeholder="Tulis wording SMS"></textarea></div>
-            <div class="field"><label>Outlet</label><textarea id="performaxSmsOutlet" style="height:64px;" placeholder="Daftar outlet"></textarea></div>
+            <div class="field"><label>Wording SMS <span style="font-weight:400;color:#6b7280;">(maks. 160 karakter)</span></label><div class="performax-counted-field"><textarea id="performaxSmsWording" style="height:90px;" data-limit="160" placeholder="Tulis wording SMS" oninput="updatePerformaxCounter(this, 'performaxSmsWordingCount')"></textarea><span class="char-count" id="performaxSmsWordingCount">0/160</span></div></div>
           </div>
 
           <div id="performaxMetaFields" class="performax-channel-fields">
@@ -2610,6 +2620,41 @@ function updatePerformaxSelection() {
   document.getElementById('performaxOpenaiFields').classList.toggle('active', selected.includes('openai-ads'));
 }
 
+// Outlet (SMS): "All Outlet" is a fixed value; "Selected Store" reveals a free-text
+// field for the store list. The saved value is either "All Outlet" or that text.
+function onPerformaxOutletModeChange(selectEl) {
+  const wrap = document.getElementById('performaxOutletManualWrap');
+  const ta = document.getElementById('performaxSmsOutlet');
+  const manual = selectEl.value === 'Selected Store';
+  wrap.style.display = manual ? 'block' : 'none';
+  if (manual) ta.focus();
+}
+
+function getPerformaxOutletValue() {
+  const mode = document.getElementById('performaxOutletMode').value;
+  if (mode === 'All Outlet') return 'All Outlet';
+  if (mode === 'Selected Store') return document.getElementById('performaxSmsOutlet').value.trim();
+  return '';
+}
+
+function setPerformaxOutletValue(value) {
+  const modeEl = document.getElementById('performaxOutletMode');
+  const ta = document.getElementById('performaxSmsOutlet');
+  const v = String(value || '').trim();
+  if (!v) {
+    modeEl.value = '';
+    ta.value = '';
+  } else if (/^all\s*(outlet|store)s?$/i.test(v)) {
+    modeEl.value = 'All Outlet';
+    ta.value = '';
+  } else {
+    modeEl.value = 'Selected Store';
+    ta.value = v;
+  }
+  onPerformaxOutletModeChange(modeEl);
+  ta.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
 function updatePerformaxCounter(field, counterId) {
   const counter = document.getElementById(counterId);
   if (!counter) return;
@@ -2684,7 +2729,7 @@ function collectPerformaxCampaign() {
     sms: selected.includes('sms') ? {
       whitelist_numbers: document.getElementById('performaxSmsWhitelist').value.trim(),
       wording: document.getElementById('performaxSmsWording').value.trim(),
-      outlet: document.getElementById('performaxSmsOutlet').value.trim()
+      outlet: getPerformaxOutletValue()
     } : null,
     meta_ads: selected.includes('meta-ads') ? {
       key_visual: sharedKeyVisual,
@@ -2805,7 +2850,7 @@ function generatePerformaxCampaign() {
     const data = key === 'sms' ? campaign.sms : key === 'meta-ads' ? campaign.meta_ads : key === 'tiktok-ads' ? campaign.tiktok_ads : key === 'google-ads' ? campaign.google_ads : campaign.openai_ads;
     let rows;
     if (key === 'sms') {
-      rows = `<tr><td>Whitelist Numbers</td><td style="white-space:pre-line;">${escapeHtml(data.whitelist_numbers) || '-'}</td></tr><tr><td>Wording SMS</td><td>${escapeHtml(data.wording) || '-'}</td></tr><tr><td>Outlet</td><td style="white-space:pre-line;">${escapeHtml(data.outlet) || '-'}</td></tr>`;
+      rows = `<tr><td>Whitelist Numbers</td><td style="white-space:pre-line;">${escapeHtml(data.whitelist_numbers) || '-'}</td></tr><tr><td>Wording SMS</td><td>${escapeHtml(data.wording) || '-'}${data.wording ? ` <span style="color:#6b7280;">(${data.wording.length} char)</span>` : ''}${data.wording && data.wording.length > 160 ? ' <span style="color:#dc2626; font-weight:600;">⚠️ OVER 160 CHARS</span>' : ''}</td></tr><tr><td>Outlet</td><td style="white-space:pre-line;">${escapeHtml(data.outlet) || '-'}</td></tr>`;
     } else if (key === 'google-ads') {
       rows = `<tr><td>Headlines</td><td>${data.headlines.map((value, index) => `${index + 1}. ${escapeHtml(value)}`).join('<br>')}</td></tr><tr><td>Long Headlines</td><td>${data.long_headlines.map((value, index) => `${index + 1}. ${escapeHtml(value)}`).join('<br>')}</td></tr><tr><td>Descriptions</td><td>${data.descriptions.map((value, index) => `${index + 1}. ${escapeHtml(value)}`).join('<br>')}</td></tr>`;
     } else if (key === 'meta-ads') {
@@ -2831,6 +2876,8 @@ function generatePerformaxCampaign() {
 function resetPerformaxForm() {
   window.smsSelectedLogoUrl = '';
   document.querySelectorAll('#performax-panel input, #performax-panel textarea').forEach(el => { if (el.type === 'checkbox') el.checked = false; else el.value = ''; });
+  document.getElementById('performaxOutletMode').value = '';
+  document.getElementById('performaxOutletManualWrap').style.display = 'none';
   document.querySelectorAll('#performaxGoogleFields [data-performax-dynamic="true"]').forEach(el => el.remove());
   document.querySelectorAll('#performax-panel [data-limit]').forEach(el => {
     const counter = el.parentElement.querySelector('.char-count');
@@ -3383,6 +3430,14 @@ function openOutlookComposeForCampaign(campaignData, pdfLink) {
   } else if (type === 'Kuponku Meta' && campaignData.meta_ads && campaignData.meta_ads.key_visual) {
     bodyLines.push('');
     bodyLines.push(`Key Visual Meta Ads : ${campaignData.meta_ads.key_visual}`);
+  } else if (type === 'Kuponku Performax') {
+    // Only the Key Visual URL from the "Type Campaign" section (a single image link,
+    // or a folder link holding every KV when there are several).
+    const kvUrls = String(campaignData.key_visual || '').split(/\r?\n/).map(u => u.trim()).filter(Boolean);
+    if (kvUrls.length) {
+      bodyLines.push('');
+      kvUrls.forEach((u, i) => bodyLines.push(`Key Visual${kvUrls.length > 1 ? ' ' + (i + 1) : ''} : ${u}`));
+    }
   } else if (type === 'WhatsApp LBA' || type === 'WhatsApp Targeted') {
     if (campaignData.format === 'Carrousel' && Array.isArray(campaignData.cards)) {
       const cardLines = campaignData.cards
@@ -3952,7 +4007,7 @@ function loadCampaignIntoForm(campaign, historyId) {
     if (campaign.sms) {
       setVal('performaxSmsWhitelist', campaign.sms.whitelist_numbers);
       setVal('performaxSmsWording', campaign.sms.wording);
-      setVal('performaxSmsOutlet', campaign.sms.outlet);
+      setPerformaxOutletValue(campaign.sms.outlet);
     }
     if (campaign.meta_ads) {
       setVal('performaxMetaCaption', campaign.meta_ads.caption);
@@ -4507,8 +4562,12 @@ function createWlContentSectionHTML(id, data) {
 
       <div class="field">
         <label>Lokasi</label>
-        <textarea class="wl-location" style="height:70px;" placeholder="1. Jakarta Selatan&#10;2. Bandung" onkeydown="handleNumberedListKeydown(this, event)" onblur="renumberNumberedList(this)">${escapeHtml(data.location)}</textarea>
-        <div class="field-hint">Tekan Enter untuk menambah lokasi baru — penomoran mengikuti otomatis.</div>
+        <div style="display:flex; gap:6px; margin-bottom:6px;">
+          <button type="button" class="icon-btn" onclick="applyListFormat(this, 'bullet')" title="Bullet list">• Bullet</button>
+          <button type="button" class="icon-btn" onclick="applyListFormat(this, 'number')" title="Numbered list">1. Number</button>
+        </div>
+        <textarea class="wl-location" style="height:70px;" placeholder="Jakarta Selatan&#10;Bandung" onkeydown="handleListContinueKeydown(this, event)">${escapeHtml(data.location)}</textarea>
+        <div class="field-hint">Satu lokasi per baris. Klik Bullet / Number untuk membuat list (opsional).</div>
       </div>
 
       <div class="field wl-longLatField" style="display:${wlType === 'LBA' ? 'block' : 'none'};">
@@ -4844,10 +4903,13 @@ function createLbaContentSectionHTML(id, data) {
       <div class="field">
         <div class="field-header">
           <label>Location</label>
-          <button type="button" class="icon-btn" onclick="applyListFormat(this, 'number')" title="Numbered list">1. Number</button>
+          <div style="display:flex; gap:6px;">
+            <button type="button" class="icon-btn" onclick="applyListFormat(this, 'bullet')" title="Bullet list">• Bullet</button>
+            <button type="button" class="icon-btn" onclick="applyListFormat(this, 'number')" title="Numbered list">1. Number</button>
+          </div>
         </div>
-        <textarea class="lc-location" style="height:80px;" placeholder="1. Jakarta Selatan&#10;2. Bandung" onkeydown="handleNumberedListKeydown(this, event)" onblur="renumberNumberedList(this)">${escapeHtml(data.location)}</textarea>
-        <div class="field-hint">Tekan Enter untuk menambah baris — penomoran mengikuti otomatis.</div>
+        <textarea class="lc-location" style="height:80px;" placeholder="Jakarta Selatan&#10;Bandung" onkeydown="handleListContinueKeydown(this, event)">${escapeHtml(data.location)}</textarea>
+        <div class="field-hint">Satu lokasi per baris. Klik Bullet / Number untuk membuat list (opsional).</div>
       </div>
 
       <div class="field lc-longLatField" style="display:${subType === 'LBA' ? 'block' : 'none'};">
@@ -5329,8 +5391,12 @@ function createContentSectionHTML(id, data) {
           <option value="__manual__">Isi Manual</option>
         </select>
         <div class="manual-wrap" style="display:${data.outlet ? '' : 'none'};">
-          <textarea class="cc-outlet" style="height:80px;" placeholder="1. Outlet pertama&#10;2. Outlet kedua" onkeydown="handleNumberedListKeydown(this, event)" onblur="renumberNumberedList(this)">${escapeHtml(data.outlet)}</textarea>
-          <div class="field-hint">Tekan Enter untuk menambah outlet baru — penomoran mengikuti otomatis.</div>
+          <div style="display:flex; gap:6px; margin-bottom:6px;">
+            <button type="button" class="icon-btn" onclick="applyListFormat(this, 'bullet')" title="Bullet list">• Bullet</button>
+            <button type="button" class="icon-btn" onclick="applyListFormat(this, 'number')" title="Numbered list">1. Number</button>
+          </div>
+          <textarea class="cc-outlet" style="height:80px;" placeholder="Outlet pertama&#10;Outlet kedua" onkeydown="handleListContinueKeydown(this, event)">${escapeHtml(data.outlet)}</textarea>
+          <div class="field-hint">Satu outlet per baris. Klik Bullet / Number untuk membuat list (opsional).</div>
           <a href="javascript:void(0)" class="preset-back-link" onclick="revertToPresetSelect(this)">↩ Pilih dari daftar</a>
         </div>
       </div>
@@ -5399,7 +5465,7 @@ function updateTermsCount(textarea) {
 
 function applyListFormat(btn, type) {
   const field = btn.closest('.field');
-  const textarea = field.querySelector('.cc-syaratKetentuan, .lc-location, .lc-longLat, #performaxTerms');
+  const textarea = field.querySelector('.cc-syaratKetentuan, .cc-outlet, .wl-location, .lc-location, .lc-longLat, #performaxTerms');
   if (!textarea) return;
 
   const start = textarea.selectionStart;
@@ -5441,6 +5507,14 @@ function applyListFormat(btn, type) {
   textarea.focus();
   textarea.dispatchEvent(new Event('input', { bubbles: true }));
   textarea.dispatchEvent(new Event('keyup', { bubbles: true }));
+}
+
+// Opt-in list continuation for Outlet / Lokasi / Location: Enter only continues a
+// list when the current line already starts with a bullet or number (i.e. the user
+// clicked Bullet / Number). Plain lines behave like a normal textarea — numbering is
+// never applied by default.
+function handleListContinueKeydown(textarea, event) {
+  return handlePerformaxTermsKeydown(textarea, event);
 }
 
 function handlePerformaxTermsKeydown(textarea, event) {
@@ -5601,8 +5675,7 @@ function onPresetSelectChange(selectEl, targetInputId) {
 }
 
 // Same idea, but scoped to the closest repeated "Campaign Content" section, since
-// Shared by Kuponku SMS's "Outlet" field and WhatsApp LBA/TGT's "Lokasi" field:
-// both accept several entries, one per line, numbered "1.", "2.", … Pressing Enter
+// Still used by SMS LBA/TGT's Long/Lat field: entries numbered "1.", "2.", … Pressing Enter
 // inserts the next number automatically so the list stays tidy without the user
 // typing the prefixes by hand.
 function handleNumberedListKeydown(el, event) {
@@ -5660,12 +5733,10 @@ function onOutletPresetChange(selectEl) {
   if (!input) return;
   const wrap = input.closest('.manual-wrap');
   if (selectEl.value === '__manual__') {
-    // Seed the first number so the numbering convention is obvious straight away
-    input.value = '1. ';
+    input.value = '';
     if (wrap) wrap.style.display = 'block';
     selectEl.style.display = 'none';
     input.focus();
-    if (input.setSelectionRange) input.setSelectionRange(input.value.length, input.value.length);
   } else if (selectEl.value !== '') {
     input.value = selectEl.value;
   }
@@ -6516,7 +6587,7 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
       sectionTitle(labels[key] || key);
       if (key === 'sms') {
         paragraph('Whitelist Numbers:', data.whitelist_numbers);
-        paragraph('Wording SMS:', data.wording);
+        paragraph('Wording SMS (' + (data.wording ? data.wording.length : 0) + ' char):', data.wording);
         paragraph('Outlet:', data.outlet);
       } else if (key === 'meta-ads') {
         paragraph('Caption:', data.caption);
