@@ -636,7 +636,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   .pxc-logo { flex:0 0 auto; display:flex; align-items:center; justify-content:center; height:30px; padding-top:13px; box-sizing:border-box; }
   .pxc-logo .performax-lp-logo { max-height:12px; max-width:55%; }
   .pxc-logo .performax-lp-brand-fallback { font-size:9px; }
-  .pxc-visual { position:relative; height:96px; flex:0 0 auto; background:#eeeeee; overflow:hidden; }
+  .pxc-visual { position:relative; height:104px; flex:0 0 auto; background:#eeeeee; overflow:hidden; }
   .pxc-visual > img.pxc-visual-img { width:100%; height:100%; object-fit:cover; display:block; }
   .pxc-brandbar { position:absolute; left:0; right:0; bottom:0; display:flex; justify-content:space-between; align-items:center; padding:2px 4px; font-size:3.6px; font-weight:700; color:#111; line-height:1; }
   .pxc-brandbar img { height:5px; width:auto; display:block; }
@@ -1720,7 +1720,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
             <label class="performax-option"><input type="checkbox" value="google-ads" onchange="updatePerformaxSelection()"> Google Ads</label>
             <label class="performax-option"><input type="checkbox" value="openai-ads" onchange="updatePerformaxSelection()"> OpenAI Ads</label>
           </div>
-          <div class="field" style="margin-top:14px;"><label>Key Visual URL</label><textarea id="performaxSharedKeyVisual" class="performax-auto-field" rows="1" placeholder="https://example.com/image.jpg" oninput="autoResizePerformaxField(this)"></textarea><small style="color:#6b7280;">Key visual yang digunakan untuk Meta Ads dan Google Ads.</small></div>
+          <div class="field" style="margin-top:14px;"><label>Key Visual URL</label><textarea id="performaxSharedKeyVisual" class="performax-auto-field" rows="1" placeholder="https://example.com/image.jpg" oninput="autoResizePerformaxField(this)"></textarea></div>
 
           <div id="performaxSmsFields" class="performax-channel-fields">
             <h4>SMS</h4>
@@ -1797,6 +1797,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
             <textarea id="performaxTerms" style="height:90px;" placeholder="Masukkan syarat dan ketentuan" onkeydown="handlePerformaxTermsKeydown(this, event)"></textarea>
           </div>
           <div class="field"><label>Highlight Text</label><input type="text" id="performaxHighlight" placeholder="e.g. Buy 1 Get 1"></div>
+          <div class="field" id="performaxClickCtaField" style="display:none;"><label>URL CTA</label><input type="url" id="performaxClickCtaUrl" placeholder="https://example.com/promo"></div>
           <div class="field" id="performaxClickMockupField" style="display:none;"><label>URL Mockup</label><input type="url" id="performaxClickMockupUrl" placeholder="https://example.com/image.jpg"><small style="display:block;margin-top:5px;color:#6b7280;font-size:12px;">Gambar halaman tujuan (HP ke-4 di journey Click). Link tidak ditampilkan di PDF.</small></div>
         </div>
 
@@ -2685,8 +2686,11 @@ function getPerformaxScheme() {
   return el && el.value === 'Click' ? 'Click' : 'Redeem';
 }
 function updatePerformaxScheme() {
-  const field = document.getElementById('performaxClickMockupField');
-  if (field) field.style.display = getPerformaxScheme() === 'Click' ? '' : 'none';
+  const show = getPerformaxScheme() === 'Click' ? '' : 'none';
+  ['performaxClickCtaField', 'performaxClickMockupField'].forEach(id => {
+    const field = document.getElementById(id);
+    if (field) field.style.display = show;
+  });
 }
 
 // Outlet (SMS): "All Outlet" is a fixed value; "Selected Store" reveals a free-text
@@ -2829,6 +2833,7 @@ function collectPerformaxCampaign() {
     } : null,
     customer_journey: {
       key_visual: document.getElementById('performaxJourneyKeyVisual').value.trim(),
+      cta_url: getPerformaxScheme() === 'Click' ? document.getElementById('performaxClickCtaUrl').value.trim() : '',
       mockup_url: getPerformaxScheme() === 'Click' ? document.getElementById('performaxClickMockupUrl').value.trim() : '',
       terms: document.getElementById('performaxTerms').value.trim(),
       highlight_text: document.getElementById('performaxHighlight').value.trim()
@@ -2912,9 +2917,9 @@ function buildPerformaxUnifiedMockup(campaign) {
     const pxcTimer = [['19','Days'],['13','Hours'],['21','Minutes'],['24','Seconds']]
       .map(([n, l]) => `<div class="pxc-timer-box"><div class="pxc-timer-num">${n}</div><div class="pxc-timer-lbl">${l}</div></div>`).join('');
     const pxcPin = '<svg viewBox="0 0 10 14" xmlns="http://www.w3.org/2000/svg"><path d="M5 0C2.2 0 0 2.2 0 4.9 0 8.6 5 14 5 14s5-5.4 5-9.1C10 2.2 7.8 0 5 0z" fill="#2f6fe4"/><circle cx="5" cy="4.9" r="1.9" fill="#fff"/></svg>';
-    const pxcLanding = ctaLabel => `<div class="pxc-screen"><div class="pxc-logo">${landingLogo}</div><div class="pxc-card"><div class="pxc-visual">${pxcVisual}<div class="pxc-brandbar"><img src="${KUPONKU_LOGO}" alt="Kuponku.id"><span>Mitra untuk penyebaran dan validasi kupon</span></div></div><div class="pxc-timer">${pxcTimer}</div><div class="pxc-divider"></div><div class="pxc-text">Ambil voucher <strong>${brand}</strong> sekarang!</div><div class="pxc-loc">${pxcPin}<span>Lokasi Penukaran</span></div><div class="pxc-btn">${ctaLabel}</div><div class="pxc-btn-row"><span class="pxc-btn-outline">BAGIKAN KUPON</span><span class="pxc-info">i</span></div><div class="pxc-tnc">Syarat dan Ketentuan Promo ›</div><div class="pxc-footer">Kuponku adalah mitra <strong>${brand}</strong><br>untuk penyebaran dan validasi kupon<div class="pxc-footer-small">Mau bisnis anda punya iklan seperti ini? <span>Click here</span></div></div></div></div>`;
+    const pxcLanding = ctaLabel => `<div class="pxc-screen"><div class="pxc-logo">${landingLogo}</div><div class="pxc-card"><div class="pxc-visual">${pxcVisual}</div><div class="pxc-timer">${pxcTimer}</div><div class="pxc-divider"></div><div class="pxc-text">Ambil voucher <strong>${brand}</strong> sekarang!</div><div class="pxc-loc">${pxcPin}<span>Lokasi Penukaran</span></div><div class="pxc-btn">${ctaLabel}</div><div class="pxc-btn-row"><span class="pxc-btn-outline">BAGIKAN KUPON</span><span class="pxc-info">i</span></div><div class="pxc-tnc">Syarat dan Ketentuan Promo ›</div><div class="pxc-footer">Kuponku adalah mitra <strong>${brand}</strong><br>untuk penyebaran dan validasi kupon<div class="pxc-footer-small">Mau bisnis anda punya iklan seperti ini? <span>Click here</span></div></div></div></div>`;
     const pxcDest = campaign.customer_journey.mockup_url
-      ? `<img class="pxc-dest-img" src="${escapeAttr(toDirectImageUrl(campaign.customer_journey.mockup_url))}" alt="URL Mockup" onerror="this.style.display='none'">`
+      ? `<img class="pxc-dest-img" src="${escapeAttr(toDirectImageUrl(campaign.customer_journey.mockup_url))}" alt="URL Mockup" onerror="this.outerHTML='<div style=&quot;padding:60px 10px;text-align:center;font-size:7px;color:#9ca3af;&quot;>Image not loaded (check Drive sharing)</div>'">`
       : '';
     const pxcLogin = phone(`<div class="pxc-login-screen"><div class="pxc-login-modal"><div class="pxc-login-title">Silakan login sebagai prosedur keamanan kupon anda</div><div class="pxc-login-sub">Kuponku adalah Mitra <strong>${brand}</strong><br>untuk penyebaran dan validasi kupon</div><div class="pxc-login-g">G</div><div class="pxc-login-btn">MASUK DENGAN GOOGLE</div><div class="pxc-login-note">Dengan melanjutkan, Anda menyetujui <u>Kebijakan Privasi</u> kami.</div></div></div>`, '2. Login Google');
     const pxcKeys = [1,2,3,4,5,6,7,8,9].map(n => `<div class="pxc-key">${n}</div>`).join('') + '<div class="pxc-key back"><svg viewBox="0 0 24 24"><path d="M9 5h11a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H9l-6-7z" fill="#fff"/><path d="M12.5 9.5l5 5m0-5l-5 5" stroke="#2dbfae" stroke-width="2" stroke-linecap="round"/></svg></div><div class="pxc-key">0</div><div class="pxc-key ok"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>';
@@ -2970,9 +2975,9 @@ function generatePerformaxCampaign() {
   document.getElementById('performaxPreview').innerHTML = `
     <div class="preview-section"><div class="preview-section-title">Basic Information</div><table class="preview-table"><tr><td>Brand Name</td><td>${escapeHtml(campaign.brand_name)}</td></tr><tr><td>MID</td><td>${escapeHtml(campaign.mid)}</td></tr><tr><td>Brand Masking</td><td>${escapeHtml(campaign.brand_masking) || '-'}</td></tr></table></div>
     <div class="preview-section"><div class="preview-section-title">Campaign Details</div><table class="preview-table"><tr><td>Invoice Number</td><td>${escapeHtml(campaign.invoice_number) || '-'}</td></tr><tr><td>Payment Method</td><td>${escapeHtml(campaign.payment_method)}</td></tr><tr><td>Scheme</td><td>${escapeHtml(campaign.scheme || 'Redeem')}</td></tr><tr><td>Campaign Period</td><td>${escapeHtml(campaign.campaign_period)}</td></tr><tr><td>Price</td><td>${escapeHtml(campaign.price) || '-'}</td></tr></table></div>
-    <div class="preview-section"><div class="preview-section-title">Type Campaign</div><div style="display:flex;gap:6px;flex-wrap:wrap;">${campaign.selected_channels.map(key => `<span class="performax-step">${labels[key]}</span>`).join('')}</div><table class="preview-table"><tr><td>Key Visual URL (Meta Ads / Google Ads)</td><td>${campaign.key_visual ? `<a class="preview-link" href="${escapeAttr(campaign.key_visual)}" target="_blank">${escapeHtml(campaign.key_visual)}</a>` : '-'}</td></tr></table></div>
+    <div class="preview-section"><div class="preview-section-title">Type Campaign</div><div style="display:flex;gap:6px;flex-wrap:wrap;">${campaign.selected_channels.map(key => `<span class="performax-step">${labels[key]}</span>`).join('')}</div><table class="preview-table"><tr><td>Key Visual URL</td><td>${campaign.key_visual ? `<a class="preview-link" href="${escapeAttr(campaign.key_visual)}" target="_blank">${escapeHtml(campaign.key_visual)}</a>` : '-'}</td></tr></table></div>
     ${channelSections}
-    <div class="preview-section"><div class="preview-section-title">Landing Page</div><table class="preview-table"><tr><td>URL Key Visual</td><td>${campaign.customer_journey.key_visual ? `<a class="preview-link" href="${escapeAttr(campaign.customer_journey.key_visual)}" target="_blank">${escapeHtml(campaign.customer_journey.key_visual)}</a>` : '-'}</td></tr><tr><td>Syarat &amp; Ketentuan</td><td style="white-space:pre-line;">${escapeHtml(campaign.customer_journey.terms) || '-'}</td></tr><tr><td>Highlight Text</td><td>${escapeHtml(campaign.customer_journey.highlight_text) || '-'}</td></tr></table></div>
+    <div class="preview-section"><div class="preview-section-title">Landing Page</div><table class="preview-table"><tr><td>URL Key Visual</td><td>${campaign.customer_journey.key_visual ? `<a class="preview-link" href="${escapeAttr(campaign.customer_journey.key_visual)}" target="_blank">${escapeHtml(campaign.customer_journey.key_visual)}</a>` : '-'}</td></tr><tr><td>Syarat &amp; Ketentuan</td><td style="white-space:pre-line;">${escapeHtml(campaign.customer_journey.terms) || '-'}</td></tr><tr><td>Highlight Text</td><td>${escapeHtml(campaign.customer_journey.highlight_text) || '-'}</td></tr>${campaign.scheme === 'Click' ? `<tr><td>URL CTA</td><td>${campaign.customer_journey.cta_url ? `<a class="preview-link" href="${escapeAttr(campaign.customer_journey.cta_url)}" target="_blank">${escapeHtml(campaign.customer_journey.cta_url)}</a>` : '-'}</td></tr>` : ''}</table></div>
     <div class="preview-section mockup-section"><div class="preview-section-title">Campaign Mockup — Customer Journey</div>${buildPerformaxUnifiedMockup(campaign)}</div>`;
   window.performaxCampaignData = campaign;
   autoGenerateAndSavePDF('performax', 'performaxPreview', campaign);
@@ -4160,6 +4165,7 @@ function loadCampaignIntoForm(campaign, historyId) {
     }
     if (campaign.customer_journey) {
       setVal('performaxJourneyKeyVisual', campaign.customer_journey.key_visual);
+      setVal('performaxClickCtaUrl', campaign.customer_journey.cta_url);
       setVal('performaxClickMockupUrl', campaign.customer_journey.mockup_url);
       setVal('performaxTerms', campaign.customer_journey.terms);
       setVal('performaxHighlight', campaign.customer_journey.highlight_text);
@@ -6690,7 +6696,7 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
     sectionTitle('Type Campaign');
     kvRow('Tipe yang dipilih', campaignData.selected_channels.map(key => labels[key] || key).join(', '), 10, 60, false, 'normal');
     // Key Visual bersama Meta Ads / Google Ads ditampilkan di sini (sama seperti di web app).
-    kvRow('Key Visual URL (Meta Ads / Google Ads)', campaignData.key_visual, 10, 60, false, 'normal');
+    kvRow('Key Visual URL', campaignData.key_visual, 10, 60, false, 'normal');
     endCard();
     y += SP.card;
     campaignData.selected_channels.forEach(key => {
@@ -6730,6 +6736,7 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
       kvRow('URL Key Visual', campaignData.customer_journey.key_visual);
       paragraphRich('Syarat & Ketentuan:', campaignData.customer_journey.terms);
       kvRow('Highlight Text', campaignData.customer_journey.highlight_text);
+      if (campaignData.scheme === 'Click') kvRow('URL CTA', campaignData.customer_journey.cta_url);
       endCard();
       y += SP.card;
     }
