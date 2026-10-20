@@ -630,6 +630,51 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   .performax-counted-field .char-count { position:absolute; right:8px; bottom:8px; }
   .performax-auto-field { min-height:42px; resize:none; overflow:hidden; line-height:1.45; }
   @media (max-width:900px) { .performax-form-grid { grid-template-columns:1fr; } }
+  /* Performax — skema Click: landing page + modal login + hp tujuan (URL Mockup) */
+  .pxc-screen { flex:1; min-height:0; background:#ebebeb; padding:19px 6px 6px; display:flex; flex-direction:column; }
+  .pxc-card { flex:1; min-height:0; background:#fff; border-radius:7px; box-shadow:0 1px 4px rgba(0,0,0,.14); overflow:hidden; display:flex; flex-direction:column; }
+  .pxc-visual { position:relative; height:110px; flex:0 0 auto; background:#eeeeee; overflow:hidden; }
+  .pxc-visual > img.pxc-visual-img { width:100%; height:100%; object-fit:cover; display:block; }
+  .pxc-brandbar { position:absolute; left:0; right:0; bottom:0; display:flex; justify-content:space-between; align-items:center; padding:2px 4px; font-size:3.6px; font-weight:700; color:#111; line-height:1; }
+  .pxc-brandbar img { height:5px; width:auto; display:block; }
+  .pxc-timer { display:flex; justify-content:center; gap:2px; padding:7px 5px 0; }
+  .pxc-timer-box { flex:1; background:#fbd5d5; border-radius:2px; padding:2px 0 2px; text-align:center; }
+  .pxc-timer-num { font-size:8px; font-weight:800; color:#c81e1e; line-height:1; }
+  .pxc-timer-lbl { font-size:3.4px; color:#d77; margin-top:1px; line-height:1; }
+  .pxc-divider { position:relative; margin:6px 0 5px; border-top:1px dashed #cfcfcf; }
+  .pxc-divider::before, .pxc-divider::after { content:''; position:absolute; top:-4px; width:8px; height:8px; border-radius:50%; background:#ebebeb; }
+  .pxc-divider::before { left:-4px; } .pxc-divider::after { right:-4px; }
+  .pxc-text { text-align:center; font-size:5px; color:#111; line-height:1.25; padding:0 4px; overflow-wrap:anywhere; }
+  .pxc-loc { display:flex; align-items:center; justify-content:center; gap:2px; font-size:4.6px; color:#2563eb; margin-top:3px; }
+  .pxc-loc svg { width:5px; height:7px; flex:0 0 auto; }
+  .pxc-btn { margin:5px 22px 0; padding:4px 0; border-radius:10px; background:#e8190f; color:#fff; text-align:center; font-size:6px; font-weight:800; letter-spacing:.3px; box-shadow:0 1px 3px rgba(232,25,15,.35); }
+  .pxc-btn-row { display:flex; align-items:center; justify-content:center; gap:3px; margin:4px 12px 0; }
+  .pxc-btn-outline { flex:0 1 auto; padding:3px 9px; border:.6px solid #e8190f; border-radius:9px; color:#e8190f; font-size:4.8px; font-weight:800; letter-spacing:.3px; }
+  .pxc-info { width:7px; height:7px; box-sizing:border-box; border:.6px solid #e8190f; border-radius:50%; color:#e8190f; font-size:4.6px; line-height:1; display:flex; align-items:center; justify-content:center; font-weight:700; flex:0 0 auto; }
+  .pxc-tnc { text-align:center; font-size:4.8px; font-weight:700; color:#666; margin-top:9px; }
+  .pxc-footer { margin:8px 8px 0; padding-top:4px; border-top:.5px solid #eee; text-align:center; font-size:3.9px; color:#111; line-height:1.35; }
+  .pxc-footer-small { font-size:3px; color:#bbb; margin-top:2px; } .pxc-footer-small span { color:#2563eb; }
+  .pxc-login-screen { flex:1; background:#505050; display:flex; flex-direction:column; justify-content:center; padding-top:10px; }
+  .pxc-login-modal { background:#f9f9f9; padding:9px 6px 8px; text-align:center; color:#111; }
+  .pxc-login-title { font-size:6.6px; font-weight:800; line-height:1.3; margin-bottom:3px; }
+  .pxc-login-sub { font-size:4.8px; line-height:1.35; overflow-wrap:anywhere; }
+  .pxc-login-g { width:20px; height:20px; border-radius:50%; background:#fff; box-shadow:0 1px 4px rgba(0,0,0,.2); margin:7px auto 4px; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; color:#4285f4; line-height:1; }
+  .pxc-login-btn { font-size:4.6px; font-weight:800; letter-spacing:.3px; color:#2b2b4b; }
+  .pxc-login-note { font-size:3.6px; color:#aaa; margin-top:6px; line-height:1.3; } .pxc-login-note u { color:#2563eb; }
+  .pxc-code-screen { flex:1; background:#ebebeb; padding:34px 7px 0; display:flex; flex-direction:column; }
+  .pxc-code-card { background:#fff; border-radius:9px; box-shadow:0 1px 4px rgba(0,0,0,.14); padding:8px 6px 6px; text-align:center; color:#111; }
+  .pxc-code-title { font-size:6.6px; font-weight:800; line-height:1.2; }
+  .pxc-code-sub { font-size:3.8px; color:#555; margin:4px 0 6px; line-height:1.3; }
+  .pxc-code-input { font-size:6px; color:#444; border-bottom:.5px solid #bbb; padding:0 0 2px; margin:0 3px 6px; }
+  .pxc-keys { display:grid; grid-template-columns:repeat(3,1fr); gap:3px 4px; padding:0 8px; }
+  .pxc-key { width:15px; height:15px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.22); display:flex; align-items:center; justify-content:center; font-size:5.4px; color:#555; margin:0 auto; }
+  .pxc-key.back { background:#2dbfae; color:#fff; } .pxc-key.ok { background:#e8190f; color:#fff; font-size:7px; font-weight:800; }
+  .pxc-code-back { text-align:left; font-size:5px; font-weight:700; margin:5px 0 0 2px; }
+  .pxc-success-screen { flex:1; background:#ebebeb; display:flex; flex-direction:column; align-items:center; padding:55px 18px 0; text-align:center; }
+  .pxc-success-title { font-size:11px; font-weight:800; line-height:1.2; color:#111; }
+  .pxc-success-back { margin-top:62px; font-size:6px; font-weight:700; color:#0b5cff; }
+  .pxc-dest-screen { flex:1; background:#fff; position:relative; }
+  .pxc-dest-screen > img.pxc-dest-img { width:100%; height:100%; object-fit:cover; object-position:top; display:block; }
 
   /* Main Grid */
   .main-grid {
@@ -1652,6 +1697,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
               <textarea id="performaxSmsOutlet" style="height:64px;" placeholder="Masukkan daftar outlet (satu outlet per baris)"></textarea>
             </div>
           </div>
+          <div class="field" id="performaxSchemeField">
+            <label>Scheme</label>
+            <select id="performaxScheme" onchange="updatePerformaxScheme()">
+              <option value="Redeem">Redeem</option>
+              <option value="Click">Click</option>
+            </select>
+          </div>
         </div>
 
         <div class="card">
@@ -1740,6 +1792,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
             <textarea id="performaxTerms" style="height:90px;" placeholder="Masukkan syarat dan ketentuan" onkeydown="handlePerformaxTermsKeydown(this, event)"></textarea>
           </div>
           <div class="field"><label>Highlight Text</label><input type="text" id="performaxHighlight" placeholder="e.g. Buy 1 Get 1"></div>
+          <div class="field" id="performaxClickMockupField" style="display:none;"><label>URL Mockup</label><input type="url" id="performaxClickMockupUrl" placeholder="https://example.com/image.jpg"><small style="display:block;margin-top:5px;color:#6b7280;font-size:12px;">Gambar halaman tujuan (HP ke-4 di journey Click). Link tidak ditampilkan di PDF.</small></div>
         </div>
 
         <div class="btn-row">
@@ -2618,6 +2671,17 @@ function updatePerformaxSelection() {
   document.getElementById('performaxTiktokFields').classList.toggle('active', selected.includes('tiktok-ads'));
   document.getElementById('performaxGoogleFields').classList.toggle('active', selected.includes('google-ads'));
   document.getElementById('performaxOpenaiFields').classList.toggle('active', selected.includes('openai-ads'));
+  updatePerformaxScheme();
+}
+
+// Scheme: "Redeem" = journey 5 layar seperti biasa; "Click" = journey 4 layar + URL Mockup.
+function getPerformaxScheme() {
+  const el = document.getElementById('performaxScheme');
+  return el && el.value === 'Click' ? 'Click' : 'Redeem';
+}
+function updatePerformaxScheme() {
+  const field = document.getElementById('performaxClickMockupField');
+  if (field) field.style.display = getPerformaxScheme() === 'Click' ? '' : 'none';
 }
 
 // Outlet (SMS): "All Outlet" is a fixed value; "Selected Store" reveals a free-text
@@ -2722,6 +2786,7 @@ function collectPerformaxCampaign() {
     brand_masking: document.getElementById('performaxBrandMasking').value.trim(),
     invoice_number: document.getElementById('performaxInvoiceNumber').value.trim(),
     payment_method: document.getElementById('performaxPaymentMethod').value,
+    scheme: getPerformaxScheme(),
     campaign_period: formatPeriod(document.getElementById('performaxStartDate').value, document.getElementById('performaxEndDate').value),
     price: document.getElementById('performaxPrice').value.trim(),
     selected_channels: selected,
@@ -2759,6 +2824,7 @@ function collectPerformaxCampaign() {
     } : null,
     customer_journey: {
       key_visual: document.getElementById('performaxJourneyKeyVisual').value.trim(),
+      mockup_url: getPerformaxScheme() === 'Click' ? document.getElementById('performaxClickMockupUrl').value.trim() : '',
       terms: document.getElementById('performaxTerms').value.trim(),
       highlight_text: document.getElementById('performaxHighlight').value.trim()
     }
@@ -2832,7 +2898,41 @@ function buildPerformaxUnifiedMockup(campaign) {
     phone(`${landingHeader}<div class="phone-modal-wrap"><div class="phone-modal"><div class="pm-title">Masukkan Code Outlet</div><div style="font-size:7px;text-align:center;color:#9ca3af;margin-bottom:8px;">Silakan masukkan kode dari kasir outlet</div><div class="performax-code-input">Kode Outlet</div><div class="kp-grid">${[1,2,3,4,5,6,7,8,9].map(n => `<div class="kp-key">${n}</div>`).join('')}</div><div class="performax-code-actions"><span class="performax-code-back">←</span><span class="performax-code-submit">✓</span></div></div></div>`, '4. Input Kode Outlet'),
     phone(`<div class="performax-success-screen"><div class="performax-success-title">Selamat Anda Berhasil<br>Menukarkan Kupon Promo</div><div class="performax-success-brand">${successBrand}</div><div class="performax-success-back">BACK TO PROMO</div></div>`, '5. Berhasil')
   ];
-  return `<div class="performax-mockup-stage"><div class="performax-mockup-row">${sourcePhones.join('')}</div><div class="performax-mockup-arrow">↓</div><div class="performax-mockup-row performax-journey-row">${sharedPhones.join('')}</div></div>`;
+  let journeyPhones = sharedPhones;
+  {
+    // Skema Click: 4 layar — Landing Page (Ambil Kupon) → Login Google → Landing Page (Tukar Kupon) → halaman tujuan (URL Mockup).
+    const pxcVisual = campaign.customer_journey.key_visual
+      ? `<img class="pxc-visual-img" src="${escapeAttr(toDirectImageUrl(campaign.customer_journey.key_visual))}" alt="Key Visual" onerror="this.style.display='none'">`
+      : '';
+    const pxcTimer = [['19','Days'],['13','Hours'],['21','Minutes'],['24','Seconds']]
+      .map(([n, l]) => `<div class="pxc-timer-box"><div class="pxc-timer-num">${n}</div><div class="pxc-timer-lbl">${l}</div></div>`).join('');
+    const pxcPin = '<svg viewBox="0 0 10 14" xmlns="http://www.w3.org/2000/svg"><path d="M5 0C2.2 0 0 2.2 0 4.9 0 8.6 5 14 5 14s5-5.4 5-9.1C10 2.2 7.8 0 5 0z" fill="#2f6fe4"/><circle cx="5" cy="4.9" r="1.9" fill="#fff"/></svg>';
+    const pxcLanding = ctaLabel => `<div class="pxc-screen"><div class="pxc-card"><div class="pxc-visual">${pxcVisual}<div class="pxc-brandbar"><img src="${KUPONKU_LOGO}" alt="Kuponku.id"><span>Mitra untuk penyebaran dan validasi kupon</span></div></div><div class="pxc-timer">${pxcTimer}</div><div class="pxc-divider"></div><div class="pxc-text">Ambil voucher <strong>${brand}</strong> sekarang!</div><div class="pxc-loc">${pxcPin}<span>Lokasi Penukaran</span></div><div class="pxc-btn">${ctaLabel}</div><div class="pxc-btn-row"><span class="pxc-btn-outline">BAGIKAN KUPON</span><span class="pxc-info">i</span></div><div class="pxc-tnc">Syarat dan Ketentuan Promo ›</div><div class="pxc-footer">Kuponku adalah mitra <strong>${brand}</strong><br>untuk penyebaran dan validasi kupon<div class="pxc-footer-small">Mau bisnis anda punya iklan seperti ini? <span>Click here</span></div></div></div></div>`;
+    const pxcDest = campaign.customer_journey.mockup_url
+      ? `<img class="pxc-dest-img" src="${escapeAttr(toDirectImageUrl(campaign.customer_journey.mockup_url))}" alt="URL Mockup" onerror="this.style.display='none'">`
+      : '';
+    const pxcLogin = phone(`<div class="pxc-login-screen"><div class="pxc-login-modal"><div class="pxc-login-title">Silakan login sebagai prosedur keamanan kupon anda</div><div class="pxc-login-sub">Kuponku adalah Mitra <strong>${brand}</strong><br>untuk penyebaran dan validasi kupon</div><div class="pxc-login-g">G</div><div class="pxc-login-btn">MASUK DENGAN GOOGLE</div><div class="pxc-login-note">Dengan melanjutkan, Anda menyetujui <u>Kebijakan Privasi</u> kami.</div></div></div>`, '2. Login Google');
+    const pxcKeys = [1,2,3,4,5,6,7,8,9].map(n => `<div class="pxc-key">${n}</div>`).join('') + '<div class="pxc-key back">⌫</div><div class="pxc-key">0</div><div class="pxc-key ok">✓</div>';
+    if (campaign.scheme === 'Click') {
+      // Skema Click: Landing Page → Login Google → Landing Page (Tukar) → halaman tujuan (URL Mockup).
+      journeyPhones = [
+        phone(pxcLanding('AMBIL KUPON'), '1. Landing Page'),
+        pxcLogin,
+        phone(pxcLanding('TUKAR KUPON'), '3. Landing Page'),
+        phone(`<div class="pxc-dest-screen">${pxcDest}</div>`, '4. Halaman Tujuan')
+      ];
+    } else {
+      // Skema Redeem: 5 layar — Landing Page → Login → Landing Page (Tukar) → Input Kode Outlet → Berhasil.
+      journeyPhones = [
+        phone(pxcLanding('AMBIL KUPON'), '1. Landing Page'),
+        pxcLogin,
+        phone(pxcLanding('TUKAR KUPON'), '3. Landing Page'),
+        phone(`<div class="pxc-code-screen"><div class="pxc-code-card"><div class="pxc-code-title">Masukkan Code Outlet</div><div class="pxc-code-sub">Silahkan minta kode outlet dari kasir untuk validasi</div><div class="pxc-code-input">Kode Outlet</div><div class="pxc-keys">${pxcKeys}</div><div class="pxc-code-back">‹ Back</div></div></div>`, '4. Input Kode Outlet'),
+        phone(`<div class="pxc-success-screen"><div class="pxc-success-title">Selamat Anda Berhasil Menukarkan Kupon Promo</div><div class="pxc-success-back">Back To Promo</div></div>`, '5. Berhasil')
+      ];
+    }
+  }
+  return `<div class="performax-mockup-stage"><div class="performax-mockup-row">${sourcePhones.join('')}</div><div class="performax-mockup-arrow">↓</div><div class="performax-mockup-row performax-journey-row">${journeyPhones.join('')}</div></div>`;
 }
 
 function generatePerformaxCampaign() {
@@ -2864,7 +2964,7 @@ function generatePerformaxCampaign() {
   }).join('');
   document.getElementById('performaxPreview').innerHTML = `
     <div class="preview-section"><div class="preview-section-title">Basic Information</div><table class="preview-table"><tr><td>Brand Name</td><td>${escapeHtml(campaign.brand_name)}</td></tr><tr><td>MID</td><td>${escapeHtml(campaign.mid)}</td></tr><tr><td>Brand Masking</td><td>${escapeHtml(campaign.brand_masking) || '-'}</td></tr></table></div>
-    <div class="preview-section"><div class="preview-section-title">Campaign Details</div><table class="preview-table"><tr><td>Invoice Number</td><td>${escapeHtml(campaign.invoice_number) || '-'}</td></tr><tr><td>Payment Method</td><td>${escapeHtml(campaign.payment_method)}</td></tr><tr><td>Campaign Period</td><td>${escapeHtml(campaign.campaign_period)}</td></tr><tr><td>Price</td><td>${escapeHtml(campaign.price) || '-'}</td></tr></table></div>
+    <div class="preview-section"><div class="preview-section-title">Campaign Details</div><table class="preview-table"><tr><td>Invoice Number</td><td>${escapeHtml(campaign.invoice_number) || '-'}</td></tr><tr><td>Payment Method</td><td>${escapeHtml(campaign.payment_method)}</td></tr><tr><td>Scheme</td><td>${escapeHtml(campaign.scheme || 'Redeem')}</td></tr><tr><td>Campaign Period</td><td>${escapeHtml(campaign.campaign_period)}</td></tr><tr><td>Price</td><td>${escapeHtml(campaign.price) || '-'}</td></tr></table></div>
     <div class="preview-section"><div class="preview-section-title">Type Campaign</div><div style="display:flex;gap:6px;flex-wrap:wrap;">${campaign.selected_channels.map(key => `<span class="performax-step">${labels[key]}</span>`).join('')}</div><table class="preview-table"><tr><td>Key Visual URL (Meta Ads / Google Ads)</td><td>${campaign.key_visual ? `<a class="preview-link" href="${escapeAttr(campaign.key_visual)}" target="_blank">${escapeHtml(campaign.key_visual)}</a>` : '-'}</td></tr></table></div>
     ${channelSections}
     <div class="preview-section"><div class="preview-section-title">Landing Page</div><table class="preview-table"><tr><td>URL Key Visual</td><td>${campaign.customer_journey.key_visual ? `<a class="preview-link" href="${escapeAttr(campaign.customer_journey.key_visual)}" target="_blank">${escapeHtml(campaign.customer_journey.key_visual)}</a>` : '-'}</td></tr><tr><td>Syarat &amp; Ketentuan</td><td style="white-space:pre-line;">${escapeHtml(campaign.customer_journey.terms) || '-'}</td></tr><tr><td>Highlight Text</td><td>${escapeHtml(campaign.customer_journey.highlight_text) || '-'}</td></tr></table></div>
@@ -2885,6 +2985,8 @@ function resetPerformaxForm() {
   });
   document.querySelectorAll('#performax-panel .performax-auto-field').forEach(el => { el.style.height = ''; });
   document.getElementById('performaxPaymentMethod').value = '';
+  const schemeEl = document.getElementById('performaxScheme');
+  if (schemeEl) schemeEl.value = 'Redeem';
   const pricePreset = document.getElementById('performaxPricePreset');
   const priceInput = document.getElementById('performaxPrice');
   if (pricePreset) { pricePreset.value = ''; pricePreset.style.display = ''; }
@@ -3986,6 +4088,8 @@ function loadCampaignIntoForm(campaign, historyId) {
     setVal('performaxBrandMasking', campaign.brand_masking);
     setVal('performaxInvoiceNumber', campaign.invoice_number);
     document.getElementById('performaxPaymentMethod').value = campaign.payment_method || '';
+    document.getElementById('performaxScheme').value = campaign.scheme === 'Click' ? 'Click' : 'Redeem'; // data lama (tanpa scheme) = Redeem
+    updatePerformaxScheme();
 
     const [prStart, prEnd] = (campaign.campaign_period || '').split(' - ');
     document.getElementById('performaxStartDate').value = prStart ? prStart.trim() : '';
@@ -4051,6 +4155,7 @@ function loadCampaignIntoForm(campaign, historyId) {
     }
     if (campaign.customer_journey) {
       setVal('performaxJourneyKeyVisual', campaign.customer_journey.key_visual);
+      setVal('performaxClickMockupUrl', campaign.customer_journey.mockup_url);
       setVal('performaxTerms', campaign.customer_journey.terms);
       setVal('performaxHighlight', campaign.customer_journey.highlight_text);
     }
@@ -5965,6 +6070,8 @@ function exportPreviewToPDF(previewElementId, campaignData, _retry, mode) {
     if (campaignData.whatsapp && campaignData.whatsapp.campaign_image) imageUrls.push(campaignData.whatsapp.campaign_image);
     if (campaignData.flow && campaignData.flow.campaign_image) imageUrls.push(campaignData.flow.campaign_image);
     if (campaignData.key_visual) imageUrls.push(campaignData.key_visual); // WhatsApp LBA/TGT Reguler
+    if (campaignData.customer_journey && campaignData.customer_journey.mockup_url) imageUrls.push(campaignData.customer_journey.mockup_url); // Performax skema Click (hanya untuk gambar mockup)
+    if (campaignData.customer_journey && campaignData.customer_journey.key_visual) imageUrls.push(campaignData.customer_journey.key_visual);
     if (Array.isArray(campaignData.cards)) {
       campaignData.cards.forEach(c => { if (c.image) imageUrls.push(c.image); }); // WhatsApp LBA/TGT Carrousel
     }
@@ -6526,6 +6633,7 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
     sectionTitle('Campaign Details');
     if (campaignData.invoice_number !== undefined) kvRow('Invoice Number', campaignData.invoice_number);
     kvRow('Payment Method', campaignData.payment_method);
+    if (campaignType === 'Kuponku Performax') kvRow('Scheme', campaignData.scheme || 'Redeem');
     if (campaignData.price !== undefined) kvRow('Price', campaignData.price);
     kvRow('Campaign Period', campaignPeriod);
     if (campaignData.broadcast_time) kvRow('Jam Tayang', campaignData.broadcast_time);
