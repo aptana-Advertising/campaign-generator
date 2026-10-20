@@ -631,9 +631,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   .performax-auto-field { min-height:42px; resize:none; overflow:hidden; line-height:1.45; }
   @media (max-width:900px) { .performax-form-grid { grid-template-columns:1fr; } }
   /* Performax — skema Click: landing page + modal login + hp tujuan (URL Mockup) */
-  .pxc-screen { flex:1; min-height:0; background:#ebebeb; padding:19px 6px 6px; display:flex; flex-direction:column; }
+  .pxc-screen { flex:1; min-height:0; background:#ebebeb; padding:0 6px 6px; display:flex; flex-direction:column; }
   .pxc-card { flex:1; min-height:0; background:#fff; border-radius:7px; box-shadow:0 1px 4px rgba(0,0,0,.14); overflow:hidden; display:flex; flex-direction:column; }
-  .pxc-visual { position:relative; height:110px; flex:0 0 auto; background:#eeeeee; overflow:hidden; }
+  .pxc-logo { flex:0 0 auto; display:flex; align-items:center; justify-content:center; height:30px; padding-top:13px; box-sizing:border-box; }
+  .pxc-logo .performax-lp-logo { max-height:12px; max-width:55%; }
+  .pxc-logo .performax-lp-brand-fallback { font-size:9px; }
+  .pxc-visual { position:relative; height:96px; flex:0 0 auto; background:#eeeeee; overflow:hidden; }
   .pxc-visual > img.pxc-visual-img { width:100%; height:100%; object-fit:cover; display:block; }
   .pxc-brandbar { position:absolute; left:0; right:0; bottom:0; display:flex; justify-content:space-between; align-items:center; padding:2px 4px; font-size:3.6px; font-weight:700; color:#111; line-height:1; }
   .pxc-brandbar img { height:5px; width:auto; display:block; }
@@ -661,18 +664,20 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   .pxc-login-g { width:20px; height:20px; border-radius:50%; background:#fff; box-shadow:0 1px 4px rgba(0,0,0,.2); margin:7px auto 4px; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; color:#4285f4; line-height:1; }
   .pxc-login-btn { font-size:4.6px; font-weight:800; letter-spacing:.3px; color:#2b2b4b; }
   .pxc-login-note { font-size:3.6px; color:#aaa; margin-top:6px; line-height:1.3; } .pxc-login-note u { color:#2563eb; }
-  .pxc-code-screen { flex:1; background:#ebebeb; padding:34px 7px 0; display:flex; flex-direction:column; }
-  .pxc-code-card { background:#fff; border-radius:9px; box-shadow:0 1px 4px rgba(0,0,0,.14); padding:8px 6px 6px; text-align:center; color:#111; }
-  .pxc-code-title { font-size:6.6px; font-weight:800; line-height:1.2; }
-  .pxc-code-sub { font-size:3.8px; color:#555; margin:4px 0 6px; line-height:1.3; }
-  .pxc-code-input { font-size:6px; color:#444; border-bottom:.5px solid #bbb; padding:0 0 2px; margin:0 3px 6px; }
-  .pxc-keys { display:grid; grid-template-columns:repeat(3,1fr); gap:3px 4px; padding:0 8px; }
-  .pxc-key { width:15px; height:15px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.22); display:flex; align-items:center; justify-content:center; font-size:5.4px; color:#555; margin:0 auto; }
-  .pxc-key.back { background:#2dbfae; color:#fff; } .pxc-key.ok { background:#e8190f; color:#fff; font-size:7px; font-weight:800; }
-  .pxc-code-back { text-align:left; font-size:5px; font-weight:700; margin:5px 0 0 2px; }
-  .pxc-success-screen { flex:1; background:#ebebeb; display:flex; flex-direction:column; align-items:center; padding:55px 18px 0; text-align:center; }
+  .pxc-code-screen { flex:1; background:#ebebeb; padding:52px 7px 0; display:flex; flex-direction:column; }
+  .pxc-code-card { background:#fff; border-radius:9px; box-shadow:0 1px 4px rgba(0,0,0,.14); padding:10px 7px 8px; text-align:center; color:#111; }
+  .pxc-code-title { font-size:7.4px; font-weight:800; line-height:1.2; }
+  .pxc-code-sub { font-size:4px; color:#666; margin:4px 0 9px; line-height:1.3; }
+  .pxc-code-input { font-size:6.4px; color:#444; border-bottom:.5px solid #bbb; padding:0 0 3px; margin:0 2px 9px; }
+  .pxc-keys { display:grid; grid-template-columns:repeat(3,1fr); gap:5px 4px; padding:0 6px; justify-items:center; }
+  .pxc-key { width:17px; height:17px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.22); display:flex; align-items:center; justify-content:center; font-size:6px; color:#555; margin:0; }
+  .pxc-key.back { background:#2dbfae; color:#fff; } .pxc-key.ok { background:#e8190f; } .pxc-key svg { width:9px; height:9px; display:block; }
+  .pxc-code-back { text-align:left; font-size:5.4px; font-weight:700; margin:8px 0 0 1px; }
+  .pxc-success-screen { flex:1; background:#ebebeb; display:flex; flex-direction:column; align-items:center; padding:60px 18px 0; text-align:center; }
   .pxc-success-title { font-size:11px; font-weight:800; line-height:1.2; color:#111; }
-  .pxc-success-back { margin-top:62px; font-size:6px; font-weight:700; color:#0b5cff; }
+  .pxc-success-brand { min-height:22px; margin-top:26px; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; color:#7c3aed; font-style:italic; }
+  .pxc-success-brand .performax-success-logo { max-width:70px; max-height:18px; }
+  .pxc-success-back { margin-top:26px; font-size:6px; font-weight:700; color:#0b5cff; }
   .pxc-dest-screen { flex:1; background:#fff; position:relative; }
   .pxc-dest-screen > img.pxc-dest-img { width:100%; height:100%; object-fit:cover; object-position:top; display:block; }
 
@@ -2907,12 +2912,12 @@ function buildPerformaxUnifiedMockup(campaign) {
     const pxcTimer = [['19','Days'],['13','Hours'],['21','Minutes'],['24','Seconds']]
       .map(([n, l]) => `<div class="pxc-timer-box"><div class="pxc-timer-num">${n}</div><div class="pxc-timer-lbl">${l}</div></div>`).join('');
     const pxcPin = '<svg viewBox="0 0 10 14" xmlns="http://www.w3.org/2000/svg"><path d="M5 0C2.2 0 0 2.2 0 4.9 0 8.6 5 14 5 14s5-5.4 5-9.1C10 2.2 7.8 0 5 0z" fill="#2f6fe4"/><circle cx="5" cy="4.9" r="1.9" fill="#fff"/></svg>';
-    const pxcLanding = ctaLabel => `<div class="pxc-screen"><div class="pxc-card"><div class="pxc-visual">${pxcVisual}<div class="pxc-brandbar"><img src="${KUPONKU_LOGO}" alt="Kuponku.id"><span>Mitra untuk penyebaran dan validasi kupon</span></div></div><div class="pxc-timer">${pxcTimer}</div><div class="pxc-divider"></div><div class="pxc-text">Ambil voucher <strong>${brand}</strong> sekarang!</div><div class="pxc-loc">${pxcPin}<span>Lokasi Penukaran</span></div><div class="pxc-btn">${ctaLabel}</div><div class="pxc-btn-row"><span class="pxc-btn-outline">BAGIKAN KUPON</span><span class="pxc-info">i</span></div><div class="pxc-tnc">Syarat dan Ketentuan Promo ›</div><div class="pxc-footer">Kuponku adalah mitra <strong>${brand}</strong><br>untuk penyebaran dan validasi kupon<div class="pxc-footer-small">Mau bisnis anda punya iklan seperti ini? <span>Click here</span></div></div></div></div>`;
+    const pxcLanding = ctaLabel => `<div class="pxc-screen"><div class="pxc-logo">${landingLogo}</div><div class="pxc-card"><div class="pxc-visual">${pxcVisual}<div class="pxc-brandbar"><img src="${KUPONKU_LOGO}" alt="Kuponku.id"><span>Mitra untuk penyebaran dan validasi kupon</span></div></div><div class="pxc-timer">${pxcTimer}</div><div class="pxc-divider"></div><div class="pxc-text">Ambil voucher <strong>${brand}</strong> sekarang!</div><div class="pxc-loc">${pxcPin}<span>Lokasi Penukaran</span></div><div class="pxc-btn">${ctaLabel}</div><div class="pxc-btn-row"><span class="pxc-btn-outline">BAGIKAN KUPON</span><span class="pxc-info">i</span></div><div class="pxc-tnc">Syarat dan Ketentuan Promo ›</div><div class="pxc-footer">Kuponku adalah mitra <strong>${brand}</strong><br>untuk penyebaran dan validasi kupon<div class="pxc-footer-small">Mau bisnis anda punya iklan seperti ini? <span>Click here</span></div></div></div></div>`;
     const pxcDest = campaign.customer_journey.mockup_url
       ? `<img class="pxc-dest-img" src="${escapeAttr(toDirectImageUrl(campaign.customer_journey.mockup_url))}" alt="URL Mockup" onerror="this.style.display='none'">`
       : '';
     const pxcLogin = phone(`<div class="pxc-login-screen"><div class="pxc-login-modal"><div class="pxc-login-title">Silakan login sebagai prosedur keamanan kupon anda</div><div class="pxc-login-sub">Kuponku adalah Mitra <strong>${brand}</strong><br>untuk penyebaran dan validasi kupon</div><div class="pxc-login-g">G</div><div class="pxc-login-btn">MASUK DENGAN GOOGLE</div><div class="pxc-login-note">Dengan melanjutkan, Anda menyetujui <u>Kebijakan Privasi</u> kami.</div></div></div>`, '2. Login Google');
-    const pxcKeys = [1,2,3,4,5,6,7,8,9].map(n => `<div class="pxc-key">${n}</div>`).join('') + '<div class="pxc-key back">⌫</div><div class="pxc-key">0</div><div class="pxc-key ok">✓</div>';
+    const pxcKeys = [1,2,3,4,5,6,7,8,9].map(n => `<div class="pxc-key">${n}</div>`).join('') + '<div class="pxc-key back"><svg viewBox="0 0 24 24"><path d="M9 5h11a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H9l-6-7z" fill="#fff"/><path d="M12.5 9.5l5 5m0-5l-5 5" stroke="#2dbfae" stroke-width="2" stroke-linecap="round"/></svg></div><div class="pxc-key">0</div><div class="pxc-key ok"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>';
     if (campaign.scheme === 'Click') {
       // Skema Click: Landing Page → Login Google → Landing Page (Tukar) → halaman tujuan (URL Mockup).
       journeyPhones = [
@@ -2928,7 +2933,7 @@ function buildPerformaxUnifiedMockup(campaign) {
         pxcLogin,
         phone(pxcLanding('TUKAR KUPON'), '3. Landing Page'),
         phone(`<div class="pxc-code-screen"><div class="pxc-code-card"><div class="pxc-code-title">Masukkan Code Outlet</div><div class="pxc-code-sub">Silahkan minta kode outlet dari kasir untuk validasi</div><div class="pxc-code-input">Kode Outlet</div><div class="pxc-keys">${pxcKeys}</div><div class="pxc-code-back">‹ Back</div></div></div>`, '4. Input Kode Outlet'),
-        phone(`<div class="pxc-success-screen"><div class="pxc-success-title">Selamat Anda Berhasil Menukarkan Kupon Promo</div><div class="pxc-success-back">Back To Promo</div></div>`, '5. Berhasil')
+        phone(`<div class="pxc-success-screen"><div class="pxc-success-title">Selamat Anda Berhasil Menukarkan Kupon Promo</div><div class="pxc-success-brand">${successBrand}</div><div class="pxc-success-back">Back To Promo</div></div>`, '5. Berhasil')
       ];
     }
   }
