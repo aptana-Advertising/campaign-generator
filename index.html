@@ -7766,45 +7766,50 @@ function buildWlMockup(campaign) {
     }).join('')}</div>`;
   }
 
-  let bodyHtml;
-  if (campaign.format === 'Carrousel') {
-    const cardsHtml = (campaign.cards || []).map(c => `
-      <div class="wa-carousel-card">
-        <div class="wa-card-image">${waImage(c.image, 'Campaign Image')}</div>
-        <div class="wa-carousel-caption">${renderWaWordingHtml(c.promo_wording)}</div>
-        ${waButtons(c.buttons)}
-      </div>
-    `).join('');
+  // Satu body chat per Campaign Content (ct): Reguler = key visual + wording + button,
+  // Carrousel = bubble wording + kartu-kartu geser.
+  function buildBody(ct) {
+    if (campaign.format === 'Carrousel') {
+      const cardsHtml = (ct.cards || []).map(c => `
+        <div class="wa-carousel-card">
+          <div class="wa-card-image">${waImage(c.image, 'Campaign Image')}</div>
+          <div class="wa-carousel-caption">${renderWaWordingHtml(c.promo_wording)}</div>
+          ${waButtons(c.buttons)}
+        </div>
+      `).join('');
 
-    bodyHtml = `
-      <div class="wa-card wa-card-text-only">
-        <div class="wa-card-body">
-          <div class="wa-card-wording">${waWordingBlock(campaign.wording)}</div>
-          <div class="wa-optout">${optOutText}</div>
+      return `
+        <div class="wa-card wa-card-text-only">
+          <div class="wa-card-body">
+            <div class="wa-card-wording">${waWordingBlock(ct.wording)}</div>
+            <div class="wa-optout">${optOutText}</div>
+          </div>
         </div>
-      </div>
-      <div class="wa-carousel-scroll">${cardsHtml}</div>
-    `;
-  } else {
-    // Shows a clickable CTA row matching the real WhatsApp broadcast layout when
-    // the user has actually filled in a button — if no CTA was set for this
-    // Campaign Content, the mockup leaves that row empty rather than fabricating
-    // a placeholder link, so an empty CTA in the form reads as empty in the PDF too.
-    bodyHtml = `
+        <div class="wa-carousel-scroll">${cardsHtml}</div>
+      `;
+    }
+    // Menampilkan baris CTA hanya bila button benar-benar diisi pada Campaign Content ini;
+    // kalau kosong, baris dibiarkan kosong (tidak mengarang link placeholder).
+    return `
       <div class="wa-card">
-        <div class="wa-card-image">${waImage(campaign.key_visual, 'Key Visual')}</div>
+        <div class="wa-card-image">${waImage(ct.key_visual, 'Key Visual')}</div>
         <div class="wa-card-body">
-          <div class="wa-card-wording">${waWordingBlock(campaign.wording)}</div>
+          <div class="wa-card-wording">${waWordingBlock(ct.wording)}</div>
           <div class="wa-optout">${optOutText}</div>
         </div>
-        ${waButtons(campaign.buttons)}
+        ${waButtons(ct.buttons)}
       </div>
     `;
   }
 
-  return `
-    <div class="mockup-hint">Simulated customer journey — the opt-out line is standard illustrative boilerplate.</div>
-    <div class="mockup-scroll">
+  // Jumlah mockup mengikuti jumlah Campaign Content. Campaign lama (sebelum multi-content)
+  // hanya menyimpan satu konten di level campaign, jadi dianggap satu konten.
+  const wlContents = Array.isArray(campaign.campaign_contents) && campaign.campaign_contents.length
+    ? campaign.campaign_contents
+    : [campaign];
+  const total = wlContents.length;
+
+  const phonesHtml = wlContents.map((ct, idx) => `
       <div class="phone" style="width:200px;">
         <div class="phone-frame" style="width:200px; height:420px;">
           <div class="phone-notch"></div>
@@ -7816,15 +7821,19 @@ function buildWlMockup(campaign) {
               <span class="wa-menu-dots">${waIconMenuDots('#ffffff')}</span>
             </div>
             <div class="wa-chat-bg">
-              ${bodyHtml}
+              ${buildBody(ct)}
             </div>
             <div class="wa-input-bar">
               <span>${waIconSmiley('#8e8e8e')}</span><span class="wa-input-field">Message</span><span>${waIconPaperclip('#8e8e8e')}</span><span>${waIconCamera('#8e8e8e')}</span><span class="wa-mic">${waIconMic('#8e8e8e')}</span>
             </div>
           </div>
         </div>
-        <div class="phone-caption">WhatsApp</div>
-      </div>
+        <div class="phone-caption">${total > 1 ? 'Campaign Content ' + (idx + 1) : 'WhatsApp'}</div>
+      </div>`).join('');
+
+  return `
+    <div class="mockup-hint">Simulated customer journey — the opt-out line is standard illustrative boilerplate.${total > 1 ? ' Menampilkan ' + total + ' mockup sesuai jumlah Campaign Content.' : ''}</div>
+    <div class="mockup-scroll">${phonesHtml}
     </div>
   `;
 }
