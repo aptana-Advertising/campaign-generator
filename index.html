@@ -633,29 +633,31 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   /* Performax — skema Click: landing page + modal login + hp tujuan (URL Mockup) */
   .pxc-screen { flex:1; min-height:0; background:#ebebeb; padding:0 6px 6px; display:flex; flex-direction:column; }
   .pxc-card { flex:1; min-height:0; background:#fff; border-radius:7px; box-shadow:0 1px 4px rgba(0,0,0,.14); overflow:hidden; display:flex; flex-direction:column; }
-  .pxc-logo { flex:0 0 auto; display:flex; align-items:center; justify-content:center; height:30px; padding-top:13px; box-sizing:border-box; }
+  .pxc-card > * { flex-shrink:0; }
+  .pxc-logo { flex:0 0 auto; display:flex; align-items:center; justify-content:center; height:37px; padding-top:18px; box-sizing:border-box; }
   .pxc-logo .performax-lp-logo { max-height:12px; max-width:55%; }
   .pxc-logo .performax-lp-brand-fallback { font-size:9px; }
-  .pxc-visual { position:relative; height:104px; flex:0 0 auto; background:#eeeeee; overflow:hidden; }
-  .pxc-visual > img.pxc-visual-img { width:100%; height:100%; object-fit:cover; display:block; }
+  .pxc-visual { position:relative; flex:0 0 auto; background:#eeeeee; overflow:hidden; line-height:0; }
+  .pxc-visual.empty { min-height:104px; }
+  .pxc-visual > img.pxc-visual-img { width:100%; height:auto; display:block; } /* rasio asli, tanpa stretch/crop */
   .pxc-brandbar { position:absolute; left:0; right:0; bottom:0; display:flex; justify-content:space-between; align-items:center; padding:2px 4px; font-size:3.6px; font-weight:700; color:#111; line-height:1; }
   .pxc-brandbar img { height:5px; width:auto; display:block; }
-  .pxc-timer { display:flex; justify-content:center; gap:2px; padding:7px 5px 0; }
+  .pxc-timer { display:flex; justify-content:center; gap:2px; padding:5px 5px 0; }
   .pxc-timer-box { flex:1; background:#fbd5d5; border-radius:2px; padding:2px 0 2px; text-align:center; }
   .pxc-timer-num { font-size:8px; font-weight:800; color:#c81e1e; line-height:1; }
   .pxc-timer-lbl { font-size:3.4px; color:#d77; margin-top:1px; line-height:1; }
-  .pxc-divider { position:relative; margin:6px 0 5px; border-top:1px dashed #cfcfcf; }
+  .pxc-divider { position:relative; margin:5px 0 4px; border-top:1px dashed #cfcfcf; }
   .pxc-divider::before, .pxc-divider::after { content:''; position:absolute; top:-4px; width:8px; height:8px; border-radius:50%; background:#ebebeb; }
   .pxc-divider::before { left:-4px; } .pxc-divider::after { right:-4px; }
   .pxc-text { text-align:center; font-size:5px; color:#111; line-height:1.25; padding:0 4px; overflow-wrap:anywhere; }
   .pxc-loc { display:flex; align-items:center; justify-content:center; gap:2px; font-size:4.6px; color:#2563eb; margin-top:3px; }
   .pxc-loc svg { width:5px; height:7px; flex:0 0 auto; }
-  .pxc-btn { margin:5px 22px 0; padding:4px 0; border-radius:10px; background:#e8190f; color:#fff; text-align:center; font-size:6px; font-weight:800; letter-spacing:.3px; box-shadow:0 1px 3px rgba(232,25,15,.35); }
-  .pxc-btn-row { display:flex; align-items:center; justify-content:center; gap:3px; margin:4px 12px 0; }
+  .pxc-btn { margin:4px 22px 0; padding:4px 0; border-radius:10px; background:#e8190f; color:#fff; text-align:center; font-size:6px; font-weight:800; letter-spacing:.3px; box-shadow:0 1px 3px rgba(232,25,15,.35); }
+  .pxc-btn-row { display:flex; align-items:center; justify-content:center; gap:3px; margin:3px 12px 0; }
   .pxc-btn-outline { flex:0 1 auto; padding:3px 9px; border:.6px solid #e8190f; border-radius:9px; color:#e8190f; font-size:4.8px; font-weight:800; letter-spacing:.3px; }
   .pxc-info { width:7px; height:7px; box-sizing:border-box; border:.6px solid #e8190f; border-radius:50%; color:#e8190f; font-size:4.6px; line-height:1; display:flex; align-items:center; justify-content:center; font-weight:700; flex:0 0 auto; }
-  .pxc-tnc { text-align:center; font-size:4.8px; font-weight:700; color:#666; margin-top:9px; }
-  .pxc-footer { margin:8px 8px 0; padding-top:4px; border-top:.5px solid #eee; text-align:center; font-size:3.9px; color:#111; line-height:1.35; }
+  .pxc-tnc { text-align:center; font-size:4.8px; font-weight:700; color:#666; margin-top:6px; }
+  .pxc-footer { margin:5px 8px 0; padding-top:4px; border-top:.5px solid #eee; text-align:center; font-size:3.9px; color:#111; line-height:1.35; }
   .pxc-footer-small { font-size:3px; color:#bbb; margin-top:2px; } .pxc-footer-small span { color:#2563eb; }
   .pxc-login-screen { flex:1; background:#505050; display:flex; flex-direction:column; justify-content:center; padding-top:10px; }
   .pxc-login-modal { background:#f9f9f9; padding:9px 6px 8px; text-align:center; color:#111; }
@@ -2912,12 +2914,12 @@ function buildPerformaxUnifiedMockup(campaign) {
   {
     // Skema Click: 4 layar — Landing Page (Ambil Kupon) → Login Google → Landing Page (Tukar Kupon) → halaman tujuan (URL Mockup).
     const pxcVisual = campaign.customer_journey.key_visual
-      ? `<img class="pxc-visual-img" src="${escapeAttr(toDirectImageUrl(campaign.customer_journey.key_visual))}" alt="Key Visual" onerror="this.style.display='none'">`
+      ? `<img class="pxc-visual-img" src="${escapeAttr(toDirectImageUrl(campaign.customer_journey.key_visual))}" alt="Key Visual" onerror="this.style.display='none';this.parentNode.classList.add('empty')">`
       : '';
     const pxcTimer = [['19','Days'],['13','Hours'],['21','Minutes'],['24','Seconds']]
       .map(([n, l]) => `<div class="pxc-timer-box"><div class="pxc-timer-num">${n}</div><div class="pxc-timer-lbl">${l}</div></div>`).join('');
     const pxcPin = '<svg viewBox="0 0 10 14" xmlns="http://www.w3.org/2000/svg"><path d="M5 0C2.2 0 0 2.2 0 4.9 0 8.6 5 14 5 14s5-5.4 5-9.1C10 2.2 7.8 0 5 0z" fill="#2f6fe4"/><circle cx="5" cy="4.9" r="1.9" fill="#fff"/></svg>';
-    const pxcLanding = ctaLabel => `<div class="pxc-screen"><div class="pxc-logo">${landingLogo}</div><div class="pxc-card"><div class="pxc-visual">${pxcVisual}</div><div class="pxc-timer">${pxcTimer}</div><div class="pxc-divider"></div><div class="pxc-text">Ambil voucher <strong>${brand}</strong> sekarang!</div><div class="pxc-loc">${pxcPin}<span>Lokasi Penukaran</span></div><div class="pxc-btn">${ctaLabel}</div><div class="pxc-btn-row"><span class="pxc-btn-outline">BAGIKAN KUPON</span><span class="pxc-info">i</span></div><div class="pxc-tnc">Syarat dan Ketentuan Promo ›</div><div class="pxc-footer">Kuponku adalah mitra <strong>${brand}</strong><br>untuk penyebaran dan validasi kupon<div class="pxc-footer-small">Mau bisnis anda punya iklan seperti ini? <span>Click here</span></div></div></div></div>`;
+    const pxcLanding = ctaLabel => `<div class="pxc-screen"><div class="pxc-logo">${landingLogo}</div><div class="pxc-card"><div class="pxc-visual${pxcVisual ? '' : ' empty'}">${pxcVisual}</div><div class="pxc-timer">${pxcTimer}</div><div class="pxc-divider"></div><div class="pxc-text">Ambil voucher <strong>${brand}</strong> sekarang!</div><div class="pxc-loc">${pxcPin}<span>Lokasi Penukaran</span></div><div class="pxc-btn">${ctaLabel}</div><div class="pxc-btn-row"><span class="pxc-btn-outline">BAGIKAN KUPON</span><span class="pxc-info">i</span></div><div class="pxc-tnc">Syarat dan Ketentuan Promo ›</div><div class="pxc-footer">Kuponku adalah mitra <strong>${brand}</strong><br>untuk penyebaran dan validasi kupon<div class="pxc-footer-small">Mau bisnis anda punya iklan seperti ini? <span>Click here</span></div></div></div></div>`;
     const pxcDest = campaign.customer_journey.mockup_url
       ? `<img class="pxc-dest-img" src="${escapeAttr(toDirectImageUrl(campaign.customer_journey.mockup_url))}" alt="URL Mockup" onerror="this.outerHTML='<div style=&quot;padding:60px 10px;text-align:center;font-size:7px;color:#9ca3af;&quot;>Image not loaded (check Drive sharing)</div>'">`
       : '';
