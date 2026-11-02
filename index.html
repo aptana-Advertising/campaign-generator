@@ -6077,7 +6077,13 @@ function exportPreviewToPDF(previewElementId, campaignData, _retry, mode) {
     const imageUrls = [];
     if (campaignData.brand_logo_url) imageUrls.push(campaignData.brand_logo_url);
     if (Array.isArray(campaignData.campaign_contents)) {
-      campaignData.campaign_contents.forEach(c => { if (c.url_key_visual) imageUrls.push(c.url_key_visual); });
+      campaignData.campaign_contents.forEach(c => {
+        if (c.url_key_visual) imageUrls.push(c.url_key_visual);
+        // WhatsApp LBA/TGT: every Campaign Content section has its own Key Visual / Card images.
+        // The top-level key_visual/cards below only mirror section 1, so sections 2+ must be collected here.
+        if (c.key_visual) imageUrls.push(c.key_visual);
+        if (Array.isArray(c.cards)) c.cards.forEach(cd => { if (cd && cd.image) imageUrls.push(cd.image); });
+      });
     }
     if (campaignData.meta_ads && campaignData.meta_ads.key_visual) imageUrls.push(campaignData.meta_ads.key_visual);
     if (campaignData.whatsapp && campaignData.whatsapp.campaign_image) imageUrls.push(campaignData.whatsapp.campaign_image);
@@ -6090,7 +6096,7 @@ function exportPreviewToPDF(previewElementId, campaignData, _retry, mode) {
     }
 
     const imageMap = {};
-    Promise.all(imageUrls.map(async (u) => {
+    Promise.all(Array.from(new Set(imageUrls)).map(async (u) => {
       const data = await fetchImageAsDataURL(u);
       if (data) {
         imageMap[u] = data;
