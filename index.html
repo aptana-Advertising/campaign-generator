@@ -1967,15 +1967,15 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
           </div>
           <div class="field">
             <label>Jam Tayang</label>
-            <select class="preset-select" onchange="onPresetSelectChange(this, 'smsBroadcastTime')">
-              <option value="">Pilih jam tayang...</option>
-              <option value="06:00 WIB">06:00 WIB</option>
-              <option value="08:00 WIB">08:00 WIB</option>
-              <option value="__manual__">Custom</option>
-            </select>
-            <div class="manual-wrap" style="display:none;">
-              <input type="text" id="smsBroadcastTime" placeholder="Masukkan jam tayang custom">
-              <a href="javascript:void(0)" class="preset-back-link" onclick="revertToPresetSelect(this)">↩ Pilih dari daftar</a>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+              <div>
+                <div style="font-size:11px; color:#6b7280; margin-bottom:3px;">Start</div>
+                <input type="time" id="smsBroadcastStart" value="06:00" style="width:100%;">
+              </div>
+              <div>
+                <div style="font-size:11px; color:#6b7280; margin-bottom:3px;">End</div>
+                <input type="time" id="smsBroadcastEnd" value="20:00" style="width:100%;">
+              </div>
             </div>
           </div>
           <div class="field">
@@ -1988,7 +1988,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
         <div id="campaignContentList"></div>
 
         <div class="add-section-row">
-          <button class="btn-add-section" onclick="addContentSection()">+ Add Campaign Content Section</button>
+          <button class="btn-add-section" onclick="addContentSection()">+ Add CO Section</button>
         </div>
 
         <div class="btn-row">
@@ -4196,8 +4196,7 @@ function loadCampaignIntoForm(campaign, historyId) {
     syncPresetFieldVisibility(document.getElementById('paymentMethod'));
     document.getElementById('price').value = campaign.price || '';
     syncPresetFieldVisibility(document.getElementById('price'));
-    document.getElementById('smsBroadcastTime').value = campaign.broadcast_time || '';
-    syncPresetFieldVisibility(document.getElementById('smsBroadcastTime'));
+    setSmsBroadcastTime(campaign.broadcast_time);
 
     const [pStart, pEnd] = (campaign.campaign_period || '').split(' - ');
     document.getElementById('startDate').value = pStart ? pStart.trim() : '';
@@ -5458,13 +5457,33 @@ document.addEventListener('click', function(e) {
   }
 });
 
+/* ---------------- Kuponku SMS — Jam Tayang (Start / End) ---------------- */
+const SMS_BROADCAST_DEFAULT_START = '06:00';
+const SMS_BROADCAST_DEFAULT_END = '20:00';
+function getSmsBroadcastTime() {
+  const st = document.getElementById('smsBroadcastStart').value;
+  const en = document.getElementById('smsBroadcastEnd').value;
+  if (!st && !en) return '';
+  if (st && en) return st + ' - ' + en + ' WIB';
+  return (st || en) + ' WIB';
+}
+// Accepts a saved string ("06:00 - 20:00 WIB", or legacy "06:00 WIB"); falls back to defaults.
+function setSmsBroadcastTime(val) {
+  const stEl = document.getElementById('smsBroadcastStart');
+  const enEl = document.getElementById('smsBroadcastEnd');
+  const pad = t => { const m = String(t).match(/^(\d{1,2})[:.](\d{2})$/); return m ? m[1].padStart(2, '0') + ':' + m[2] : ''; };
+  const times = (String(val || '').match(/\d{1,2}[:.]\d{2}/g) || []).map(pad).filter(Boolean);
+  stEl.value = times[0] || SMS_BROADCAST_DEFAULT_START;
+  enEl.value = times[1] || SMS_BROADCAST_DEFAULT_END;
+}
+
 /* ---------------- Campaign Content Sections (dynamic) ---------------- */
 function createContentSectionHTML(id, data) {
   data = data || {};
   return `
     <div class="content-section" id="content-section-${id}" data-section-id="${id}">
       <div class="content-section-header">
-        <span class="content-section-title">Campaign Content${data.label ? ' — ' + escapeHtml(data.label) : ''}</span>
+        <span class="content-section-title">CO${data.label ? ' — ' + escapeHtml(data.label) : ''}</span>
         <div class="content-section-actions">
           <button class="icon-btn" onclick="duplicateContentSection(${id})" title="Duplicate this section">⧉ Duplicate</button>
           <button class="icon-btn danger" onclick="removeContentSection(${id})" title="Remove this section">🗑 Remove</button>
@@ -5726,7 +5745,7 @@ function duplicateContentSection(id) {
 function removeContentSection(id) {
   const list = document.getElementById('campaignContentList');
   if (list.children.length <= 1) {
-    alert('At least one Campaign Content section is required.');
+    alert('At least one CO section is required.');
     return;
   }
   const section = document.getElementById('content-section-' + id);
@@ -6667,7 +6686,7 @@ function buildPdfDocument(campaignData, imageMap, overlay, JsPDF, previewElement
   if (!skipGenericSections && Array.isArray(campaignData.campaign_contents)) {
     campaignData.campaign_contents.forEach((c, idx) => {
       beginCard();
-      sectionTitle('Campaign Content ' + (idx + 1), SECTION_ACCENT);
+      sectionTitle('CO ' + (idx + 1), SECTION_ACCENT);
       if (c.url_key_visual) {
         embedImageWithLabel(c.url_key_visual, 'Key Visual:', 75);
       }
@@ -7231,7 +7250,7 @@ function generateCampaign() {
     const syaratKetentuan = section.querySelector('.cc-syaratKetentuan').value;
     const outlet = section.querySelector('.cc-outlet').value;
     if (!wordingSms.trim() || !syaratKetentuan.trim() || !outlet.trim()) {
-      alert('Please fill all required fields in each Campaign Content section (Wording SMS, Syarat & Ketentuan, Outlet).');
+      alert('Please fill all required fields in each CO section (Wording SMS, Syarat & Ketentuan, Outlet).');
       return;
     }
   }
@@ -7262,7 +7281,7 @@ function generateCampaign() {
     payment_method: document.getElementById('paymentMethod').value,
     price: document.getElementById('price').value,
     campaign_period: formatPeriod(document.getElementById('startDate').value, document.getElementById('endDate').value),
-    broadcast_time: document.getElementById('smsBroadcastTime').value,
+    broadcast_time: getSmsBroadcastTime(),
     whitelist: document.getElementById('whitelist').value,
     campaign_contents: contentSections
   };
@@ -7303,7 +7322,7 @@ function buildSmsMockup(campaign) {
   }
 
   return `
-    <div class="mockup-hint">Simulated customer journey — actual timer & data are illustrative.${hasMultipleContents ? ' Mockup reflects Campaign Content 1 only.' : ''}</div>
+    <div class="mockup-hint">Simulated customer journey — actual timer & data are illustrative.${hasMultipleContents ? ' Mockup reflects CO 1 only.' : ''}</div>
     <div class="mockup-scroll">
 
       <!-- 1. SMS -->
@@ -7905,7 +7924,7 @@ function renderPreview(campaign) {
 
     contentBlocksHtml += `
       <div class="content-block">
-        <div class="content-block-title">Campaign Content ${idx + 1}</div>
+        <div class="content-block-title">CO ${idx + 1}</div>
 
         ${visualHtml}
 
@@ -7954,7 +7973,7 @@ function renderPreview(campaign) {
     </div>
 
     <div class="preview-section">
-      <div class="preview-section-title">Campaign Content (${campaign.campaign_contents.length})</div>
+      <div class="preview-section-title">CO (${campaign.campaign_contents.length})</div>
       ${contentBlocksHtml}
     </div>
 
@@ -8005,8 +8024,7 @@ function resetForm() {
   syncPresetFieldVisibility(document.getElementById('price'));
   document.getElementById('startDate').value = '';
   document.getElementById('endDate').value = '';
-  document.getElementById('smsBroadcastTime').value = '';
-  syncPresetFieldVisibility(document.getElementById('smsBroadcastTime'));
+  setSmsBroadcastTime('');
   document.getElementById('whitelist').value = '';
 
   document.getElementById('campaignContentList').innerHTML = '';
