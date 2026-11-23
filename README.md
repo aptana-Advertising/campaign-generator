@@ -8,3 +8,4 @@ Update 4 Sept: tambah field profiling SMS LBA/TGT
 Update 11 Sept: Tambah Field jam tayang SMS
 update 16 sept: tambah field keterangan medsos
 Update 5 okt 26: tambah fitur performax
+Update 23 NOv: tambah start & end tanggal tayang. rename Campaign content -> CO
