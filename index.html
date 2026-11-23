@@ -766,6 +766,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   input[type="text"],
   input[type="url"],
   input[type="date"],
+  input[type="time"],
   select,
   textarea {
     width: 100%;
@@ -786,6 +787,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
   }
 
   input[readonly] { background: #f9fafb; color: #6b7280; }
+  input[type="time"] { box-sizing: border-box; min-height: 38px; font-family: inherit; font-size: 13px; }
+  input[type="time"]::-webkit-datetime-edit,
+  input[type="time"]::-webkit-datetime-edit-fields-wrapper,
+  input[type="time"]::-webkit-datetime-edit-hour-field,
+  input[type="time"]::-webkit-datetime-edit-minute-field,
+  input[type="time"]::-webkit-datetime-edit-text { font-family: inherit; font-size: 13px; color: #1a1a1a; }
 
   textarea {
     resize: none;
@@ -1970,11 +1977,11 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var r,n,i,a,
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
               <div>
                 <div style="font-size:11px; color:#6b7280; margin-bottom:3px;">Start</div>
-                <input type="time" id="smsBroadcastStart" value="06:00" style="width:100%;">
+                <input type="time" id="smsBroadcastStart" value="06:00">
               </div>
               <div>
                 <div style="font-size:11px; color:#6b7280; margin-bottom:3px;">End</div>
-                <input type="time" id="smsBroadcastEnd" value="20:00" style="width:100%;">
+                <input type="time" id="smsBroadcastEnd" value="20:00">
               </div>
             </div>
           </div>
